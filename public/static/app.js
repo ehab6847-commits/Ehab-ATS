@@ -83,8 +83,8 @@ function renderLogin() {
   el('root').innerHTML = `
   <div class="min-h-screen flex items-center justify-center p-4" style="background:radial-gradient(ellipse at top, #1e293b, #0f172a)">
     <div class="glass-strong rounded-3xl p-8 w-full max-w-md text-center" dir="rtl">
-      <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mb-4 shadow-lg shadow-indigo-500/30">
-        <i class="fas fa-file-invoice text-white text-2xl"></i>
+      <div class="w-20 h-20 mx-auto rounded-2xl p-1 bg-gradient-to-br from-amber-400 via-amber-600 to-yellow-700 mb-4 shadow-xl shadow-amber-500/20">
+        <img src="/static/logo.jpg" class="w-full h-full object-cover rounded-xl" alt="Ehab ATS Logo">
       </div>
       <h1 class="text-2xl font-bold text-white mb-1">Ehab ATS</h1>
       <p class="text-slate-400 text-sm mb-6">منصة السير الذاتية الاحترافية — دخول خاص</p>
@@ -168,8 +168,8 @@ function renderApp() {
   <div dir="rtl" class="min-h-screen flex">
     <aside id="sidebar" class="glass-strong w-64 shrink-0 flex flex-col p-4 gap-1 fixed md:static inset-y-0 right-0 z-40">
       <div class="flex items-center gap-3 px-2 py-3 mb-2">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-          <i class="fas fa-file-invoice text-white"></i>
+        <div class="w-10 h-10 rounded-xl p-0.5 bg-gradient-to-br from-amber-400 to-yellow-600 shadow-md shadow-amber-500/20 shrink-0 overflow-hidden">
+          <img src="/static/logo.jpg" class="w-full h-full object-cover rounded-lg" alt="Ehab ATS Logo">
         </div>
         <div><div class="font-bold">Ehab ATS</div><div class="text-xs text-slate-400">Resume Platform</div></div>
       </div>
