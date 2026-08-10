@@ -173,11 +173,11 @@ function renderBuilderForm() {
       <div class="section-body">
         <div class="grid grid-cols-2 gap-2">
           ${pf('nameAr', 'الاسم (عربي) *')} ${pf('nameEn', 'Name (En)', 'ltr')}
-          ${pf('titleAr', 'المسمى الوظيفي (عربي)')} ${pf('titleEn', 'Job Title (En)', 'ltr')}
+          ${pf('titleAr', 'المسمى الوظيفي (اختياري)')} ${pf('titleEn', 'Job Title (En - اختياري)', 'ltr')}
           ${pf('email', 'الإيميل', 'ltr')} ${pf('phone', 'التليفون', 'ltr')}
           ${pf('cityAr', 'المدينة (عربي)')} ${pf('cityEn', 'City (En)', 'ltr')}
           ${pf('linkedin', 'LinkedIn', 'ltr')} ${pf('website', 'موقع/Portfolio', 'ltr')}
-          ${pf('nationality', 'الجنسية')} ${pf('birthdate', 'تاريخ الميلاد', 'ltr')}
+          ${pf('nationality', 'الجنسية (اختياري)')} ${pf('birthdate', 'تاريخ الميلاد (اختياري)', 'ltr')}
         </div>
         <div class="grid grid-cols-3 gap-2 mt-2">
           <div><label class="fld">صورة شخصية</label><input type="file" accept="image/*" class="input-field !py-1 !text-xs" onchange="bUploadImg(this,'photo')"></div>
@@ -662,17 +662,75 @@ ${dataJson}
   }
 }
 
-/* ---------- export menu ---------- */
+/* ---------- export menu & print PDF ---------- */
 function bExportMenu() {
-  const slug = B.resume.public_slug;
+  const slug = B ? B.resume.public_slug : '';
   openModal(`
-    <h3 class="font-bold text-lg mb-4"><i class="fas fa-file-export text-amber-400 ml-2"></i>تصدير السيرة الذاتية</h3>
-    <div class="space-y-2">
-      <button class="btn-ghost w-full !justify-start" onclick="window.open('/cv/${slug}','_blank')"><i class="fas fa-file-pdf ml-2 text-rose-400"></i>PDF — افتح الصفحة العامة واطبع (A4)</button>
-      <button class="btn-ghost w-full !justify-start" onclick="exportDocx(${B.id})"><i class="fas fa-file-word ml-2 text-sky-400"></i>DOCX (Word)</button>
-      <button class="btn-ghost w-full !justify-start" onclick="exportJson(${B.id})"><i class="fas fa-code ml-2 text-amber-400"></i>JSON (نسخة احتياطية كاملة)</button>
-      <button class="btn-ghost w-full !justify-start" onclick="exportTxt(${B.id})"><i class="fas fa-file-lines ml-2 text-slate-400"></i>TXT (نص خام لأنظمة ATS)</button>
-      <button class="btn-ghost w-full !justify-start" onclick="navigator.clipboard.writeText(location.origin+'/cv/${slug}'); toast('الرابط اتنسخ ✅')"><i class="fas fa-link ml-2 text-emerald-400"></i>نسخ الرابط العام</button>
+    <h3 class="font-bold text-lg mb-4"><i class="fas fa-file-export text-amber-400 ml-2"></i>تصدير وتنزيل السيرة الذاتية</h3>
+    <div class="space-y-2.5">
+      <button class="btn-primary w-full !justify-start !py-2.5 shadow-md" onclick="printResumePDF()"><i class="fas fa-file-pdf ml-2 text-rose-300"></i>تحميل PDF — حفظ بتنسيق PDF بنقرة واحدة (A4)</button>
+      <button class="btn-ghost w-full !justify-start !py-2.5" onclick="exportDocx(${B.id})"><i class="fas fa-file-word ml-2 text-sky-400"></i>تحميل Word (DOCX)</button>
+      <button class="btn-ghost w-full !justify-start !py-2.5" onclick="exportJson(${B.id})"><i class="fas fa-code ml-2 text-amber-400"></i>تحميل JSON (نسخة احتياطية كاملة)</button>
+      <button class="btn-ghost w-full !justify-start !py-2.5" onclick="exportTxt(${B.id})"><i class="fas fa-file-lines ml-2 text-slate-400"></i>تحميل TXT (نص خام للـ ATS)</button>
+      ${slug ? `<button class="btn-ghost w-full !justify-start !py-2.5" onclick="navigator.clipboard.writeText(location.origin+'/?cv=${slug}'); toast('الرابط اتنسخ ✅')"><i class="fas fa-link ml-2 text-emerald-400"></i>نسخ الرابط العام للسيرة</button>` : ''}
     </div>
     <div class="flex justify-end mt-4"><button class="btn-ghost" onclick="closeModal()">إغلاق</button></div>`, true);
+}
+
+function printResumePDF() {
+  if (!B || !B.data) return toast('لا توجد سيرة مفتوحة للتنزيل', 'err');
+  closeModal();
+
+  const p = B.data.personal || {};
+  const tpl = B.resume.template || 'canva_purple';
+  const lang = B.resume.language || 'ar';
+  const cust = B.customization || {};
+  const title = (p.nameAr || p.nameEn || B.resume.title || 'Sira') + ' - CV';
+
+  const cvHtml = renderTemplate(tpl, B.data, cust, lang);
+
+  const printWin = window.open('', '_blank', 'width=950,height=1150');
+  if (!printWin) {
+    toast('يرجى السماح بفتح النوافذ المنبثقة من المتصفح لتنزيل الـ PDF', 'err');
+    return;
+  }
+
+  printWin.document.write(`<!DOCTYPE html>
+<html lang="${lang === 'en' ? 'en' : 'ar'}" dir="${lang === 'en' ? 'ltr' : 'rtl'}">
+<head>
+<meta charset="UTF-8">
+<title>${bEsc(title)}</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;600;700&family=Almarai:wght@300;400;700&family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;800&family=Changa:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;600;700&family=Inter:wght@300;400;600;700&family=Kufam:wght@400;600;700&family=Montserrat:wght@300;400;600;700&family=Noto+Sans+Arabic:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&family=Readex+Pro:wght@300;400;600;700&family=Roboto:wght@300;400;600;700&family=Rubik:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="/static/templates.css" rel="stylesheet">
+<style>
+@page { size: A4 portrait; margin: 0; }
+@media print {
+  .no-print { display: none !important; }
+  body { margin: 0; padding: 0; background: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .cv-page { margin: 0 auto !important; box-shadow: none !important; width: 100% !important; border: none !important; }
+}
+body { background: #0f172a; padding: 20px; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; align-items: center; }
+.print-banner { background: #1e293b; color: #fff; padding: 12px 24px; border-radius: 12px; margin-bottom: 20px; text-align: center; max-width: 800px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+.print-btn { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 8px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 8px; font-family: inherit; }
+</style>
+</head>
+<body>
+<div class="print-banner no-print">
+  <div><b>اختر "حفظ بتنسيق PDF" (Save as PDF) من نافذة الطباعة لتنزيل الملف فوراً</b></div>
+  <button class="print-btn" onclick="window.print()"><i class="fas fa-file-pdf ml-1"></i>حفظ / تنزيل PDF الآن</button>
+</div>
+${cvHtml}
+<script>
+window.onload = function() {
+  setTimeout(function() {
+    window.print();
+  }, 400);
+};
+</script>
+</body>
+</html>`);
+  printWin.document.close();
+  toast('جاري فتح نافذة تنزيل ملف الـ PDF... 📄');
 }
