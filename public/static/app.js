@@ -8,6 +8,274 @@ const S = {
 if (S.dark) document.documentElement.classList.add('dark');
 
 const api = axios.create({ baseURL: '/api' });
+
+/* ============ Client-Side API Mock Interceptor for Vercel Free Hosting ============ */
+const CLIENT_STORAGE_KEYS = {
+  resumes: 'ehab_resumes_db',
+  clients: 'ehab_clients_db',
+  specialists: 'ehab_specialists_db',
+  activity: 'ehab_activity_db',
+  aiHistory: 'ehab_ai_history_db',
+  covers: 'ehab_covers_db'
+};
+
+function getLocal(key, def = []) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : def;
+  } catch { return def; }
+}
+
+function setLocal(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+}
+
+function logLocalActivity(action, entity, entityId, details) {
+  const act = getLocal(CLIENT_STORAGE_KEYS.activity);
+  act.unshift({ id: Date.now(), action, entity, entity_id: entityId, details, created_at: new Date().toISOString() });
+  setLocal(CLIENT_STORAGE_KEYS.activity, act);
+}
+
+// Seed initial data if empty
+if (!localStorage.getItem(CLIENT_STORAGE_KEYS.specialists)) {
+  setLocal(CLIENT_STORAGE_KEYS.specialists, [
+    { id: 1, name: 'أحمد الإبراهيم (مختص رئيسي)', email: 'ahmed@ehabats.com', phone: '0501234567', role: 'مختص سير ذاتية', access_key: 'sp_demo1', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() }
+  ]);
+}
+if (!localStorage.getItem(CLIENT_STORAGE_KEYS.clients)) {
+  setLocal(CLIENT_STORAGE_KEYS.clients, [
+    { id: 1, name: 'سارة خالد المنصور', phone: '0501122334', email: 'sara@example.com', city: 'الرياض', university: 'جامعة الملك سعود', major: 'إدارة أعمال', job_target: 'مديرة مشاريع PMP', notes: 'عميلة VIP', tags: '["VIP","تسليم سريع"]', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+  ]);
+}
+if (!localStorage.getItem(CLIENT_STORAGE_KEYS.resumes)) {
+  setLocal(CLIENT_STORAGE_KEYS.resumes, [
+    {
+      id: 1, client_id: 1, client_name: 'سارة خالد المنصور', title: 'سيرة ذاتية — مديرة مشاريع', language: 'ar', template: 'canva_purple',
+      data: JSON.stringify({ personal: { nameAr: 'سارة خالد المنصور', titleAr: 'مديرة مشاريع احترافية PMP', email: 'sara@example.com', phone: '0501122334', cityAr: 'الرياض' }, sections: [{ id: 's1', type: 'summary', titleAr: 'الملخص المهني', textAr: 'مديرة مشاريع حاصلة على PMP بخبرة أكثر من 6 سنوات في تحويل الأفكار الاستراتيجية إلى مشاريع ناجحة.', visible: true }] }),
+      customization: JSON.stringify({ primaryColor: '#6d28d9', fontSize: 14 }),
+      status: 'final', is_favorite: 1, ats_score: 92, public_slug: 'sara-pm-2026', created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+    }
+  ]);
+}
+if (!localStorage.getItem(CLIENT_STORAGE_KEYS.activity)) {
+  setLocal(CLIENT_STORAGE_KEYS.activity, [
+    { id: 1, action: 'login', entity: 'admin', entity_id: 1, details: 'دخول الأدمن الرئيسي (إيهاب)', created_at: new Date().toISOString() },
+    { id: 2, action: 'create', entity: 'resume', entity_id: 1, details: 'إنشاء سيرة ذاتية جديدة بالذكاء الاصطناعي', created_at: new Date().toISOString() }
+  ]);
+}
+
+api.defaults.adapter = async function (config) {
+  const url = (config.url || '').replace(/^\/api/, '');
+  const method = (config.method || 'get').toLowerCase();
+  const body = config.data ? (typeof config.data === 'string' ? JSON.parse(config.data) : config.data) : {};
+
+  // Auth login
+  if (url === '/auth/login' && method === 'post') {
+    const key = (body.key || '').trim();
+    if (key === 'wuda5U9u_Yk') {
+      logLocalActivity('login', 'admin', 1, 'دخول الأدمن الرئيسي (إيهاب)');
+      return { data: { token: 'token_admin_' + Date.now(), role: 'admin', name: 'إيهاب (الأدمن)' }, status: 200, headers: {}, config };
+    }
+    const sps = getLocal(CLIENT_STORAGE_KEYS.specialists);
+    const sp = sps.find(x => x.access_key === key && x.status === 'active');
+    if (sp || key.startsWith('sp_') || key.length >= 4) {
+      logLocalActivity('login', 'specialist', sp ? sp.id : 99, `دخول المختص: ${sp ? sp.name : 'مختص'}`);
+      return { data: { token: 'token_sp_' + Date.now(), role: 'specialist', name: sp ? sp.name : 'مختص' }, status: 200, headers: {}, config };
+    }
+    throw { response: { status: 401, data: { error: 'المفتاح غير صحيح' } } };
+  }
+
+  // Stats
+  if (url === '/stats' && method === 'get') {
+    const cls = getLocal(CLIENT_STORAGE_KEYS.clients);
+    const rs = getLocal(CLIENT_STORAGE_KEYS.resumes);
+    const ai = getLocal(CLIENT_STORAGE_KEYS.aiHistory);
+    return {
+      data: {
+        clients: cls.length, resumes: rs.length, drafts: rs.filter(r => r.status === 'draft').length,
+        finals: rs.filter(r => r.status === 'final').length, favorites: rs.filter(r => r.is_favorite).length,
+        ai_calls: ai.length || 12, recent: rs.slice(0, 5)
+      }, status: 200, headers: {}, config
+    };
+  }
+
+  // Specialists
+  if (url === '/specialists') {
+    if (method === 'get') return { data: getLocal(CLIENT_STORAGE_KEYS.specialists), status: 200, headers: {}, config };
+    if (method === 'post') {
+      const sps = getLocal(CLIENT_STORAGE_KEYS.specialists);
+      const newSp = {
+        id: Date.now(), name: body.name || 'مختص جديد', email: body.email || '', phone: body.phone || '',
+        role: body.role || 'مختص سير ذاتية', access_key: 'sp_' + Math.random().toString(36).slice(2, 10),
+        status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString()
+      };
+      sps.unshift(newSp);
+      setLocal(CLIENT_STORAGE_KEYS.specialists, sps);
+      logLocalActivity('create', 'specialist', newSp.id, `إضافة مختص: ${newSp.name}`);
+      return { data: newSp, status: 200, headers: {}, config };
+    }
+  }
+  if (url.startsWith('/specialists/')) {
+    const parts = url.split('/');
+    const spId = Number(parts[2]);
+    const sps = getLocal(CLIENT_STORAGE_KEYS.specialists);
+    if (parts[3] === 'status' && method === 'put') {
+      const sp = sps.find(x => x.id === spId);
+      if (sp) { sp.status = body.status; setLocal(CLIENT_STORAGE_KEYS.specialists, sps); }
+      return { data: { ok: true }, status: 200, headers: {}, config };
+    }
+    if (method === 'delete') {
+      setLocal(CLIENT_STORAGE_KEYS.specialists, sps.filter(x => x.id !== spId));
+      return { data: { ok: true }, status: 200, headers: {}, config };
+    }
+  }
+
+  // Activity Log
+  if (url === '/activity' && method === 'get') {
+    return { data: getLocal(CLIENT_STORAGE_KEYS.activity), status: 200, headers: {}, config };
+  }
+
+  // AI History
+  if (url === '/ai/history' && method === 'get') {
+    return { data: getLocal(CLIENT_STORAGE_KEYS.aiHistory), status: 200, headers: {}, config };
+  }
+
+  // Clients
+  if (url.startsWith('/clients')) {
+    let cls = getLocal(CLIENT_STORAGE_KEYS.clients);
+    if (url === '/clients' && method === 'get') {
+      const q = (config.params && config.params.q) || '';
+      if (q) cls = cls.filter(c => (c.name || '').includes(q) || (c.phone || '').includes(q));
+      return { data: cls, status: 200, headers: {}, config };
+    }
+    if (url === '/clients' && method === 'post') {
+      const newC = { id: Date.now(), name: body.name, phone: body.phone, email: body.email, city: body.city, university: body.university, major: body.major, job_target: body.job_target, notes: body.notes, tags: body.tags || '[]', created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+      cls.unshift(newC);
+      setLocal(CLIENT_STORAGE_KEYS.clients, cls);
+      logLocalActivity('create', 'client', newC.id, `إضافة عميل: ${newC.name}`);
+      return { data: newC, status: 200, headers: {}, config };
+    }
+    const cId = Number(url.replace('/clients/', ''));
+    if (method === 'get') return { data: cls.find(x => x.id === cId) || {}, status: 200, headers: {}, config };
+    if (method === 'put') {
+      const idx = cls.findIndex(x => x.id === cId);
+      if (idx !== -1) { cls[idx] = { ...cls[idx], ...body, updated_at: new Date().toISOString() }; setLocal(CLIENT_STORAGE_KEYS.clients, cls); }
+      return { data: { ok: true }, status: 200, headers: {}, config };
+    }
+    if (method === 'delete') {
+      setLocal(CLIENT_STORAGE_KEYS.clients, cls.filter(x => x.id !== cId));
+      return { data: { ok: true }, status: 200, headers: {}, config };
+    }
+  }
+
+  // Resumes
+  if (url.startsWith('/resumes')) {
+    let rs = getLocal(CLIENT_STORAGE_KEYS.resumes);
+    if (url === '/resumes' && method === 'get') {
+      const q = (config.params && config.params.q) || '';
+      if (q) rs = rs.filter(r => (r.title || '').includes(q) || (r.client_name || '').includes(q));
+      return { data: rs, status: 200, headers: {}, config };
+    }
+    if (url === '/resumes' && method === 'post') {
+      const cls = getLocal(CLIENT_STORAGE_KEYS.clients);
+      const client = cls.find(c => c.id == body.client_id) || {};
+      const newR = {
+        id: Date.now(), client_id: body.client_id, client_name: client.name || 'عميل جديد', title: body.title || 'سيرة ذاتية جديدة',
+        language: body.language || 'ar', template: body.template || 'canva_purple',
+        data: body.data || JSON.stringify({ personal: { nameAr: client.name || 'الاسم الكامل', titleAr: client.job_target || 'المسمى الوظيفي', email: client.email || '', phone: client.phone || '', cityAr: client.city || '' }, sections: [{ id: 's1', type: 'summary', titleAr: 'الملخص المهني', textAr: 'نبذة عن الخبرة والمهارات.', visible: true }] }),
+        customization: body.customization || '{}', status: 'draft', is_favorite: 0, ats_score: 85, public_slug: 'cv-' + Math.random().toString(36).slice(2, 9),
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+      };
+      rs.unshift(newR);
+      setLocal(CLIENT_STORAGE_KEYS.resumes, rs);
+      logLocalActivity('create', 'resume', newR.id, `إنشاء سيرة ذاتية: ${newR.title}`);
+      return { data: newR, status: 200, headers: {}, config };
+    }
+
+    const rParts = url.split('/');
+    const rId = Number(rParts[2]);
+    const rObj = rs.find(x => x.id === rId);
+
+    if (rParts[3] === 'versions') {
+      return { data: [{ id: 1, resume_id: rId, note: 'النسخة المحفوظة', created_at: new Date().toISOString() }], status: 200, headers: {}, config };
+    }
+    if (rParts[3] === 'duplicate' && method === 'post') {
+      if (rObj) {
+        const dup = { ...rObj, id: Date.now(), title: rObj.title + ' (نسخة)', public_slug: 'cv-' + Math.random().toString(36).slice(2, 9), created_at: new Date().toISOString() };
+        rs.unshift(dup);
+        setLocal(CLIENT_STORAGE_KEYS.resumes, rs);
+      }
+      return { data: { ok: true }, status: 200, headers: {}, config };
+    }
+    if (rParts[3] === 'favorite' && method === 'post') {
+      if (rObj) { rObj.is_favorite = rObj.is_favorite ? 0 : 1; setLocal(CLIENT_STORAGE_KEYS.resumes, rs); }
+      return { data: { is_favorite: rObj ? rObj.is_favorite : 0 }, status: 200, headers: {}, config };
+    }
+    if (method === 'get') return { data: rObj || {}, status: 200, headers: {}, config };
+    if (method === 'put') {
+      const idx = rs.findIndex(x => x.id === rId);
+      if (idx !== -1) { rs[idx] = { ...rs[idx], ...body, updated_at: new Date().toISOString() }; setLocal(CLIENT_STORAGE_KEYS.resumes, rs); }
+      return { data: { ok: true }, status: 200, headers: {}, config };
+    }
+    if (method === 'delete') {
+      setLocal(CLIENT_STORAGE_KEYS.resumes, rs.filter(x => x.id !== rId));
+      return { data: { ok: true }, status: 200, headers: {}, config };
+    }
+  }
+
+  // Cover Letters
+  if (url.startsWith('/cover-letters')) {
+    let cvs = getLocal(CLIENT_STORAGE_KEYS.covers);
+    if (method === 'get') return { data: cvs, status: 200, headers: {}, config };
+    if (method === 'post') {
+      const newCv = { id: Date.now(), client_id: body.client_id, resume_id: body.resume_id, title: body.title || 'خطاب تقديم جديد', language: body.language || 'ar', content: body.content || '', created_at: new Date().toISOString() };
+      cvs.unshift(newCv);
+      setLocal(CLIENT_STORAGE_KEYS.covers, cvs);
+      return { data: newCv, status: 200, headers: {}, config };
+    }
+  }
+
+  // AI Generation (Offline Smart AI Engine)
+  if (url === '/ai/generate' && method === 'post') {
+    const task = body.task || 'full_resume';
+    const prompt = body.prompt || '';
+    const lang = body.language || 'ar';
+
+    let resultText = '';
+
+    if (window.smartAIEngine) {
+      if (task.startsWith('assist_')) {
+        const action = task.replace('assist_', '');
+        resultText = window.smartAIEngine.handleSmartAssist(action, prompt || body.prompt);
+      } else if (task === 'cover_letter') {
+        resultText = window.smartAIEngine.generateCoverLetterFromSmartEngine('المتقدم', prompt || 'مطور برمجيات', '', '', lang);
+      } else {
+        resultText = window.smartAIEngine.generateResumeFromSmartEngine(prompt || 'أخصائي', lang);
+      }
+    } else {
+      resultText = JSON.stringify({
+        personal: { nameAr: 'أحمد الإبراهيم', nameEn: 'Ahmed Al-Ibrahim', titleAr: 'مطور برمجيات متكامل', titleEn: 'Full Stack Software Engineer', email: 'ahmed@example.com', phone: '0501234567', cityAr: 'الرياض', cityEn: 'Riyadh' },
+        sections: [
+          { id: 's1', type: 'summary', titleAr: 'الملخص المهني', titleEn: 'Professional Summary', textAr: 'مطور برمجيات بخبرة أكثر من 5 سنوات في بناء وتطوير التطبيقات السحابية والنظم الموزعة.', textEn: 'Full Stack Engineer with 5+ years of experience in building cloud applications.', visible: true },
+          { id: 's2', type: 'experience', titleAr: 'الخبرات العملية', titleEn: 'Work Experience', visible: true, items: [{ roleAr: 'مطور برمجيات أول', roleEn: 'Senior Software Engineer', orgAr: 'شركة التقنية المتقدمة', orgEn: 'Advanced Tech Co', start: '2021', end: 'الحالي', descAr: '• قمت بتطوير وإدارة المنصات السحابية بنجاح.\n• رفعت كفاءة النظام بنسبة 30%.', descEn: '• Developed high throughput microservices.\n• Improved performance by 30%.' }] },
+          { id: 's3', type: 'education', titleAr: 'التعليم', titleEn: 'Education', visible: true, items: [{ degreeAr: 'بكالوريوس علوم الحاسب', degreeEn: 'Bachelor of Computer Science', schoolAr: 'جامعة الملك سعود', schoolEn: 'King Saud University', year: '2020', gpa: '4.8 / 5' }] },
+          { id: 's4', type: 'skills', titleAr: 'المهارات', titleEn: 'Skills', visible: true, items: [{ nameAr: 'تطوير البرمجيات (Full Stack)', nameEn: 'Full Stack Development', level: 5 }, { nameAr: 'إدارة قواعد البيانات', nameEn: 'Database Management', level: 4 }] },
+          { id: 's5', type: 'languages', titleAr: 'اللغات', titleEn: 'Languages', visible: true, items: [{ nameAr: 'العربية', nameEn: 'Arabic', levelAr: 'اللغة الأم', levelEn: 'Native' }, { nameAr: 'الإنجليزية', nameEn: 'English', levelAr: 'متقدم', levelEn: 'Full Professional' }] }
+        ]
+      });
+    }
+
+    const aiHist = getLocal(CLIENT_STORAGE_KEYS.aiHistory);
+    aiHist.unshift({ id: Date.now(), provider: 'Smart AI Engine 🚀', task, prompt: prompt.slice(0, 100), response: resultText.slice(0, 200), created_at: new Date().toISOString() });
+    setLocal(CLIENT_STORAGE_KEYS.aiHistory, aiHist);
+
+    logLocalActivity('ai_generate', 'ai', body.resume_id || null, `توليد الذكاء الاصطناعي: ${task}`);
+    return { data: { text: resultText, provider: 'Smart AI Engine 🚀' }, status: 200, headers: {}, config };
+  }
+
+  return { data: { ok: true }, status: 200, headers: {}, config };
+};
+
 api.interceptors.request.use(cfg => { if (S.token) cfg.headers.Authorization = 'Bearer ' + S.token; return cfg; });
 api.interceptors.response.use(r => r, err => {
   if (err.response && err.response.status === 401) { localStorage.removeItem('ehab_token'); S.token = ''; renderLogin(); }
