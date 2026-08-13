@@ -743,34 +743,114 @@ function bPDFEditorModal() {
   `, true);
 }
 
-function generateDirectPDF() {
-  if (!window.html2pdf) {
-    toast('جاري تحميل محرك الـ PDF الفوري...', 'info');
-    return setTimeout(generateDirectPDF, 600);
-  }
-
+async function generateDirectPDF() {
+  if (!B || !B.data) return toast('لا توجد سيرة مفتوحة', 'err');
+  
   const p = (B && B.data && B.data.personal) || {};
   const filename = (p.nameAr || p.nameEn || (B && B.resume && B.resume.title) || 'Sira_CV') + '.pdf';
   
-  const element = document.querySelector('#pdf-editor-canvas .cv-page') || document.querySelector('#b-preview .cv-page') || document.querySelector('.cv-page');
-  if (!element) return toast('تعذر العثور على نموذج السيرة الذاتية', 'err');
+  const srcElement = document.querySelector('#pdf-editor-canvas .cv-page') || document.querySelector('#b-preview .cv-page') || document.querySelector('.cv-page');
+  if (!srcElement) return toast('تعذر العثور على نموذج السيرة الذاتية', 'err');
 
-  toast('جاري إنشاء ملف الـ PDF عالي الدقة بالتنسيق الكامل... 📄');
+  toast('جاري تحضير ملف الـ PDF لصفحة واحدة... 📄');
 
-  const opt = {
-    margin: [0, 0, 0, 0],
-    filename: filename,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  const ensureScript = (src, globalKey) => {
+    return new Promise((resolve) => {
+      if (window[globalKey]) return resolve(true);
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        existing.addEventListener('load', () => resolve(true));
+        return setTimeout(() => resolve(!!window[globalKey]), 1500);
+      }
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
   };
 
-  window.html2pdf().set(opt).from(element).save().then(() => {
-    toast('تم تنزيل ملف الـ PDF المطابق بنجاح ✅');
-  }).catch(err => {
+  await ensureScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'html2canvas');
+  await ensureScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'jspdf');
+
+  const clone = srcElement.cloneNode(true);
+  clone.style.transform = 'none';
+  clone.style.boxShadow = 'none';
+  clone.style.border = 'none';
+  clone.style.margin = '0';
+  clone.style.width = '794px';
+  clone.style.height = '1122px';
+  clone.style.maxHeight = '1122px';
+  clone.style.overflow = 'hidden';
+  clone.style.boxSizing = 'border-box';
+
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.left = '-9999px';
+  container.style.top = '0';
+  container.style.width = '794px';
+  container.style.height = '1122px';
+  container.style.overflow = 'hidden';
+  container.appendChild(clone);
+  document.body.appendChild(container);
+
+  if (clone.scrollHeight > 1115) {
+    const ratio = Math.max(0.72, 1115 / clone.scrollHeight);
+    clone.style.fontSize = (13 * ratio) + 'px';
+    clone.style.lineHeight = '1.3';
+    clone.querySelectorAll('.cv-section').forEach(s => s.style.marginTop = (13 * ratio) + 'px');
+    clone.querySelectorAll('.cv-item').forEach(s => s.style.marginBottom = (7 * ratio) + 'px');
+    const inner = clone.querySelector('.cv-inner');
+    if (inner) inner.style.padding = (24 * ratio) + 'px';
+  }
+
+  try {
+    const html2canvasFunc = window.html2canvas;
+    const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+
+    if (html2canvasFunc && jsPDFClass) {
+      const canvas = await html2canvasFunc(clone, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        width: 794,
+        height: 1122,
+        windowWidth: 794,
+        windowHeight: 1122
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      const pdf = new jsPDFClass({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+      pdf.save(filename);
+
+      if (document.body.contains(container)) document.body.removeChild(container);
+      toast('تم تنزيل ملف الـ PDF لصفحة واحدة بنجاح ✅');
+    } else if (window.html2pdf) {
+      const opt = {
+        margin: [0, 0, 0, 0],
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      await window.html2pdf().set(opt).from(clone).save();
+      if (document.body.contains(container)) document.body.removeChild(container);
+      toast('تم تنزيل ملف الـ PDF بنجاح ✅');
+    } else {
+      if (document.body.contains(container)) document.body.removeChild(container);
+      printResumePDF();
+    }
+  } catch (err) {
     console.error('PDF Export Error:', err);
+    if (document.body.contains(container)) document.body.removeChild(container);
     printResumePDF();
-  });
+  }
 }
 
 function printResumePDF() {
