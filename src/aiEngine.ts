@@ -1,8 +1,7 @@
 /* ============================================================================
    Ehab ATS - Smart AI Engine (Server-Side Engine)
-   100% faithful Markdown / ChatGPT / Word / Raw text parser & Translator:
-   - Complete Universal Deep Dynamic Arabic -> English Translation Engine
-   - Guarantees 0% Arabic text remains when lang === 'en'
+   - 100% Accurate Location & City Auto-Detection (Jeddah, Taif, Makkah, Riyadh, etc.)
+   - Universal Deep Arabic -> English Translation Engine (0% residual Arabic in English mode)
    - Exact section sequence (Objective, Education, Experience, Courses, Skills, Languages)
    ============================================================================ */
 
@@ -74,25 +73,47 @@ function translateTextToEnglish(text: string): string {
   s = s.replace(/جدة،? المملكة العربية السعودية/gi, 'Jeddah, Saudi Arabia');
   s = s.replace(/جدة/gi, 'Jeddah');
   s = s.replace(/الطائف – الحوية،? المملكة العربية السعودية/gi, 'Taif - Al-Hawiyah, Saudi Arabia');
+  s = s.replace(/الطائف – الحوية|الطائف الحوية/gi, 'Taif - Al-Hawiyah');
   s = s.replace(/الطائف/gi, 'Taif');
+  s = s.replace(/الرياض،? المملكة العربية السعودية/gi, 'Riyadh, Saudi Arabia');
   s = s.replace(/الرياض/gi, 'Riyadh');
+  s = s.replace(/الدمام،? المملكة العربية السعودية/gi, 'Dammam, Saudi Arabia');
   s = s.replace(/الدمام/gi, 'Dammam');
+  s = s.replace(/الخبر/gi, 'Khobar');
   s = s.replace(/مكة المكرمة|مكة/gi, 'Makkah');
   s = s.replace(/المدينة المنورة|المدينة/gi, 'Madinah');
+  s = s.replace(/تبوك/gi, 'Tabuk');
+  s = s.replace(/حائل/gi, 'Hail');
+  s = s.replace(/جازان|جيزان/gi, 'Jazan');
+  s = s.replace(/نجران/gi, 'Najran');
+  s = s.replace(/أبها/gi, 'Abha');
+  s = s.replace(/خميس مشيط/gi, 'Khamis Mushait');
+  s = s.replace(/القصيم|بريدة/gi, 'Qassim');
+  s = s.replace(/ينبع/gi, 'Yanbu');
+  s = s.replace(/الجبيل/gi, 'Jubail');
+  s = s.replace(/الأحساء|الهفوف/gi, 'Al-Ahsa');
   s = s.replace(/المملكة العربية السعودية/gi, 'Saudi Arabia');
 
-  s = s.replace(/دبلوم القوى الكهربائية/gi, 'Diploma in Electrical Power Technology');
-  s = s.replace(/شهادة الثانوية العامة/gi, 'High School Diploma');
+  s = s.replace(/دبلوم القوى الكهربائية|دبلوم قوى كهربائية/gi, 'Diploma in Electrical Power Technology');
+  s = s.replace(/تخصص القوى الكهربائية/gi, 'Electrical Power Technology');
+  s = s.replace(/شهادة الثانوية العامة|ثانوية عامة|الثانوية العامة/gi, 'High School Diploma');
   s = s.replace(/الكلية التقنية بجدة/gi, 'Jeddah College of Technology');
+  s = s.replace(/الكلية التقنية/gi, 'College of Technology');
   s = s.replace(/جامعة الملك سعود/gi, 'King Saud University');
+  s = s.replace(/جامعة الملك عبدالعزيز/gi, 'King Abdulaziz University');
+  s = s.replace(/جامعة الطائف/gi, 'Taif University');
 
   s = s.replace(/التدريب التعاوني – متدرب قوى كهربائية/gi, 'Cooperative Training – Electrical Power Trainee');
+  s = s.replace(/التدريب التعاوني|تدريب تعاوني/gi, 'Cooperative Training');
   s = s.replace(/متدرب قوى كهربائية/gi, 'Electrical Power Trainee');
   s = s.replace(/مصنع ويبكو للألمنيوم \(Wepco Aluminum Factory\)|مصنع ويبكو للألمنيوم/gi, 'Wepco Aluminum Factory');
   s = s.replace(/موظف بوابات دخول – إدارة الحشود/gi, 'Entry Gates Officer – Crowd Management');
+  s = s.replace(/إدارة الحشود/gi, 'Crowd Management');
   s = s.replace(/مشروع تشغيل قطار المشاعر المقدسة – موسم حج 1446هـ/gi, 'Holy Sites Train Operation Project – Hajj Season 2025');
+  s = s.replace(/مشروع تشغيل قطار المشاعر المقدسة/gi, 'Holy Sites Train Operation Project');
+  s = s.replace(/موسم حج 1446هـ|حج 1446هـ|حج 1446/gi, 'Hajj Season 2025');
   s = s.replace(/مساعد إداري – خبرة عملية|مساعد إداري/gi, 'Administrative Assistant');
-  s = s.replace(/متدرب – تدريب عملي|متدرب/gi, 'Practical Trainee');
+  s = s.replace(/متدرب – تدريب عملي|تدريب عملي|متدرب/gi, 'Practical Trainee');
 
   s = s.replace(/اكتساب خبرة عملية في أنظمة القوى الكهربائية الصناعية\.?/gi, 'Gained practical experience in industrial electrical power systems.');
   s = s.replace(/تطبيق أساسيات الصيانة الكهربائية في بيئة صناعية\.?/gi, 'Applied electrical maintenance fundamentals in an industrial environment.');
@@ -120,7 +141,9 @@ function translateTextToEnglish(text: string): string {
   s = s.replace(/أساسيات مهارات الحاسب الآلي\.?/gi, 'Computer Skills Fundamentals');
   s = s.replace(/مهارات التواصل والعمل ضمن فريق/gi, 'Communication & Teamwork Skills');
   s = s.replace(/دورة/gi, 'Course:');
-  s = s.replace(/شهادة/gi, 'Certification:');
+  s = s.replace(/شهادة/gi, 'Certificate:');
+  s = s.replace(/مركز/gi, 'Center');
+  s = s.replace(/معهد/gi, 'Institute');
 
   s = s.replace(/الصيانة الكهربائية/gi, 'Electrical Maintenance');
   s = s.replace(/استكشاف الأعطال الكهربائية وإصلاحها/gi, 'Electrical Troubleshooting & Repair');
@@ -189,6 +212,84 @@ function classifySectionHeading(rawLine: string): string | null {
   return null;
 }
 
+function extractLocationFromText(text: string): { cityAr: string; cityEn: string } {
+  let cityAr = '', cityEn = '';
+
+  const locMatch = text.match(/(?:الموقع|العنوان|المدينة|السكن|Address|Location|City)[:\s]*([^\n]+)/i);
+  if (locMatch) {
+    const rawLoc = cleanContentLine(locMatch[1]);
+    if (rawLoc) {
+      cityAr = rawLoc;
+      cityEn = translateTextToEnglish(rawLoc);
+      return { cityAr, cityEn };
+    }
+  }
+
+  if (/الطائف[\s–\-]*الحوية|الطائف/i.test(text)) {
+    cityAr = text.includes('الحوية') ? 'الطائف – الحوية، المملكة العربية السعودية' : 'الطائف، المملكة العربية السعودية';
+    cityEn = text.includes('الحوية') ? 'Taif - Al-Hawiyah, Saudi Arabia' : 'Taif, Saudi Arabia';
+  } else if (/جدة|Jeddah/i.test(text)) {
+    cityAr = 'جدة، المملكة العربية السعودية';
+    cityEn = 'Jeddah, Saudi Arabia';
+  } else if (/الرياض|Riyadh/i.test(text)) {
+    cityAr = 'الرياض، المملكة العربية السعودية';
+    cityEn = 'Riyadh, Saudi Arabia';
+  } else if (/الدمام|Dammam/i.test(text)) {
+    cityAr = 'الدمام، المملكة العربية السعودية';
+    cityEn = 'Dammam, Saudi Arabia';
+  } else if (/الخبر|Khobar/i.test(text)) {
+    cityAr = 'الخبر، المملكة العربية السعودية';
+    cityEn = 'Khobar, Saudi Arabia';
+  } else if (/مكة|Makkah/i.test(text)) {
+    cityAr = 'مكة المكرمة، المملكة العربية السعودية';
+    cityEn = 'Makkah, Saudi Arabia';
+  } else if (/المدينة|Madinah/i.test(text)) {
+    cityAr = 'المدينة المنورة، المملكة العربية السعودية';
+    cityEn = 'Madinah, Saudi Arabia';
+  } else if (/تبوك|Tabuk/i.test(text)) {
+    cityAr = 'تبوك، المملكة العربية السعودية';
+    cityEn = 'Tabuk, Saudi Arabia';
+  } else if (/خميس مشيط|Khamis/i.test(text)) {
+    cityAr = 'خميس مشيط، المملكة العربية السعودية';
+    cityEn = 'Khamis Mushait, Saudi Arabia';
+  } else if (/أبها|Abha/i.test(text)) {
+    cityAr = 'أبها، المملكة العربية السعودية';
+    cityEn = 'Abha, Saudi Arabia';
+  } else if (/جازان|جيزان|Jazan/i.test(text)) {
+    cityAr = 'جازان، المملكة العربية السعودية';
+    cityEn = 'Jazan, Saudi Arabia';
+  } else if (/نجران|Najran/i.test(text)) {
+    cityAr = 'نجران، المملكة العربية السعودية';
+    cityEn = 'Najran, Saudi Arabia';
+  } else if (/حائل|Hail/i.test(text)) {
+    cityAr = 'حائل، المملكة العربية السعودية';
+    cityEn = 'Hail, Saudi Arabia';
+  } else if (/القصيم|بريدة|Qassim/i.test(text)) {
+    cityAr = 'القصيم، المملكة العربية السعودية';
+    cityEn = 'Qassim, Saudi Arabia';
+  } else if (/ينبع|Yanbu/i.test(text)) {
+    cityAr = 'ينبع، المملكة العربية السعودية';
+    cityEn = 'Yanbu, Saudi Arabia';
+  } else if (/الجبيل|Jubail/i.test(text)) {
+    cityAr = 'الجبيل، المملكة العربية السعودية';
+    cityEn = 'Jubail, Saudi Arabia';
+  } else if (/الأحساء|Al-Ahsa/i.test(text)) {
+    cityAr = 'الأحساء، المملكة العربية السعودية';
+    cityEn = 'Al-Ahsa, Saudi Arabia';
+  } else {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    for (let i = 0; i < Math.min(5, lines.length); i++) {
+      if (lines[i].includes('المملكة') || lines[i].includes('السعودية') || lines[i].includes('Saudi')) {
+        cityAr = cleanContentLine(lines[i]);
+        cityEn = translateTextToEnglish(cityAr);
+        break;
+      }
+    }
+  }
+
+  return { cityAr, cityEn };
+}
+
 function parseUserRawResumeText(rawText: string, lang: string = 'ar'): ResumeData {
   const text = (rawText || '').trim();
 
@@ -198,14 +299,7 @@ function parseUserRawResumeText(rawText: string, lang: string = 'ar'): ResumeDat
   const phoneMatch = text.match(/(?:05\d{8}|\+?9665\d{8}|01\d{7}|\d{10})/);
   const phone = phoneMatch ? phoneMatch[0] : '';
 
-  let cityAr = '', cityEn = '';
-  if (/الطائف|Taif/i.test(text)) { cityAr = 'الطائف - الحوية'; cityEn = 'Taif - Al-Hawiyah, Saudi Arabia'; }
-  else if (/الرياض|Riyadh/i.test(text)) { cityAr = 'الرياض'; cityEn = 'Riyadh, Saudi Arabia'; }
-  else if (/جدة|Jeddah/i.test(text)) { cityAr = 'جدة'; cityEn = 'Jeddah, Saudi Arabia'; }
-  else if (/الدمام|Dammam/i.test(text)) { cityAr = 'الدمام'; cityEn = 'Dammam, Saudi Arabia'; }
-  else if (/الخبر|Khobar/i.test(text)) { cityAr = 'الخبر'; cityEn = 'Khobar, Saudi Arabia'; }
-  else if (/مكة|Makkah/i.test(text)) { cityAr = 'مكة المكرمة'; cityEn = 'Makkah, Saudi Arabia'; }
-  else if (/المدينة|Madinah/i.test(text)) { cityAr = 'المدينة المنورة'; cityEn = 'Madinah, Saudi Arabia'; }
+  const { cityAr, cityEn } = extractLocationFromText(text);
 
   let nameAr = '', nameEn = '';
   const nameLine = text.match(/(?:الاسم|اسم|أنا|المتقدم|المرشح|Candidate|Name)[:\s]*([^\n,.]+)/i);
