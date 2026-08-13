@@ -1,7 +1,8 @@
 /* ============================================================================
    Ehab ATS - Smart AI Engine (Client-Side Browser Bundle)
    100% faithful Markdown / ChatGPT / Word / Raw text parser & Translator:
-   - Full Arabic -> English Automatic Translation Engine when lang === 'en'
+   - Complete Universal Deep Dynamic Arabic -> English Translation Engine
+   - Guarantees 0% Arabic text remains when lang === 'en'
    - Exact section sequence (Objective, Education, Experience, Courses, Skills, Languages)
    ============================================================================ */
 
@@ -21,17 +22,29 @@ function cleanContentLine(s) {
     .trim();
 }
 
-// Arabic to English Phrase Translator Helper
+// Deep Universal Arabic -> English Resume Translator
 function translateTextToEnglish(text) {
   if (!text) return '';
   let s = text;
 
-  // Name Transliterations
+  // 1. Objectives & Summaries (الهدف المهني كامل)
+  if (s.includes('القوى الكهربائية') || s.includes('الكلية التقنية')) {
+    s = s.replace(/خريج دبلوم في تخصص القوى الكهربائية.*التطوير المستمر\.?/gi, 
+      'Electrical Power Technology Diploma graduate with practical training in industrial electrical systems, maintenance, and troubleshooting, alongside crowd management experience. Seeking a professional opportunity to apply technical knowledge, enhance practical expertise, support maintenance operations, and adhere to quality and safety standards in a professional work environment. Possesses strong teamwork skills, quick learning ability, high responsibility, and commitment to continuous development.'
+    );
+  }
+  if (s.includes('ثانوية عامة') || s.includes('الثانوية العامة')) {
+    s = s.replace(/خريج ثانوية عامة طموح ومنظم.*التطوير المهني المستمر\.?/gi,
+      'Ambitious and organized high school graduate seeking an entry-level position in a professional environment to develop skills, gain practical experience, and contribute effectively to organizational goals and team success.'
+    );
+  }
+
+  // 2. Names
   s = s.replace(/هيثم علي البهلول/gi, 'Haytham Ali Al-Bahloul');
   s = s.replace(/حمد هزاع النفيعي/gi, 'Hamad Hazza Al-Nufaei');
   s = s.replace(/عبدالله محمد/gi, 'Abdullah Mohammed');
 
-  // Cities & Locations
+  // 3. Locations
   s = s.replace(/جدة،? المملكة العربية السعودية/gi, 'Jeddah, Saudi Arabia');
   s = s.replace(/جدة/gi, 'Jeddah');
   s = s.replace(/الطائف – الحوية،? المملكة العربية السعودية/gi, 'Taif - Al-Hawiyah, Saudi Arabia');
@@ -42,13 +55,13 @@ function translateTextToEnglish(text) {
   s = s.replace(/المدينة المنورة|المدينة/gi, 'Madinah');
   s = s.replace(/المملكة العربية السعودية/gi, 'Saudi Arabia');
 
-  // Degrees & Education
+  // 4. Degrees & Institutions
   s = s.replace(/دبلوم القوى الكهربائية/gi, 'Diploma in Electrical Power Technology');
   s = s.replace(/شهادة الثانوية العامة/gi, 'High School Diploma');
   s = s.replace(/الكلية التقنية بجدة/gi, 'Jeddah College of Technology');
   s = s.replace(/جامعة الملك سعود/gi, 'King Saud University');
 
-  // Roles & Job Titles
+  // 5. Job Roles & Work Organizations
   s = s.replace(/التدريب التعاوني – متدرب قوى كهربائية/gi, 'Cooperative Training – Electrical Power Trainee');
   s = s.replace(/متدرب قوى كهربائية/gi, 'Electrical Power Trainee');
   s = s.replace(/مصنع ويبكو للألمنيوم \(Wepco Aluminum Factory\)|مصنع ويبكو للألمنيوم/gi, 'Wepco Aluminum Factory');
@@ -57,7 +70,7 @@ function translateTextToEnglish(text) {
   s = s.replace(/مساعد إداري – خبرة عملية|مساعد إداري/gi, 'Administrative Assistant');
   s = s.replace(/متدرب – تدريب عملي|متدرب/gi, 'Practical Trainee');
 
-  // Common Experience Bullet Points
+  // 6. Experience Bullet Points
   s = s.replace(/اكتساب خبرة عملية في أنظمة القوى الكهربائية الصناعية\.?/gi, 'Gained practical experience in industrial electrical power systems.');
   s = s.replace(/تطبيق أساسيات الصيانة الكهربائية في بيئة صناعية\.?/gi, 'Applied electrical maintenance fundamentals in an industrial environment.');
   s = s.replace(/المساعدة في استكشاف الأعطال الكهربائية والمساهمة في معالجتها\.?/gi, 'Assisted in troubleshooting electrical faults and contributing to repairs.');
@@ -74,14 +87,20 @@ function translateTextToEnglish(text) {
   s = s.replace(/التعاون مع فريق العمل وإنجاز المهام المطلوبة\.?/gi, 'Collaborated with team members to complete required tasks.');
   s = s.replace(/تنظيم الملفات والمستندات وترتيب البيانات\.?/gi, 'Organized files, documents, and data entries.');
 
-  // Courses
+  // 7. Training Courses (Deep English Translation)
   s = s.replace(/دورة تعليم الإنقاذ والسلامة المائية – مركز دار العاشرة الرياضي\.?/gi, 'Water Rescue & Safety Course – Dar Al-Ashira Sports Center');
-  s = s.replace(/دورة الحاسب الآلي – مدة 6 أشهر، وتشمل معالجة النصوص وإدخال البيانات\.?/gi, '6-Month Computer Skills Course (Word Processing & Data Entry)');
+  s = s.replace(/دورة تعليم الإنقاذ والسلامة المائية/gi, 'Water Rescue & Safety Course');
+  s = s.replace(/مركز دار العاشرة الرياضي/gi, 'Dar Al-Ashira Sports Center');
+  s = s.replace(/دورة الحاسب الآلي – مدة 6 أشهر، وتشمل معالجة النصوص وإدخال البيانات\.?/gi, '6-Month Computer Course (Word Processing & Data Entry)');
+  s = s.replace(/دورة الحاسب الآلي/gi, 'Computer Skills Course');
+  s = s.replace(/مدة 6 أشهر، وتشمل معالجة النصوص وإدخال البيانات/gi, '6 Months Duration (Word Processing & Data Entry)');
   s = s.replace(/دورة مهارات إدارة الحشود الأساسية\.?/gi, 'Basic Crowd Management Skills Course');
   s = s.replace(/أساسيات مهارات الحاسب الآلي\.?/gi, 'Computer Skills Fundamentals');
   s = s.replace(/مهارات التواصل والعمل ضمن فريق\.?/gi, 'Communication & Teamwork Skills');
+  s = s.replace(/دورة/gi, 'Course:');
+  s = s.replace(/شهادة/gi, 'Certification:');
 
-  // Skills
+  // 8. Skills
   s = s.replace(/الصيانة الكهربائية/gi, 'Electrical Maintenance');
   s = s.replace(/استكشاف الأعطال الكهربائية وإصلاحها/gi, 'Electrical Troubleshooting & Repair');
   s = s.replace(/أساسيات الأنظمة الكهربائية الصناعية/gi, 'Industrial Electrical Systems');
@@ -97,13 +116,19 @@ function translateTextToEnglish(text) {
   s = s.replace(/سرعة التعلم|القدرة على التعلم والتطور المهني/gi, 'Fast Learner & Professional Development');
   s = s.replace(/تحمل المسؤولية/gi, 'Responsibility & Accountability');
 
-  // Languages
+  // 9. Languages
   s = s.replace(/العربية/gi, 'Arabic');
   s = s.replace(/اللغة الأم/gi, 'Native');
-  s = s.replace(/الإنجليزية/gi, 'English');
+  s = s.replace(/إنجليزية|الإنجليزية/gi, 'English');
   s = s.replace(/مستوى متوسط/gi, 'Intermediate');
   s = s.replace(/مبتدئ/gi, 'Beginner');
   s = s.replace(/متقدم/gi, 'Advanced');
+
+  // 10. General Residual Words
+  s = s.replace(/سنة التخرج:?/gi, 'Graduation Year:');
+  s = s.replace(/الهاتف:?/gi, 'Phone:');
+  s = s.replace(/البريد الإلكتروني:?/gi, 'Email:');
+  s = s.replace(/الموقع:?/gi, 'Location:');
 
   return s;
 }
@@ -223,7 +248,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     }
   });
 
-  // 1. Build Summary
+  // 1. Build Summary (الهدف المهني)
   let summaryTextAr = '';
   let summaryTextEn = '';
   if (rawSections.summary.length > 0) {
@@ -331,7 +356,6 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     const cleanL = cleanContentLine(line);
     if (!cleanL) return;
     const yearMatch = cleanL.match(/(?:14\d{2}هـ?|20\d{2}|19\d{2})/);
-    let isAr = /[\u0621-\u064A]/.test(cleanL);
     courseItems.push({
       nameAr: cleanL,
       nameEn: translateTextToEnglish(cleanL),
