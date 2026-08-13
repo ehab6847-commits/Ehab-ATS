@@ -867,7 +867,7 @@ async function viewAI() {
     <h2 class="text-xl font-bold mb-4"><i class="fas fa-wand-magic-sparkles text-violet-400 ml-2"></i>مولّد السير الذاتية بالذكاء الاصطناعي</h2>
     <div class="grid lg:grid-cols-2 gap-4">
       <div class="glass rounded-2xl p-5 space-y-3">
-        <div><label class="fld">المسمى الوظيفي المستهدف *</label><input id="ai-job" class="input-field" placeholder="مثال: محاسب أول / مهندس مدني / أخصائي موارد بشرية"></div>
+        <div><label class="fld">المسمى الوظيفي (اختياري - اتركه فارغاً إذا لا ترغب بمسمى)</label><input id="ai-job" class="input-field" placeholder="اختياري — اتركه فارغاً لإنشاء سيرة بدون مسمى وظيفي"></div>
         <div><label class="fld">العميل (اختياري)</label><select id="ai-client" class="input-field"><option value="">— بدون —</option>${opts}</select></div>
         <div><label class="fld">معلومات الشخص (خبرات، تعليم، مهارات... أو CV قديم منسوخ)</label>
           <textarea id="ai-info" class="input-field" rows="8" placeholder="اكتب أو الصق أي معلومات متاحة...">${esc(pre)}</textarea></div>
@@ -934,47 +934,48 @@ async function handleAIFile(input) {
 async function runAIGenerate() {
   const job = el('ai-job').value.trim();
   const info = el('ai-info').value.trim();
-  if (!job) return toast('اكتب المسمى الوظيفي', 'err');
+  if (!job && !info) return toast('ضع معلومات صاحب السيرة الذاتية في المربع أولاً', 'err');
   const lang = el('ai-lang').value;
   const btn = el('ai-go');
   btn.disabled = true; btn.innerHTML = '<div class="spinner !w-5 !h-5 !border-2 inline-block ml-2"></div> جاري التوليد...';
   el('ai-result').innerHTML = '<div class="text-center"><div class="spinner mx-auto mb-3"></div><p class="text-slate-400 text-sm">الذكاء الاصطناعي شغال... استنى شوية</p></div>';
-  const langNote = lang === 'ar' ? 'كل المحتوى بالعربية الفصحى المهنية (واملأ الحقول En بترجمة إنجليزية أيضاً)' : lang === 'en' ? 'All content in professional English (also fill Ar fields with Arabic translation)' : 'محتوى ثنائي اللغة: كل حقل Ar بالعربية وكل حقل En بالإنجليزية';
-  const prompt = `أنت خبير كتابة سير ذاتية محترف متخصص في سوق العمل السعودي والخليجي ومتوافق مع أنظمة ATS.
-اكتب سيرة ذاتية كاملة واحترافية لوظيفة: "${job}".
-${info ? 'معلومات الشخص:\n' + info : 'مفيش معلومات محددة — اخترع محتوى واقعي احترافي مناسب للوظيفة (خبرة 4-6 سنوات، تعليم مناسب، مهارات مطلوبة في السوق السعودي).'}
-${langNote}.
-استخدم أفعال قوية (قاد، طوّر، حقق، خفّض) وأرقام وإنجازات قابلة للقياس.
-أرجع JSON فقط بدون أي شرح أو markdown، بنفس البنية دي بالظبط (ممكن تزود items):
-${RESUME_JSON_SCHEMA}`;
+
+  const prompt = info ? (job ? `المسمى: ${job}\n\n${info}` : info) : job;
   try {
     const { data } = await api.post('/ai/generate', {
-      prompt, task: 'full_resume',
+      prompt, task: 'full_resume', language: lang,
       provider: el('ai-provider').value || undefined
     });
     const m = data.text.match(/\{[\s\S]*\}/);
     if (!m) throw new Error('الرد مش JSON');
     const resumeData = JSON.parse(m[0]);
     if (!resumeData.sections) throw new Error('بنية غير صحيحة');
+    
+    // Ensure job title is strictly empty if not specified
+    if (!job && (!info || !info.includes('المسمى الوظيفي'))) {
+      if (resumeData.personal) {
+        resumeData.personal.titleAr = '';
+        resumeData.personal.titleEn = '';
+        resumeData.personal.jobTitle = '';
+        resumeData.personal.jobTitleEn = '';
+      }
+    }
+
     resumeData.sections.forEach((s, i) => { if (!s.id) s.id = 's' + (i + 1); if (s.visible === undefined) s.visible = true; });
     const created = (await api.post('/resumes', {
-      title: 'CV — ' + job + ' (AI)',
-      language: lang, template: 'ats1',
-      client_id: el('ai-client').value || null,
-      data: JSON.stringify(resumeData),
-      customization: JSON.stringify({})
+      client_id: el('ai-client').value || undefined,
+      title: (resumeData.personal?.nameAr || 'سيرة ذاتية') + (job ? ' — ' + job : ''),
+      language: lang,
+      template: 'canva_purple',
+      data: JSON.stringify(resumeData)
     })).data;
-    el('ai-result').innerHTML = `<div class="text-center">
-      <i class="fas fa-circle-check text-emerald-400 text-4xl mb-3 block"></i>
-      <p class="font-bold mb-1">تم التوليد بنجاح! (${esc(data.provider)})</p>
-      <p class="text-sm text-slate-400 mb-4">هيتفتح المحرر دلوقتي...</p></div>`;
-    toast('السيرة اتولّدت ✅');
-    setTimeout(() => openBuilder(created.id), 800);
+
+    toast('تم توليد السيرة الذاتية بنجاح 🚀');
+    openBuilder(created.id);
   } catch (e) {
-    const msg = (e.response && e.response.data && e.response.data.error) || e.message || 'فشل التوليد';
-    el('ai-result').innerHTML = `<div class="text-center"><i class="fas fa-circle-xmark text-rose-400 text-4xl mb-3 block"></i><p class="text-rose-400 text-sm">${esc(msg)}</p><p class="text-xs text-slate-400 mt-2">تأكد إن مفتاح API متسجل في الإعدادات</p></div>`;
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-wand-magic-sparkles ml-2"></i>ولّد السيرة الذاتية';
+    el('ai-result').innerHTML = '<div class="text-rose-400 text-center p-4"><i class="fas fa-circle-xmark text-2xl mb-2"></i><div>' + esc(e.message || 'فشل التوليد') + '</div></div>';
   }
-  btn.disabled = false; btn.innerHTML = '<i class="fas fa-wand-magic-sparkles ml-2"></i>ولّد السيرة الذاتية';
 }
 
 /* ---------- import ---------- */
