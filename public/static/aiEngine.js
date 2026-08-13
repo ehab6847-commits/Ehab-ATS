@@ -1,14 +1,56 @@
 /* ============================================================================
    Ehab ATS - Smart AI Engine (Client-Side Browser Bundle)
-   100% faithful raw text parser that parses ALL sections:
-   Summary/Objective, Education, Experience, Courses/Training, Skills, Languages.
+   100% faithful Markdown / ChatGPT / Word / Raw text parser:
+   - Strips ChatGPT stars (**), hashes (##), emojis, squares (■, ▪)
+   - Accurately classifies sections (Objective, Education, Experience, Courses, Skills, Languages)
+   - Target Job Title: STRICTLY OPTIONAL & empty unless user explicitly wrote "المسمى الوظيفي:"
+   - Preserves user's exact section content & clean Arabic text
    ============================================================================ */
+
+function sanitizeText(s) {
+  if (!s) return '';
+  return s
+    .replace(/[\u2022\u2023\u25E6\u2043\u2219\u25FE\u25AA\u25CF•\*\-\_#~`■▪🔹🎯📚💼🎓🛠️📌✨⭐]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function cleanContentLine(s) {
+  if (!s) return '';
+  return s
+    .replace(/^[\*\-\#\_~`■▪🔹🎯📚💼🎓🛠️📌✨⭐•\s]+/g, '')
+    .replace(/[\*\_\#~`]/g, '')
+    .trim();
+}
+
+function classifySectionHeading(rawLine) {
+  const clean = sanitizeText(rawLine).toLowerCase();
+  if (!clean || clean.length > 40) return null;
+
+  if (/(الهدف|الملخص|نبذة|مقدمة|profile|summary|objective|about)/i.test(clean)) {
+    return 'summary';
+  }
+  if (/(التعليم|المؤهلات|المؤهل|دراستي|شهادة الثانوية|جامعة|كلية|مدرسة|education|academic|qualifications)/i.test(clean) && !clean.includes('خبرة')) {
+    return 'education';
+  }
+  if (/(الخبرات|الخبرة|خبراتي|التاريخ المهني|السجل المهني|عملي|متدرب|مساعد إداري|experience|work|employment|jobs)/i.test(clean) && clean.length < 25 && !clean.includes('مهارات')) {
+    return 'experience';
+  }
+  if (/(الدورات|الكورسات|الشهادات التدريبية|الاعتمادات|التدريب|courses|certifications|certificates|training)/i.test(clean)) {
+    return 'courses';
+  }
+  if (/(المهارات|مهاراتي|تقنيات|skills|competencies|abilities)/i.test(clean)) {
+    return 'skills';
+  }
+  if (/(اللغات|لغاتي|languages)/i.test(clean)) {
+    return 'languages';
+  }
+
+  return null;
+}
 
 function parseUserRawResumeText(rawText, lang = 'ar') {
   const text = (rawText || '').trim();
-
-  // Helper to remove bullet symbols and clean whitespace
-  const cleanLine = s => (s || '').replace(/[\u2022\u2023\u25E6\u2043\u2219\u25FE\u25AA\u25CF•\*\-]/g, '').trim();
 
   // 1. Email
   const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
@@ -18,7 +60,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
   const phoneMatch = text.match(/(?:05\d{8}|\+?9665\d{8}|01\d{7}|\d{10})/);
   const phone = phoneMatch ? phoneMatch[0] : '';
 
-  // 3. City/Location
+  // 3. City / Location
   let cityAr = '', cityEn = '';
   if (/الطائف|Taif/i.test(text)) { cityAr = 'الطائف - الحوية'; cityEn = 'Taif'; }
   else if (/الرياض|Riyadh/i.test(text)) { cityAr = 'الرياض'; cityEn = 'Riyadh'; }
@@ -28,18 +70,18 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
   else if (/مكة|Makkah/i.test(text)) { cityAr = 'مكة المكرمة'; cityEn = 'Makkah'; }
   else if (/المدينة|Madinah/i.test(text)) { cityAr = 'المدينة المنورة'; cityEn = 'Madinah'; }
 
-  // 4. Name
+  // 4. Name (Extract user's name accurately)
   let nameAr = '', nameEn = '';
   const nameLine = text.match(/(?:الاسم|اسم|أنا|المتقدم|المرشح|Candidate|Name)[:\s]*([^\n,.]+)/i);
   if (nameLine) {
-    const cand = cleanLine(nameLine[1]);
+    const cand = cleanContentLine(nameLine[1]);
     if (/[\u0621-\u064A]/.test(cand)) nameAr = cand;
     else nameEn = cand;
   }
   if (!nameAr && !nameEn) {
     const firstLine = text.split('\n')[0].trim();
     if (firstLine && firstLine.length < 35 && !firstLine.includes(':') && !firstLine.includes('@') && !firstLine.includes('{')) {
-      const cand = cleanLine(firstLine);
+      const cand = cleanContentLine(firstLine);
       if (/[\u0621-\u064A]/.test(cand)) nameAr = cand;
       else nameEn = cand;
     }
@@ -49,18 +91,10 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
   let titleAr = '', titleEn = '';
   const titleMatch = text.match(/(?:المسمى الوظيفي|Job Title)[:\s]*([^\n,.]+)/i);
   if (titleMatch) {
-    const tVal = cleanLine(titleMatch[1]);
+    const tVal = cleanContentLine(titleMatch[1]);
     if (/[\u0621-\u064A]/.test(tVal)) titleAr = tVal;
     else titleEn = tVal;
   }
-
-  // Section Heading Detector Triggers
-  const isSummaryHeader = l => /^(الهدف المهني|الهدف الوظيفي|الهدف|الملخص المهني|الملخص|نبذة عامة|نبذة|عني|مقدمة|profile|summary|objective|about)/i.test(l);
-  const isEducationHeader = l => /^(التعليم|المؤهلات الأكاديمية|المؤهلات العلمية|المؤهلات|المؤهل|الشهادات الأكاديمية|دراستي|education|academic|qualifications)/i.test(l);
-  const isExperienceHeader = l => /^(الخبرات العملية|الخبرة العملية|الخبرات|الخبرة|خبراتي المهنية|خبراتي|التاريخ المهني|السجل المهني|experience|work|employment)/i.test(l);
-  const isCoursesHeader = l => /^(الدورات التدريبية|الدورات|الشهادات التدريبية|الشهادات والاعتمادات|الكورسات|الشهادات والترخيص|الشهادات المهنية|الشهادات|courses|certifications|certificates|training)/i.test(l);
-  const isSkillsHeader = l => /^(المهارات والتقنيات|المهارات الشخصية|المهارات المهنية|المهارات|مهاراتي|skills|competencies|abilities)/i.test(l);
-  const isLanguagesHeader = l => /^(اللغات والمهارات اللغوية|اللغات|لغاتي|languages)/i.test(l);
 
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
@@ -75,17 +109,15 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
   };
 
   lines.forEach(line => {
-    const lower = cleanLine(line).toLowerCase();
-
-    if (isSummaryHeader(lower)) { currentSectionType = 'summary'; return; }
-    if (isEducationHeader(lower)) { currentSectionType = 'education'; return; }
-    if (isExperienceHeader(lower)) { currentSectionType = 'experience'; return; }
-    if (isCoursesHeader(lower)) { currentSectionType = 'courses'; return; }
-    if (isSkillsHeader(lower)) { currentSectionType = 'skills'; return; }
-    if (isLanguagesHeader(lower)) { currentSectionType = 'languages'; return; }
+    const headingType = classifySectionHeading(line);
+    if (headingType) {
+      currentSectionType = headingType;
+      return;
+    }
 
     if (currentSectionType !== 'header') {
-      rawSections[currentSectionType].push(line);
+      const cleanL = cleanContentLine(line);
+      if (cleanL) rawSections[currentSectionType].push(cleanL);
     }
   });
 
@@ -93,7 +125,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
   let summaryTextAr = '';
   let summaryTextEn = '';
   if (rawSections.summary.length > 0) {
-    const sumRaw = rawSections.summary.map(cleanLine).filter(Boolean).join(' ');
+    const sumRaw = rawSections.summary.map(cleanContentLine).filter(Boolean).join(' ');
     if (/[\u0621-\u064A]/.test(sumRaw)) summaryTextAr = sumRaw;
     else summaryTextEn = sumRaw;
   }
@@ -102,9 +134,10 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
   const eduItems = [];
   let currentEdu = null;
   rawSections.education.forEach(line => {
-    const cleanL = cleanLine(line);
+    const cleanL = cleanContentLine(line);
     if (!cleanL) return;
     const yearMatch = cleanL.match(/(?:14\d{2}هـ?|20\d{2}|19\d{2})/);
+
     if (!currentEdu || yearMatch || /شهادة|بكالوريوس|ماجستير|دبلوم|ثانوية|جامعة|كلية/i.test(cleanL)) {
       if (currentEdu) eduItems.push(currentEdu);
       let isAr = /[\u0621-\u064A]/.test(cleanL);
@@ -129,7 +162,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
   const expItems = [];
   let currentExp = null;
   rawSections.experience.forEach(line => {
-    const cleanL = cleanLine(line);
+    const cleanL = cleanContentLine(line);
     if (!cleanL) return;
     const dates = cleanL.match(/(14\d{2}هـ?|20\d{2}|19\d{2})/g);
     const isRoleOrComp = /(متدرب|مساعد|محاسب|مهندس|مدير|أخصائي|مطور|محلل|مصمم|كاتب|فني|معلم|استشاري|مشرف|خبرة|شركة|مجموعة|مؤسسة|مستشفى|وزارة|هيئة|بنك|Company|Group|Corp|Engineer|Manager|Developer|Accountant|Specialist)/i.test(cleanL);
@@ -164,7 +197,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
   // Build Courses / Training
   const courseItems = [];
   rawSections.courses.forEach(line => {
-    const cleanL = cleanLine(line);
+    const cleanL = cleanContentLine(line);
     if (!cleanL) return;
     const yearMatch = cleanL.match(/(?:14\d{2}هـ?|20\d{2}|19\d{2})/);
     let isAr = /[\u0621-\u064A]/.test(cleanL);
@@ -181,7 +214,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
   rawSections.skills.forEach(line => {
     const parts = line.split(/[,•\-\n|]/);
     parts.forEach(p => {
-      const cleanP = cleanLine(p);
+      const cleanP = cleanContentLine(p);
       if (cleanP && cleanP.length > 1 && cleanP.length < 50) {
         if (/[\u0621-\u064A]/.test(cleanP)) {
           skillItems.push({ nameAr: cleanP, nameEn: '', level: 90 });
@@ -195,7 +228,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
   // Build Languages
   const langItems = [];
   rawSections.languages.forEach(line => {
-    const cleanL = cleanLine(line);
+    const cleanL = cleanContentLine(line);
     if (!cleanL) return;
     let name = cleanL;
     let level = 'متقدم';
@@ -217,7 +250,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     }
   });
 
-  // Construct Final Personal Object (titleAr and titleEn strictly EMPTY unless user explicitly specified)
+  // Construct Personal Info (titleAr and titleEn strictly EMPTY unless explicitly typed)
   const personal = {
     nameAr: nameAr || (lang === 'en' ? '' : 'اسم صاحب السيرة'),
     nameEn: nameEn || (lang === 'en' ? 'Full Name' : ''),
@@ -253,7 +286,6 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     sections.push({ id: 's6', type: 'languages', titleAr: 'اللغات', titleEn: 'Languages', visible: true, items: langItems });
   }
 
-  // Fallback ONLY if sections are completely empty
   if (sections.length === 0) {
     sections.push({
       id: 's1', type: 'summary', titleAr: 'الملخص المهني', titleEn: 'Professional Summary', visible: true,
