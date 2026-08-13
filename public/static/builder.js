@@ -706,10 +706,35 @@ function printResumePDF() {
 <link href="/static/templates.css" rel="stylesheet">
 <style>
 @page { size: A4 portrait; margin: 0; }
+* {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
 @media print {
   .no-print { display: none !important; }
-  body { margin: 0; padding: 0; background: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  .cv-page { margin: 0 auto !important; box-shadow: none !important; width: 100% !important; border: none !important; }
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .cv-page {
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    border: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .cv-sec-title {
+    border-bottom-style: solid !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+  .cv-chip, .cv-skill-fill, .cv-side, .cv-header-band {
+    -webkit-print-color-adjust: exact !important;
+  }
 }
 body { background: #0f172a; padding: 20px; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; align-items: center; }
 .print-banner { background: #1e293b; color: #fff; padding: 12px 24px; border-radius: 12px; margin-bottom: 20px; text-align: center; max-width: 800px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
@@ -718,15 +743,19 @@ body { background: #0f172a; padding: 20px; font-family: 'Cairo', sans-serif; dis
 </head>
 <body>
 <div class="print-banner no-print">
-  <div><b>اختر "حفظ بتنسيق PDF" (Save as PDF) من نافذة الطباعة لتنزيل الملف فوراً</b></div>
+  <div><b>اختر "حفظ بتنسيق PDF" (Save as PDF) من نافذة الطباعة لتنزيل الملف بالتنسيق والخط والرموز كاملة</b></div>
   <button class="print-btn" onclick="window.print()"><i class="fas fa-file-pdf ml-1"></i>حفظ / تنزيل PDF الآن</button>
 </div>
 ${cvHtml}
 <script>
 window.onload = function() {
-  setTimeout(function() {
-    window.print();
-  }, 400);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function() {
+      setTimeout(function() { window.print(); }, 250);
+    });
+  } else {
+    setTimeout(function() { window.print(); }, 600);
+  }
 };
 </script>
 </body>
