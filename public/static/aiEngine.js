@@ -1,9 +1,14 @@
 /* ============================================================================
    Ehab ATS - Smart AI Engine (Client-Side Browser Bundle)
    100% faithful Markdown / ChatGPT / Word / Raw text parser:
-   - "التدريب التعاوني" is classified strictly as Work Experience (experience)
-   - "الدورات التدريبية" is classified strictly as Training Courses (training)
-   - Completely separate sections for Work Experience and Training Courses
+   - Strict section heading classifier (only matches short header titles)
+   - Exact section sequence:
+     1. Objective (الهدف المهني)
+     2. Education (المؤهل العلمي)
+     3. Work Experience (الخبرات العملية)
+     4. Training Courses (الدورات التدريبية)
+     5. Skills (المهارات المهنية)
+     6. Languages (اللغات)
    ============================================================================ */
 
 function sanitizeText(s) {
@@ -24,25 +29,41 @@ function cleanContentLine(s) {
 
 function classifySectionHeading(rawLine) {
   const clean = sanitizeText(rawLine).toLowerCase();
-  if (!clean || clean.length > 40) return null;
+  if (!clean || clean.length > 30) return null;
 
-  if (/(الهدف|الملخص|نبذة|مقدمة|profile|summary|objective|about)/i.test(clean)) {
+  // 1. Objective / Summary (الهدف المهني)
+  if (/^(الهدف المهني|الهدف الوظيفي|الهدف|الملخص المهني|الملخص|نبذة عامة|نبذة|مقدمة|profile|summary|objective|about)$/i.test(clean) ||
+      (clean.startsWith('الهدف') && clean.length < 20) || (clean.startsWith('الملخص') && clean.length < 20)) {
     return 'summary';
   }
-  if (/(المؤهل|التعليم|المؤهلات|دراستي|شهادة الثانوية|جامعة|كلية|مدرسة|education|academic|qualifications)/i.test(clean) && !clean.includes('خبرة')) {
+
+  // 2. Education (المؤهل العلمي / التعليم)
+  if (/^(المؤهل العلمي|المؤهلات العلمية|المؤهلات الأكاديمية|المؤهلات|التعليم|المؤهل|دراستي|education|academic|qualifications)$/i.test(clean) ||
+      (clean.startsWith('المؤهل') && clean.length < 20) || (clean.startsWith('التعليم') && clean.length < 20)) {
     return 'education';
   }
-  // Experience check MUST come BEFORE Courses check so "التدريب التعاوني" stays in Experience!
-  if (/(الخبرات|الخبرة|خبراتي|التدريب التعاوني|تدريب عملي|التاريخ المهني|السجل المهني|عملي|experience|work|employment|jobs)/i.test(clean) && clean.length < 35 && !clean.includes('دورة') && !clean.includes('دورات')) {
+
+  // 3. Work Experience (الخبرات العملية) - STRICT MATCH ONLY ON HEADERS!
+  if (/^(الخبرات العملية|الخبرة العملية|الخبرات المهنية|الخبرات|الخبرة|خبراتي|التاريخ المهني|السجل المهني|experience|work|employment|jobs)$/i.test(clean) ||
+      (clean.startsWith('الخبرات') && clean.length < 20) || (clean.startsWith('الخبرة') && clean.length < 20)) {
     return 'experience';
   }
-  if (/(الدورات|الكورسات|الشهادات التدريبية|الاعتمادات|التدريب|courses|certifications|certificates|training)/i.test(clean)) {
+
+  // 4. Training / Courses (الدورات التدريبية)
+  if (/^(الدورات التدريبية|الدورات|الكورسات|الشهادات التدريبية|الاعتمادات|التدريب|courses|certifications|certificates|training)$/i.test(clean) ||
+      (clean.startsWith('الدورات') && clean.length < 20) || (clean.startsWith('الكورسات') && clean.length < 20)) {
     return 'training';
   }
-  if (/(المهارات|مهاراتي|تقنيات|skills|competencies|abilities)/i.test(clean)) {
+
+  // 5. Skills (المهارات المهنية / المهارات)
+  if (/^(المهارات المهنية|المهارات الشخصية|المهارات والتقنيات|المهارات|مهاراتي|تقنيات|skills|competencies|abilities)$/i.test(clean) ||
+      (clean.startsWith('المهارات') && clean.length < 20)) {
     return 'skills';
   }
-  if (/(اللغات|لغاتي|languages)/i.test(clean)) {
+
+  // 6. Languages (اللغات)
+  if (/^(اللغات والمهارات اللغوية|اللغات|لغاتي|languages)$/i.test(clean) ||
+      (clean.startsWith('اللغات') && clean.length < 20)) {
     return 'languages';
   }
 
@@ -121,7 +142,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     }
   });
 
-  // Build Summary
+  // 1. Build Summary (الهدف المهني)
   let summaryTextAr = '';
   let summaryTextEn = '';
   if (rawSections.summary.length > 0) {
@@ -130,7 +151,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     else summaryTextEn = sumRaw;
   }
 
-  // Build Education
+  // 2. Build Education (المؤهل العلمي)
   const eduItems = [];
   let currentEdu = null;
   rawSections.education.forEach(line => {
@@ -156,7 +177,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
   });
   if (currentEdu) eduItems.push(currentEdu);
 
-  // Build Experiences (STRICTLY WORK & INTERNSHIP EXPERIENCES ONLY)
+  // 3. Build Work Experience (الخبرات العملية)
   const expItems = [];
   let currentExp = null;
   rawSections.experience.forEach(line => {
@@ -189,7 +210,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     expItems.push(currentExp);
   }
 
-  // Build Courses / Training (STRICTLY COURSES & CERTIFICATES ONLY)
+  // 4. Build Training Courses (الدورات التدريبية)
   const courseItems = [];
   rawSections.training.forEach(line => {
     const cleanL = cleanContentLine(line);
@@ -204,7 +225,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     });
   });
 
-  // Build Skills
+  // 5. Build Skills (المهارات المهنية)
   const skillItems = [];
   rawSections.skills.forEach(line => {
     const parts = line.split(/[,•\-\n|]/);
@@ -220,7 +241,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     });
   });
 
-  // Build Languages
+  // 6. Build Languages (اللغات)
   const langItems = [];
   rawSections.languages.forEach(line => {
     const cleanL = cleanContentLine(line);
@@ -261,27 +282,34 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     birthdate: ''
   };
 
+  // STRICT ORDER REQUIRED BY USER:
+  // 1. Objective -> 2. Education -> 3. Experience -> 4. Training -> 5. Skills -> 6. Languages
   const sections = [];
+
   if (summaryTextAr || summaryTextEn) {
     sections.push({ id: 's1', type: 'summary', titleAr: 'الهدف المهني', titleEn: 'Professional Objective', visible: true, textAr: summaryTextAr, textEn: summaryTextEn });
   }
+
   if (eduItems.length > 0) {
     sections.push({ id: 's2', type: 'education', titleAr: 'المؤهل العلمي', titleEn: 'Education', visible: true, items: eduItems });
   }
+
   if (expItems.length > 0) {
     sections.push({ id: 's3', type: 'experience', titleAr: 'الخبرات العملية', titleEn: 'Work Experience', visible: true, items: expItems });
   }
+
   if (courseItems.length > 0) {
     sections.push({ id: 's4', type: 'training', titleAr: 'الدورات التدريبية', titleEn: 'Training & Courses', visible: true, items: courseItems });
   }
+
   if (skillItems.length > 0) {
     sections.push({ id: 's5', type: 'skills', titleAr: 'المهارات المهنية', titleEn: 'Skills', visible: true, items: skillItems });
   }
+
   if (langItems.length > 0) {
     sections.push({ id: 's6', type: 'languages', titleAr: 'اللغات', titleEn: 'Languages', visible: true, items: langItems });
   }
 
-  // Fallback ONLY if sections are completely empty
   if (sections.length === 0) {
     sections.push({
       id: 's1', type: 'summary', titleAr: 'الملخص المهني', titleEn: 'Professional Summary', visible: true,
