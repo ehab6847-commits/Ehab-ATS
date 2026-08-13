@@ -668,13 +668,85 @@ function bExportMenu() {
   openModal(`
     <h3 class="font-bold text-lg mb-4"><i class="fas fa-file-export text-amber-400 ml-2"></i>تصدير وتنزيل السيرة الذاتية</h3>
     <div class="space-y-2.5">
-      <button class="btn-primary w-full !justify-start !py-2.5 shadow-md" onclick="printResumePDF()"><i class="fas fa-file-pdf ml-2 text-rose-300"></i>تحميل PDF — حفظ بتنسيق PDF بنقرة واحدة (A4)</button>
+      <button class="btn-primary w-full !justify-start !py-2.5 shadow-md !bg-gradient-to-r !from-rose-600 !to-indigo-600" onclick="bPDFEditorModal()"><i class="fas fa-sliders ml-2 text-white"></i>فتح محرر ومولد الـ PDF المباشر (Built-in PDF Editor)</button>
+      <button class="btn-ghost w-full !justify-start !py-2.5 text-rose-300 hover:text-rose-200" onclick="generateDirectPDF()"><i class="fas fa-file-pdf ml-2 text-rose-400"></i>تحميل PDF عالي الدقة فوراً (A4)</button>
       <button class="btn-ghost w-full !justify-start !py-2.5" onclick="exportDocx(${B.id})"><i class="fas fa-file-word ml-2 text-sky-400"></i>تحميل Word (DOCX)</button>
       <button class="btn-ghost w-full !justify-start !py-2.5" onclick="exportJson(${B.id})"><i class="fas fa-code ml-2 text-amber-400"></i>تحميل JSON (نسخة احتياطية كاملة)</button>
       <button class="btn-ghost w-full !justify-start !py-2.5" onclick="exportTxt(${B.id})"><i class="fas fa-file-lines ml-2 text-slate-400"></i>تحميل TXT (نص خام للـ ATS)</button>
       ${slug ? `<button class="btn-ghost w-full !justify-start !py-2.5" onclick="navigator.clipboard.writeText(location.origin+'/?cv=${slug}'); toast('الرابط اتنسخ ✅')"><i class="fas fa-link ml-2 text-emerald-400"></i>نسخ الرابط العام للسيرة</button>` : ''}
     </div>
     <div class="flex justify-end mt-4"><button class="btn-ghost" onclick="closeModal()">إغلاق</button></div>`, true);
+}
+
+function bPDFEditorModal() {
+  closeModal();
+  if (!B || !B.data) return toast('لا توجد سيرة مفتوحة', 'err');
+
+  const p = B.data.personal || {};
+  const tpl = B.resume.template || 'canva_purple';
+  const lang = B.resume.language || 'ar';
+  const cust = B.customization || {};
+  const cvHtml = renderTemplate(tpl, B.data, cust, lang);
+
+  openModal(`
+    <div class="flex items-center justify-between border-b border-slate-700/50 pb-3 mb-4">
+      <h3 class="font-bold text-lg flex items-center gap-2">
+        <i class="fas fa-file-pdf text-rose-500 text-xl"></i>
+        <span>محرر الـ PDF المباشر (Built-in PDF Editor)</span>
+      </h3>
+      <button class="mini-btn" onclick="closeModal()"><i class="fas fa-xmark"></i></button>
+    </div>
+
+    <div class="bg-slate-900/80 p-3 rounded-xl mb-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+      <div class="flex items-center gap-2">
+        <span class="text-slate-400 font-bold">حجم المعاينة:</span>
+        <button class="mini-btn" onclick="document.querySelector('#pdf-editor-canvas').style.transform='scale(0.85)'">85%</button>
+        <button class="mini-btn !bg-indigo-600 !text-white" onclick="document.querySelector('#pdf-editor-canvas').style.transform='scale(1)'">100%</button>
+        <button class="mini-btn" onclick="document.querySelector('#pdf-editor-canvas').style.transform='scale(1.15)'">115%</button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button class="btn-primary !py-2 shadow-lg !bg-gradient-to-r !from-rose-600 !to-indigo-600" onclick="generateDirectPDF()"><i class="fas fa-download ml-1.5"></i>تحميل PDF عالي الدقة (Single-Click)</button>
+        <button class="btn-ghost !py-2" onclick="printResumePDF()"><i class="fas fa-print ml-1.5"></i>طباعة النافذة</button>
+      </div>
+    </div>
+
+    <div class="pdf-editor-viewport bg-slate-950 p-6 rounded-2xl overflow-auto max-h-[70vh] flex justify-center">
+      <div id="pdf-editor-canvas" class="transition-transform origin-top duration-200">
+        ${cvHtml}
+      </div>
+    </div>
+  `, true);
+}
+
+function generateDirectPDF() {
+  if (!window.html2pdf) {
+    toast('جاري تحميل محرك الـ PDF الفوري...', 'info');
+    return setTimeout(generateDirectPDF, 600);
+  }
+
+  const p = (B && B.data && B.data.personal) || {};
+  const filename = (p.nameAr || p.nameEn || (B && B.resume && B.resume.title) || 'Sira_CV') + '.pdf';
+  
+  const element = document.querySelector('#pdf-editor-canvas .cv-page') || document.querySelector('#b-preview .cv-page') || document.querySelector('.cv-page');
+  if (!element) return toast('تعذر العثور على نموذج السيرة الذاتية', 'err');
+
+  toast('جاري إنشاء ملف الـ PDF عالي الدقة بالتنسيق الكامل... 📄');
+
+  const opt = {
+    margin: [0, 0, 0, 0],
+    filename: filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  window.html2pdf().set(opt).from(element).save().then(() => {
+    toast('تم تنزيل ملف الـ PDF المطابق بنجاح ✅');
+  }).catch(err => {
+    console.error('PDF Export Error:', err);
+    printResumePDF();
+  });
 }
 
 function printResumePDF() {
