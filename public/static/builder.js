@@ -479,11 +479,35 @@ function bCustomizationPanel() {
         </div>
       </div>
       <div class="flex gap-2 mt-3">
-        <button class="btn-ghost !py-1.5 !text-sm flex-1" onclick="bGenQR()"><i class="fas fa-qrcode ml-1"></i>${c.qrDataUrl ? 'تحديث كود QR' : 'إضافة كود QR للرابط العام'}</button>
+        <button class="btn-primary !py-1.5 !text-xs flex-1 !bg-gradient-to-r !from-indigo-600 !to-violet-600 shadow-md" onclick="bAutoFitSinglePage()"><i class="fas fa-compress-arrows-alt ml-1"></i>ضبط تلقائي لاستيعاب السيرة في صفحة واحدة ⚡</button>
+        <button class="btn-ghost !py-1.5 !text-xs" onclick="bGenQR()"><i class="fas fa-qrcode ml-1"></i>${c.qrDataUrl ? 'تحديث QR' : 'كود QR'}</button>
         ${c.qrDataUrl ? '<button class="mini-btn danger" onclick="bCust(\'qrDataUrl\',\'\');renderBuilderForm()"><i class="fas fa-trash"></i></button>' : ''}
       </div>
     </div>
   </div>`;
+}
+
+function bAutoFitSinglePage() {
+  const previewPage = document.querySelector('#b-preview .cv-page') || document.querySelector('.cv-page');
+  let currentHeight = previewPage ? previewPage.scrollHeight : 1200;
+  
+  if (currentHeight > 1115) {
+    const ratio = Math.max(0.76, 1115 / currentHeight);
+    const newFs = Math.max(11, Math.round(((B.cust.fontSize || 14) * ratio) * 10) / 10);
+    const newLh = Math.max(1.25, Math.round(((B.cust.lineHeight || 1.55) * ratio) * 100) / 100);
+    const newMg = Math.max(18, Math.round((B.cust.margin || 40) * ratio));
+    
+    B.cust.fontSize = newFs;
+    B.cust.lineHeight = newLh;
+    B.cust.margin = newMg;
+    
+    bTouched();
+    renderBuilderForm();
+    bPreview();
+    toast(`تم ضبط مقاسات السيرة لتستوعب صفحة واحدة! (خط: ${newFs}px, هوامش: ${newMg}px) ✅`);
+  } else {
+    toast('السيرة الذاتية تستوعب صفحة واحدة بالفعل 👍', 'info');
+  }
 }
 
 function bCust(k, v) { B.cust[k] = v; bTouched(); bPreviewDebounced(); }
