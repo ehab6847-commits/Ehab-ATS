@@ -400,51 +400,192 @@ function detectDomain(promptOrJob: string): JobDomain {
   return JOB_DOMAINS.generic
 }
 
-export function generateResumeFromSmartEngine(jobTitle: string, userText: string = '', lang: string = 'ar'): string {
-  const domain = detectDomain(jobTitle + ' ' + userText)
-  const isEn = lang === 'en'
+function parseUserRawResumeText(rawText: string, lang: string = 'ar') {
+  const text = rawText || '';
 
-  const titleAr = domain.titleAr
-  const titleEn = domain.titleEn
+  const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+  const email = emailMatch ? emailMatch[1] : '';
 
-  // Extract name if provided or default
-  let nameAr = 'أحمد محمد العتيبي'
-  let nameEn = 'Ahmed Mohammed Al-Otaibi'
+  const phoneMatch = text.match(/(?:05\d{8}|\+?9665\d{8}|01\d{7}|\d{10})/);
+  const phone = phoneMatch ? phoneMatch[0] : '';
 
-  if (userText) {
-    const lines = userText.split('\n')
-    const nameMatch = userText.match(/(الاسم|name|اسم):\s*([^\n,]+)/i)
-    if (nameMatch) {
-      nameAr = nameMatch[2].trim()
-      nameEn = nameMatch[2].trim()
+  let cityAr = '', cityEn = '';
+  if (/الرياض|Riyadh/i.test(text)) { cityAr = 'الرياض'; cityEn = 'Riyadh'; }
+  else if (/جدة|Jeddah/i.test(text)) { cityAr = 'جدة'; cityEn = 'Jeddah'; }
+  else if (/الدمام|Dammam/i.test(text)) { cityAr = 'الدمام'; cityEn = 'Dammam'; }
+  else if (/الخبر|Khobar/i.test(text)) { cityAr = 'الخبر'; cityEn = 'Khobar'; }
+  else if (/مكة|Makkah/i.test(text)) { cityAr = 'مكة المكرمة'; cityEn = 'Makkah'; }
+  else if (/المدينة|Madinah/i.test(text)) { cityAr = 'المدينة المنورة'; cityEn = 'Madinah'; }
+
+  let nameAr = '', nameEn = '';
+  const nameLine = text.match(/(?:الاسم|اسم|أنا|المتقدم|المرشح|Candidate|Name)[:\s]*([\u0621-\u064A\s]{3,30}|[a-zA-Z\s]{3,30})/i);
+  if (nameLine) {
+    const candidate = nameLine[1].trim();
+    if (/[\u0621-\u064A]/.test(candidate)) nameAr = candidate;
+    else nameEn = candidate;
+  }
+  if (!nameAr && !nameEn) {
+    const firstLine = text.split('\n')[0].trim();
+    if (firstLine && firstLine.length < 35 && !firstLine.includes(':') && !firstLine.includes('@') && !firstLine.includes('{')) {
+      if (/[\u0621-\u064A]/.test(firstLine)) nameAr = firstLine;
+      else nameEn = firstLine;
     }
   }
 
-  const result: ResumeData = {
-    personal: {
-      nameAr,
-      nameEn,
-      titleAr: jobTitle || titleAr,
-      titleEn: jobTitle || titleEn,
-      email: 'ahmed.alotaibi@example.com',
-      phone: '+966 50 123 4567',
-      cityAr: 'الرياض',
-      cityEn: 'Riyadh',
-      linkedin: 'linkedin.com/in/ahmed-alotaibi',
-      website: '',
-      nationality: 'سعودي / Saudi',
-      birthdate: '1995-04-12'
+  let titleAr = '', titleEn = '';
+  const titleMatch = text.match(/(?:المسمى الوظيفي|المسمى|الوظيفة|Job Title|Position)[:\s]*([^\n,.]+)/i);
+  if (titleMatch) {
+    const tVal = titleMatch[1].trim();
+    if (/[\u0621-\u064A]/.test(tVal)) titleAr = tVal;
+    else titleEn = tVal;
+  }
+
+  let schoolAr = '', schoolEn = '', degreeAr = '', degreeEn = '', eduYear = '', gpa = '';
+  const uniMatch = text.match(/(جامعة\s+[\u0621-\u064A]+|كلية\s+[\u0621-\u064A]+|معهد\s+[\u0621-\u064A]+|[A-Za-z\s]+University|[A-Za-z\s]+College)/i);
+  if (uniMatch) {
+    if (/[\u0621-\u064A]/.test(uniMatch[1])) schoolAr = uniMatch[1].trim();
+    else schoolEn = uniMatch[1].trim();
+  }
+
+  const degreeMatch = text.match(/(بكالوريوس|ماجستير|دكتوراه|دبلوم|Bachelor|Master|PhD|Diploma)[^\n,.]*/i);
+  if (degreeMatch) {
+    if (/[\u0621-\u064A]/.test(degreeMatch[0])) degreeAr = degreeMatch[0].trim();
+    else degreeEn = degreeMatch[0].trim();
+  }
+
+  const yearMatch = text.match(/(?:20\d{2}|19\d{2})/);
+  if (yearMatch) eduYear = yearMatch[0];
+
+  const gpaMatch = text.match(/(?:معدل|GPA)[:\s]*([\d.]+(?:\s*\/\s*[\d.]+)?)/i);
+  if (gpaMatch) gpa = gpaMatch[1];
+
+  const expItems: any[] = [];
+  const lines = text.split('\n');
+  let currentExp: any = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+
+    const isCompany = /(شركة|مجموعة|مؤسسة|مستشفى|وزارة|هيئة|بنك|Company|Group|Corp|Inc|Bank|Hospital)/i.test(line);
+    const isRole = /(محاسب|مهندس|مدير|أخصائي|مطور|محلل|مصمم|كاتب|فني|معلم|استشاري|مشرف|Officer|Engineer|Manager|Developer|Accountant|Specialist|Analyst)/i.test(line);
+
+    if (isCompany || isRole) {
+      if (currentExp && (currentExp.roleAr || currentExp.orgAr || currentExp.descAr)) {
+        expItems.push(currentExp);
+      }
+
+      let roleVal = isRole ? line : '';
+      let compVal = isCompany ? line : '';
+
+      const dates = line.match(/(20\d{2}|19\d{2})/g);
+      let start = dates && dates[0] ? dates[0] : '';
+      let end = dates && dates[1] ? dates[1] : (line.includes('الحالي') || line.includes('Present') ? 'الحالي' : '');
+
+      currentExp = {
+        roleAr: /[\u0621-\u064A]/.test(roleVal) ? roleVal : '',
+        roleEn: /[\u0621-\u064A]/.test(roleVal) ? '' : roleVal,
+        orgAr: /[\u0621-\u064A]/.test(compVal) ? compVal : '',
+        orgEn: /[\u0621-\u064A]/.test(compVal) ? '' : compVal,
+        start, end, descAr: '', descEn: ''
+      };
+    } else if (currentExp) {
+      if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
+        currentExp.descAr += (currentExp.descAr ? '\n' : '') + line;
+      } else if (line.length > 12 && !line.includes(':')) {
+        currentExp.descAr += (currentExp.descAr ? '\n• ' : '• ') + line;
+      }
+    }
+  }
+
+  if (currentExp && (currentExp.roleAr || currentExp.orgAr || currentExp.descAr)) {
+    expItems.push(currentExp);
+  }
+
+  const skillItems: any[] = [];
+  const skillMatch = text.match(/(?:المهارات|مهارات|Skills|Competencies)[:\s]*([^\n]+(?:\n[^\n]+)?)/i);
+  if (skillMatch) {
+    const rawSkills = skillMatch[1].split(/[,•\-\n|]/);
+    rawSkills.forEach(s => {
+      const clean = s.trim();
+      if (clean && clean.length > 2 && clean.length < 40) {
+        if (/[\u0621-\u064A]/.test(clean)) skillItems.push({ nameAr: clean, nameEn: '', level: 90 });
+        else skillItems.push({ nameAr: '', nameEn: clean, level: 90 });
+      }
+    });
+  }
+
+  const domain = detectDomain(text);
+
+  if (expItems.length === 0) {
+    domain.experiencesAr.forEach((exp, i) => {
+      expItems.push({
+        roleAr: exp.role, roleEn: (domain.experiencesEn[i] || {}).role || exp.role,
+        orgAr: exp.company, orgEn: (domain.experiencesEn[i] || {}).company || exp.company,
+        start: exp.period.split('-')[0].trim(), end: exp.period.split('-')[1]?.trim() || 'الحالي',
+        descAr: exp.points.map(p => `• ${p}`).join('\n'), descEn: ((domain.experiencesEn[i] || {}).points || exp.points).map(p => `• ${p}`).join('\n')
+      });
+    });
+  }
+
+  if (skillItems.length === 0) {
+    domain.skillsAr.forEach((sk, i) => {
+      skillItems.push({ nameAr: sk, nameEn: domain.skillsEn[i] || sk, level: 90 });
+    });
+  }
+
+  const personal = {
+    nameAr: nameAr || (lang === 'en' ? '' : 'اسم صاحب السيرة'),
+    nameEn: nameEn || (lang === 'en' ? 'Full Name' : ''),
+    titleAr,
+    titleEn,
+    email,
+    phone,
+    cityAr,
+    cityEn,
+    linkedin: '',
+    website: '',
+    nationality: '',
+    birthdate: ''
+  };
+
+  let summaryTextAr = '';
+  let summaryTextEn = '';
+  const sumMatch = text.match(/(?:الملخص|نبذة|عني|Summary|Profile|About)[:\s]*([^\n]+(?:\n[^\n]+){1,4})/i);
+  if (sumMatch) {
+    summaryTextAr = /[\u0621-\u064A]/.test(sumMatch[1]) ? sumMatch[1].trim() : '';
+    summaryTextEn = /[\u0621-\u064A]/.test(sumMatch[1]) ? '' : sumMatch[1].trim();
+  }
+  if (!summaryTextAr && !summaryTextEn) {
+    summaryTextAr = domain.summaryAr;
+    summaryTextEn = domain.summaryEn;
+  }
+
+  const sections = [
+    { id: 's1', type: 'summary', titleAr: 'الملخص المهني', titleEn: 'Professional Summary', visible: true, textAr: summaryTextAr, textEn: summaryTextEn },
+    { id: 's2', type: 'experience', titleAr: 'الخبرات العملية', titleEn: 'Work Experience', visible: true, items: expItems },
+    {
+      id: 's3', type: 'education', titleAr: 'التعليم والشهادات الأكاديمية', titleEn: 'Education', visible: true,
+      items: [{
+        degreeAr: degreeAr || domain.degreeAr, degreeEn: degreeEn || domain.degreeEn,
+        schoolAr: schoolAr || domain.uniAr, schoolEn: schoolEn || domain.uniEn,
+        year: eduYear || '2020', gpa: gpa || ''
+      }]
     },
-    sections: [
-      {
-        id: 's1',
-        type: 'summary',
-        titleAr: 'الملخص المهني',
-        titleEn: 'Professional Summary',
-        visible: true,
-        textAr: domain.summaryAr,
-        textEn: domain.summaryEn
-      },
+    { id: 's4', type: 'skills', titleAr: 'المهارات والتقنيات', titleEn: 'Skills & Competencies', visible: true, items: skillItems },
+    {
+      id: 's5', type: 'languages', titleAr: 'اللغات', titleEn: 'Languages', visible: true,
+      items: [{ nameAr: 'العربية', nameEn: 'Arabic', levelAr: 'اللغة الأم (Native)', levelEn: 'Native' }, { nameAr: 'الإنجليزية', nameEn: 'English', levelAr: 'متقدم / احترافي', levelEn: 'Full Professional' }]
+    }
+  ];
+
+  return { personal, sections };
+}
+
+export function generateResumeFromSmartEngine(jobTitle: string, userText: string = '', lang: string = 'ar'): string {
+  const parsed = parseUserRawResumeText((jobTitle ? jobTitle + '\n' : '') + userText, lang);
+  return JSON.stringify(parsed);
+}
       {
         id: 's2',
         type: 'experience',
