@@ -749,14 +749,14 @@ async function generateDirectPDF() {
   const p = (B && B.data && B.data.personal) || {};
   const filename = (p.nameAr || p.nameEn || (B && B.resume && B.resume.title) || 'Sira_CV') + '.pdf';
   
-  const srcElement = document.querySelector('#pdf-editor-canvas .cv-page') || document.querySelector('#b-preview .cv-page') || document.querySelector('.cv-page');
-  if (!srcElement) return toast('تعذر العثور على نموذج السيرة الذاتية', 'err');
+  const element = document.querySelector('#b-preview .cv-page') || document.querySelector('#pdf-editor-canvas .cv-page') || document.querySelector('.cv-page');
+  if (!element) return toast('تعذر العثور على نموذج المعاينة للسيرة الذاتية', 'err');
 
-  toast('جاري تحضير ملف الـ PDF لصفحة واحدة... 📄');
+  toast('جاري تحضير ملف الـ PDF المطابق للمعاينة 100%... 📄');
 
   const ensureScript = (src, globalKey) => {
     return new Promise((resolve) => {
-      if (window[globalKey]) return resolve(true);
+      if (window[globalKey] || window[globalKey.toLowerCase()]) return resolve(true);
       const existing = document.querySelector(`script[src="${src}"]`);
       if (existing) {
         existing.addEventListener('load', () => resolve(true));
@@ -773,50 +773,21 @@ async function generateDirectPDF() {
   await ensureScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'html2canvas');
   await ensureScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'jspdf');
 
-  const clone = srcElement.cloneNode(true);
-  clone.style.transform = 'none';
-  clone.style.boxShadow = 'none';
-  clone.style.border = 'none';
-  clone.style.margin = '0';
-  clone.style.width = '794px';
-  clone.style.height = '1122px';
-  clone.style.maxHeight = '1122px';
-  clone.style.overflow = 'hidden';
-  clone.style.boxSizing = 'border-box';
-
-  const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.left = '-9999px';
-  container.style.top = '0';
-  container.style.width = '794px';
-  container.style.height = '1122px';
-  container.style.overflow = 'hidden';
-  container.appendChild(clone);
-  document.body.appendChild(container);
-
-  if (clone.scrollHeight > 1115) {
-    const ratio = Math.max(0.72, 1115 / clone.scrollHeight);
-    clone.style.fontSize = (13 * ratio) + 'px';
-    clone.style.lineHeight = '1.3';
-    clone.querySelectorAll('.cv-section').forEach(s => s.style.marginTop = (13 * ratio) + 'px');
-    clone.querySelectorAll('.cv-item').forEach(s => s.style.marginBottom = (7 * ratio) + 'px');
-    const inner = clone.querySelector('.cv-inner');
-    if (inner) inner.style.padding = (24 * ratio) + 'px';
-  }
-
   try {
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+    }
+
     const html2canvasFunc = window.html2canvas;
     const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
 
     if (html2canvasFunc && jsPDFClass) {
-      const canvas = await html2canvasFunc(clone, {
-        scale: 2,
+      const canvas = await html2canvasFunc(element, {
+        scale: 2.5,
         useCORS: true,
+        allowTaint: true,
         logging: false,
-        width: 794,
-        height: 1122,
-        windowWidth: 794,
-        windowHeight: 1122
+        backgroundColor: '#ffffff'
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 0.98);
@@ -826,29 +797,25 @@ async function generateDirectPDF() {
         format: 'a4'
       });
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
-      pdf.save(filename);
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      if (document.body.contains(container)) document.body.removeChild(container);
-      toast('تم تنزيل ملف الـ PDF لصفحة واحدة بنجاح ✅');
-    } else if (window.html2pdf) {
-      const opt = {
-        margin: [0, 0, 0, 0],
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-      await window.html2pdf().set(opt).from(clone).save();
-      if (document.body.contains(container)) document.body.removeChild(container);
-      toast('تم تنزيل ملف الـ PDF بنجاح ✅');
+      if (imgHeight <= pageHeight) {
+        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+      } else {
+        const fitWidth = (pageHeight / imgHeight) * imgWidth;
+        const xOffset = (imgWidth - fitWidth) / 2;
+        pdf.addImage(imgData, 'JPEG', xOffset, 0, fitWidth, pageHeight);
+      }
+
+      pdf.save(filename);
+      toast('تم تنزيل ملف الـ PDF المطابق للمعاينة 100% بنجاح ✅');
     } else {
-      if (document.body.contains(container)) document.body.removeChild(container);
       printResumePDF();
     }
   } catch (err) {
-    console.error('PDF Export Error:', err);
-    if (document.body.contains(container)) document.body.removeChild(container);
+    console.error('Exact PDF Export Error:', err);
     printResumePDF();
   }
 }
