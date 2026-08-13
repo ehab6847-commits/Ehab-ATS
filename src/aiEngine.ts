@@ -1,10 +1,9 @@
 /* ============================================================================
    Ehab ATS - Smart AI Engine (Server-Side Engine)
    100% faithful Markdown / ChatGPT / Word / Raw text parser:
-   - Strips ChatGPT stars (**), hashes (##), emojis, squares (■, ▪)
-   - Accurately classifies sections (Objective, Education, Experience, Courses, Skills, Languages)
-   - Splits multi-item Experience & Education with perfection
-   - Target Job Title: STRICTLY OPTIONAL & empty unless user explicitly wrote "المسمى الوظيفي:"
+   - "التدريب التعاوني" is classified strictly as Work Experience (experience)
+   - "الدورات التدريبية" is classified strictly as Training Courses (training)
+   - Completely separate sections for Work Experience and Training Courses
    ============================================================================ */
 
 export interface ResumeData {
@@ -63,11 +62,11 @@ function classifySectionHeading(rawLine: string): string | null {
   if (/(المؤهل|التعليم|المؤهلات|دراستي|شهادة الثانوية|جامعة|كلية|مدرسة|education|academic|qualifications)/i.test(clean) && !clean.includes('خبرة')) {
     return 'education';
   }
-  if (/(الخبرات|الخبرة|خبراتي|التاريخ المهني|السجل المهني|عملي|experience|work|employment|jobs)/i.test(clean) && clean.length < 30 && !clean.includes('مهارات')) {
+  if (/(الخبرات|الخبرة|خبراتي|التدريب التعاوني|تدريب عملي|التاريخ المهني|السجل المهني|عملي|experience|work|employment|jobs)/i.test(clean) && clean.length < 35 && !clean.includes('دورة') && !clean.includes('دورات')) {
     return 'experience';
   }
   if (/(الدورات|الكورسات|الشهادات التدريبية|الاعتمادات|التدريب|courses|certifications|certificates|training)/i.test(clean)) {
-    return 'courses';
+    return 'training';
   }
   if (/(المهارات|مهاراتي|تقنيات|skills|competencies|abilities)/i.test(clean)) {
     return 'skills';
@@ -123,12 +122,12 @@ function parseUserRawResumeText(rawText: string, lang: string = 'ar'): ResumeDat
 
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
-  let currentSectionType: 'header' | 'summary' | 'education' | 'experience' | 'courses' | 'skills' | 'languages' = 'header';
+  let currentSectionType: 'header' | 'summary' | 'education' | 'experience' | 'training' | 'skills' | 'languages' = 'header';
   const rawSections: Record<string, string[]> = {
     summary: [],
     education: [],
     experience: [],
-    courses: [],
+    training: [],
     skills: [],
     languages: []
   };
@@ -212,7 +211,7 @@ function parseUserRawResumeText(rawText: string, lang: string = 'ar'): ResumeDat
   }
 
   const courseItems: any[] = [];
-  rawSections.courses.forEach(line => {
+  rawSections.training.forEach(line => {
     const cleanL = cleanContentLine(line);
     if (!cleanL) return;
     const yearMatch = cleanL.match(/(?:14\d{2}هـ?|20\d{2}|19\d{2})/);
@@ -290,7 +289,7 @@ function parseUserRawResumeText(rawText: string, lang: string = 'ar'): ResumeDat
     sections.push({ id: 's3', type: 'experience', titleAr: 'الخبرات العملية', titleEn: 'Work Experience', visible: true, items: expItems });
   }
   if (courseItems.length > 0) {
-    sections.push({ id: 's4', type: 'courses', titleAr: 'الدورات التدريبية', titleEn: 'Training & Courses', visible: true, items: courseItems });
+    sections.push({ id: 's4', type: 'training', titleAr: 'الدورات التدريبية', titleEn: 'Training & Courses', visible: true, items: courseItems });
   }
   if (skillItems.length > 0) {
     sections.push({ id: 's5', type: 'skills', titleAr: 'المهارات المهنية', titleEn: 'Skills', visible: true, items: skillItems });
