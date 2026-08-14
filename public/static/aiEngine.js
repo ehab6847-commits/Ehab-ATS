@@ -7,18 +7,25 @@
 
 function sanitizeText(s) {
   if (!s) return '';
-  return s
+  let str = s
+    .replace(/أرجع البيانات كـ JSON[\s\S]*/gi, '')
+    .replace(/\{[\s\S]*"personal"[\s\S]*\}/gi, '')
     .replace(/[\u2022\u2023\u25E6\u2043\u2219\u25FE\u25AA\u25CF•\*\-\_#~`■▪🔹🎯📚💼🎓🛠️📌✨⭐]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+  if (str.includes('أرجع البيانات') || str.includes('بنية JSON')) return '';
+  return str;
 }
 
 function cleanContentLine(s) {
   if (!s) return '';
-  return s
-    .replace(/^[\*\-\#\_~`■▪🔹🎯📚💼🎓🛠️📌✨⭐•\s]+/g, '')
+  let str = s
+    .replace(/أرجع البيانات كـ JSON[\s\S]*/gi, '')
+    .replace(/^[\*\-\#\_~`■▪▪🔹🎯📚💼🎓🛠️📌✨⭐•\s]+/g, '')
     .replace(/[\*\_\#~`]/g, '')
     .trim();
+  if (str.includes('أرجع البيانات') || str.includes('بنية JSON')) return '';
+  return str;
 }
 
 // Deep Universal Arabic -> English Resume Translator

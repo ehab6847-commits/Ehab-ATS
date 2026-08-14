@@ -782,6 +782,12 @@ async function generateDirectPDF() {
     const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
 
     if (html2canvasFunc && jsPDFClass) {
+      // Auto-fit layout if element height exceeds single page height before capture
+      if (element.scrollHeight > 1115) {
+        bAutoFitSinglePage();
+        await new Promise(r => setTimeout(r, 100));
+      }
+
       const canvas = await html2canvasFunc(element, {
         scale: 2.5,
         useCORS: true,
@@ -797,20 +803,11 @@ async function generateDirectPDF() {
         format: 'a4'
       });
 
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      if (imgHeight <= pageHeight) {
-        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
-      } else {
-        const fitWidth = (pageHeight / imgHeight) * imgWidth;
-        const xOffset = (imgWidth - fitWidth) / 2;
-        pdf.addImage(imgData, 'JPEG', xOffset, 0, fitWidth, pageHeight);
-      }
+      // Guarantee 100% Single A4 Page output (210mm x 297mm) with zero second page creation
+      pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
 
       pdf.save(filename);
-      toast('تم تنزيل ملف الـ PDF المطابق للمعاينة 100% بنجاح ✅');
+      toast('تم تنزيل ملف الـ PDF في صفحة واحدة مطابقة للمعاينة 100% بنجاح ✅');
     } else {
       printResumePDF();
     }

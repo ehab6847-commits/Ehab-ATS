@@ -238,19 +238,26 @@ api.defaults.adapter = async function (config) {
   // AI Generation (Offline Smart AI Engine)
   if (url === '/ai/generate' && method === 'post') {
     const task = body.task || 'full_resume';
-    const prompt = body.prompt || '';
+    const rawPrompt = body.prompt || '';
     const lang = body.language || 'ar';
+
+    // Strip out prompt instructions if present to isolate clean user text
+    let cleanPrompt = rawPrompt
+      .replace(/^استخرج ونظم وحول النص والمعلومات التالية إلى سيرة ذاتية مكتملة الحقول ومحتوى احترافي جداً:\s*"?/gi, '')
+      .replace(/"?\s*أرجع البيانات كـ JSON[\s\S]*$/gi, '')
+      .trim();
+    if (!cleanPrompt) cleanPrompt = rawPrompt;
 
     let resultText = '';
 
     if (window.smartAIEngine) {
       if (task.startsWith('assist_')) {
         const action = task.replace('assist_', '');
-        resultText = window.smartAIEngine.handleSmartAssist(action, prompt || body.prompt);
+        resultText = window.smartAIEngine.handleSmartAssist(action, cleanPrompt);
       } else if (task === 'cover_letter') {
-        resultText = window.smartAIEngine.generateCoverLetterFromSmartEngine('المتقدم', prompt || 'مطور برمجيات', '', '', lang);
+        resultText = window.smartAIEngine.generateCoverLetterFromSmartEngine('المتقدم', cleanPrompt || 'مطور برمجيات', '', '', lang);
       } else {
-        resultText = window.smartAIEngine.generateResumeFromSmartEngine(prompt || 'أخصائي', lang);
+        resultText = window.smartAIEngine.generateResumeFromSmartEngine(cleanPrompt || 'أخصائي', lang);
       }
     } else {
       resultText = JSON.stringify({
