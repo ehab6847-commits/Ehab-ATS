@@ -807,10 +807,7 @@ async function generateDirectPDF() {
     const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
 
     if (html2canvasFunc && jsPDFClass) {
-      // Auto-fit layout (both compression & expansion) before capture so PDF fills A4 page perfectly
-      bAutoFitSinglePage(true);
-      await new Promise(r => setTimeout(r, 120));
-
+      // 100% WYSIWYG: Capture preview element EXACTLY as custom-formatted by user (fonts, sizes, margins)
       const canvas = await html2canvasFunc(element, {
         scale: 2.5,
         useCORS: true,
@@ -826,11 +823,11 @@ async function generateDirectPDF() {
         format: 'a4'
       });
 
-      // Guarantee 100% Single A4 Page output (210mm x 297mm) with zero second page creation
+      // Fit captured preview image to exact A4 dimensions (210mm x 297mm)
       pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
 
       pdf.save(filename);
-      toast('تم تنزيل ملف الـ PDF في صفحة واحدة مطابقة للمعاينة 100% بنجاح ✅');
+      toast('تم تنزيل الـ PDF بنفس الخط والتنسيق والمقاس المختار من قِبَلك 100% بنجاح ✅');
     } else {
       printResumePDF();
     }
@@ -843,12 +840,6 @@ async function generateDirectPDF() {
 function printResumePDF() {
   if (!B || !B.data) return toast('لا توجد سيرة مفتوحة للتنزيل', 'err');
   closeModal();
-
-  // Auto-fit layout if needed before opening print window
-  const previewPage = document.querySelector('#b-preview .cv-page') || document.querySelector('.cv-page');
-  if (previewPage && previewPage.scrollHeight > 1123) {
-    bAutoFitSinglePage(true);
-  }
 
   const p = B.data.personal || {};
   const tpl = B.resume.template || 'canva_purple';
