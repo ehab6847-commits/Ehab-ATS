@@ -243,11 +243,14 @@ function renderTemplate(templateId, data, cust, language) {
   const dir = lang === 'en' ? 'ltr' : 'rtl';
   const color = cust.themeColor || tpl.color;
   const accent = cust.accentColor || tpl.accent;
+  const secGap = cust.secGap != null ? cust.secGap : 24;
+  const itemGap = cust.itemGap != null ? cust.itemGap : 14;
   const vars = [
     `--cv-color:${color}`, `--cv-accent:${accent}`,
     `--cv-line:${tpl.line || '2px solid ' + color}`,
     `--cv-fs:${cust.fontSize || 14}px`, `--cv-lh:${cust.lineHeight || 1.55}`,
     `--cv-margin:${cust.margin != null ? cust.margin : 40}px`,
+    `--cv-sec-gap:${secGap}px`, `--cv-item-gap:${itemGap}px`,
     `--cv-font-ar:'${cust.fontAr || 'Cairo'}'`, `--cv-font-en:'${cust.fontEn || 'Inter'}'`
   ];
   if (tpl.bandBg) vars.push(`--cv-band-bg:${cust.themeColor || tpl.bandBg}`);

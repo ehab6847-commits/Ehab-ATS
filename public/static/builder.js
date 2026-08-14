@@ -487,26 +487,51 @@ function bCustomizationPanel() {
   </div>`;
 }
 
-function bAutoFitSinglePage() {
+function bAutoFitSinglePage(silent = false) {
   const previewPage = document.querySelector('#b-preview .cv-page') || document.querySelector('.cv-page');
-  let currentHeight = previewPage ? previewPage.scrollHeight : 1200;
-  
+  if (!previewPage) return;
+  let currentHeight = previewPage.scrollHeight;
+
   if (currentHeight > 1115) {
-    const ratio = Math.max(0.76, 1115 / currentHeight);
-    const newFs = Math.max(11, Math.round(((B.cust.fontSize || 14) * ratio) * 10) / 10);
-    const newLh = Math.max(1.25, Math.round(((B.cust.lineHeight || 1.55) * ratio) * 100) / 100);
-    const newMg = Math.max(18, Math.round((B.cust.margin || 40) * ratio));
-    
+    // Compress long content to fit 1 single page
+    const ratio = Math.max(0.74, 1115 / currentHeight);
+    const newFs = Math.max(10.5, Math.round(((B.cust.fontSize || 14) * ratio) * 10) / 10);
+    const newLh = Math.max(1.22, Math.round(((B.cust.lineHeight || 1.55) * ratio) * 100) / 100);
+    const newMg = Math.max(16, Math.round((B.cust.margin || 40) * ratio));
+    const newSecGap = Math.max(12, Math.round((B.cust.secGap || 24) * ratio));
+    const newItemGap = Math.max(8, Math.round((B.cust.itemGap || 14) * ratio));
+
     B.cust.fontSize = newFs;
     B.cust.lineHeight = newLh;
     B.cust.margin = newMg;
-    
+    B.cust.secGap = newSecGap;
+    B.cust.itemGap = newItemGap;
+
     bTouched();
     renderBuilderForm();
     bPreview();
-    toast(`تم ضبط مقاسات السيرة لتستوعب صفحة واحدة! (خط: ${newFs}px, هوامش: ${newMg}px) ✅`);
-  } else {
-    toast('السيرة الذاتية تستوعب صفحة واحدة بالفعل 👍', 'info');
+    if (!silent) toast(`تم ضغط السيرة لتستوعب صفحة واحدة A4! (خط: ${newFs}px) ✅`);
+  } else if (currentHeight < 980) {
+    // Expand short/medium content to fill the full A4 page elegantly
+    const ratio = Math.min(1.35, 1070 / currentHeight);
+    const newFs = Math.min(16, Math.round(((B.cust.fontSize || 14) * ratio) * 10) / 10);
+    const newLh = Math.min(1.85, Math.round(((B.cust.lineHeight || 1.55) * ratio) * 100) / 100);
+    const newMg = Math.min(54, Math.round((B.cust.margin || 40) * ratio));
+    const newSecGap = Math.min(36, Math.round((B.cust.secGap || 24) * ratio));
+    const newItemGap = Math.min(22, Math.round((B.cust.itemGap || 14) * ratio));
+
+    B.cust.fontSize = newFs;
+    B.cust.lineHeight = newLh;
+    B.cust.margin = newMg;
+    B.cust.secGap = newSecGap;
+    B.cust.itemGap = newItemGap;
+
+    bTouched();
+    renderBuilderForm();
+    bPreview();
+    if (!silent) toast(`تمت توسعة وتعبئة السيرة لتغطي الصفحة بالكامل بدون حواشي فارغة! (خط: ${newFs}px) 🎨✅`);
+  } else if (!silent) {
+    toast('السيرة الذاتية متناسقة ومكتملة في صفحة واحدة بالفعل 👍', 'info');
   }
 }
 
@@ -782,11 +807,9 @@ async function generateDirectPDF() {
     const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
 
     if (html2canvasFunc && jsPDFClass) {
-      // Auto-fit layout if element height exceeds single page height before capture
-      if (element.scrollHeight > 1115) {
-        bAutoFitSinglePage();
-        await new Promise(r => setTimeout(r, 100));
-      }
+      // Auto-fit layout (both compression & expansion) before capture so PDF fills A4 page perfectly
+      bAutoFitSinglePage(true);
+      await new Promise(r => setTimeout(r, 120));
 
       const canvas = await html2canvasFunc(element, {
         scale: 2.5,

@@ -21,7 +21,7 @@
 .cv-photo { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 3px solid var(--cv-color, #6366f1); }
 .cv-logo { max-height: 52px; max-width: 130px; object-fit: contain; }
 
-.cv-section { margin-top: 20px; }
+.cv-section { margin-top: var(--cv-sec-gap, 22px); }
 .cv-sec-title {
   font-size: 1.08em; font-weight: 800; color: var(--cv-color, #1e293b);
   padding-bottom: 5px; margin: 0 0 10px; display: flex; align-items: center; gap: 8px;
@@ -29,7 +29,7 @@
 }
 .cv-sec-title i { font-size: .9em; color: var(--cv-accent, inherit); }
 
-.cv-item { margin-bottom: 12px; }
+.cv-item { margin-bottom: var(--cv-item-gap, 12px); }
 .cv-item-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .cv-item-role { font-weight: 700; font-size: 1em; }
 .cv-item-org { color: var(--cv-accent, #475569); font-weight: 600; font-size: .93em; }
