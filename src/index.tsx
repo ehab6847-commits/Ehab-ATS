@@ -274,8 +274,8 @@ app.post('/api/auth/login', async (c) => {
   const cleanKey = (key || '').trim()
 
   if (cleanKey === AUTH_KEY) {
-    await logActivity(db, 'login', 'admin', 1, 'دخول الأدمن الرئيسي (إيهاب)')
-    return c.json({ token: await makeToken('admin', 'إيهاب'), role: 'admin', name: 'إيهاب (الأدمن)' })
+    await logActivity(db, 'login', 'super_admin', 1, 'دخول المالك والمدير الرئيسي (إيهاب شحيطير)')
+    return c.json({ token: await makeToken('super_admin', 'إيهاب شحيطير'), role: 'super_admin', name: 'إيهاب شحيطير (Super Admin)' })
   }
 
   const sp = await db.prepare('SELECT * FROM specialists WHERE access_key=? AND status="active"').bind(cleanKey).first<any>()

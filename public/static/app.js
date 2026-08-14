@@ -59,7 +59,7 @@ if (!localStorage.getItem(CLIENT_STORAGE_KEYS.resumes)) {
 }
 if (!localStorage.getItem(CLIENT_STORAGE_KEYS.activity)) {
   setLocal(CLIENT_STORAGE_KEYS.activity, [
-    { id: 1, action: 'login', entity: 'admin', entity_id: 1, details: 'دخول الأدمن الرئيسي (إيهاب)', created_at: new Date().toISOString() },
+    { id: 1, action: 'login', entity: 'admin', entity_id: 1, details: 'دخول المالك والمدير الرئيسي (إيهاب شحيطير)', created_at: new Date().toISOString() },
     { id: 2, action: 'create', entity: 'resume', entity_id: 1, details: 'إنشاء سيرة ذاتية جديدة بالذكاء الاصطناعي', created_at: new Date().toISOString() }
   ]);
 }
@@ -73,8 +73,8 @@ api.defaults.adapter = async function (config) {
   if (url === '/auth/login' && method === 'post') {
     const key = (body.key || '').trim();
     if (key === 'wuda5U9u_Yk') {
-      logLocalActivity('login', 'admin', 1, 'دخول الأدمن الرئيسي (إيهاب)');
-      return { data: { token: 'token_admin_' + Date.now(), role: 'admin', name: 'إيهاب (الأدمن)' }, status: 200, headers: {}, config };
+      logLocalActivity('login', 'admin', 1, 'دخول المالك والمدير الرئيسي (إيهاب شحيطير)');
+      return { data: { token: 'token_admin_' + Date.now(), role: 'super_admin', name: 'إيهاب شحيطير (Super Admin)' }, status: 200, headers: {}, config };
     }
     const sps = getLocal(CLIENT_STORAGE_KEYS.specialists);
     const sp = sps.find(x => x.access_key === key && x.status === 'active');
@@ -351,14 +351,14 @@ function renderLogin() {
   el('root').innerHTML = `
   <div class="min-h-screen flex items-center justify-center p-4" style="background:radial-gradient(ellipse at top, #1e293b, #0f172a)">
     <div class="glass-strong rounded-3xl p-8 w-full max-w-md text-center" dir="rtl">
-      <div class="w-20 h-20 mx-auto rounded-2xl p-1 bg-gradient-to-br from-amber-400 via-amber-600 to-yellow-700 mb-4 shadow-xl shadow-amber-500/20">
-        <img src="/static/logo.jpg" class="w-full h-full object-cover rounded-xl" alt="Ehab ATS Logo">
+      <div class="w-20 h-20 mx-auto rounded-2xl p-1 bg-slate-900 border border-slate-700 mb-4 shadow-xl shadow-indigo-500/20">
+        <img src="/static/cv_builder_logo.svg" class="w-full h-full object-contain rounded-xl" alt="ATS Resume Builder Logo">
       </div>
-      <h1 class="text-2xl font-bold text-white mb-1">Ehab ATS</h1>
-      <p class="text-slate-400 text-sm mb-6">منصة السير الذاتية الاحترافية — دخول خاص</p>
-      <input id="login-key" type="password" class="input-field mb-4 text-center" placeholder="مفتاح الدخول" onkeydown="if(event.key==='Enter')doLogin()">
-      <button class="btn-primary w-full" onclick="doLogin()"><i class="fas fa-lock-open ml-2"></i>دخول</button>
-      <p id="login-err" class="text-rose-400 text-sm mt-3 hidden">المفتاح غلط، جرب تاني</p>
+      <h1 class="text-2xl font-black bg-gradient-to-r from-amber-300 via-amber-400 to-indigo-300 bg-clip-text text-transparent mb-1">ATS Resume Builder</h1>
+      <p class="text-slate-400 text-sm mb-6">منصة مولد السيرة الذاتية الاحترافية — إيهاب شحيطير (Super Admin)</p>
+      <input id="login-key" type="password" class="input-field mb-4 text-center" placeholder="مفتاح الدخول لـ إيهاب شحيطير" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="btn-primary w-full !bg-gradient-to-r !from-amber-500 !to-indigo-600 shadow-lg" onclick="doLogin()"><i class="fas fa-lock-open ml-2"></i>دخول بالنظام الكامل</button>
+      <p id="login-err" class="text-rose-400 text-sm mt-3 hidden">المفتاح غير صحيح، يرجى المحاولة مجدداً</p>
     </div>
   </div>`;
   setTimeout(() => el('login-key') && el('login-key').focus(), 100);
@@ -369,14 +369,14 @@ async function doLogin() {
 
   const validAdminKey = 'wuda5U9u_Yk';
 
-  // 1. Client-side authentication check for Admin key
+  // 1. Client-side authentication check for Super Admin key
   if (key === validAdminKey) {
     const token = 'ehab_admin_token_' + Date.now();
     S.token = token;
     localStorage.setItem('ehab_token', token);
     S.view = 'dashboard';
     renderApp();
-    toast('أهلاً بك يا إيهاب (الأدمن الرئيسي) 👋');
+    toast('أهلاً بك يا إيهاب شحيطير (Super Admin — المالك والمدير الرئيسي) 👋');
     return;
   }
 
@@ -399,7 +399,7 @@ async function doLogin() {
       localStorage.setItem('ehab_token', data.token);
       S.view = 'dashboard';
       renderApp();
-      toast('أهلاً بك 👋');
+      toast('أهلاً بك يا إيهاب شحيطير 👋');
       return;
     }
   } catch (e) {
@@ -411,7 +411,7 @@ function doLogout() { localStorage.removeItem('ehab_token'); S.token = ''; rende
 /* ---------- nav / shell ---------- */
 const NAV = [
   { id: 'dashboard', icon: 'fa-gauge-high', label: 'لوحة التحكم' },
-  { id: 'team', icon: 'fa-user-shield', label: 'إدارة المختصين والنشاط' },
+  { id: 'team', icon: 'fa-user-shield', label: 'إدارة المستخدمين والمصرح لهم' },
   { id: 'clients', icon: 'fa-users', label: 'العملاء' },
   { id: 'resumes', icon: 'fa-file-lines', label: 'السير الذاتية' },
   { id: 'templates', icon: 'fa-swatchbook', label: 'القوالب (21 قالب)' },
@@ -420,9 +420,9 @@ const NAV = [
   { id: 'covers', icon: 'fa-envelope-open-text', label: 'خطابات التقديم' },
   { id: 'drafts', icon: 'fa-pen-ruler', label: 'المسودات' },
   { id: 'export', icon: 'fa-file-export', label: 'مركز التصدير' },
-  { id: 'activity', icon: 'fa-clock-rotate-left', label: 'سجل النشاط' },
+  { id: 'activity', icon: 'fa-clock-rotate-left', label: 'سجل النشاط والأمان' },
   { id: 'aihistory', icon: 'fa-robot', label: 'سجل الـ AI' },
-  { id: 'settings', icon: 'fa-gear', label: 'الإعدادات' }
+  { id: 'settings', icon: 'fa-gear', label: 'إعدادات النظام والأمان' }
 ];
 function nav(view, param) { S.view = view; S.viewParam = param || null; renderApp(); }
 
@@ -435,15 +435,18 @@ function renderApp() {
   el('root').innerHTML = `
   <div dir="rtl" class="min-h-screen flex">
     <aside id="sidebar" class="glass-strong w-64 shrink-0 flex flex-col p-4 gap-1 fixed md:static inset-y-0 right-0 z-40">
-      <div class="flex items-center gap-3 px-2 py-3 mb-2">
-        <div class="w-10 h-10 rounded-xl p-0.5 bg-gradient-to-br from-amber-400 to-yellow-600 shadow-md shadow-amber-500/20 shrink-0 overflow-hidden">
-          <img src="/static/logo.jpg" class="w-full h-full object-cover rounded-lg" alt="Ehab ATS Logo">
+      <div class="flex items-center gap-3 px-2 py-3 mb-2 border-b border-slate-700/40 pb-3">
+        <div class="w-10 h-10 rounded-xl p-0.5 bg-slate-900 stroke-amber-500 shadow-md shrink-0 overflow-hidden border border-slate-700">
+          <img src="/static/cv_builder_logo.svg" class="w-full h-full object-contain rounded-lg" alt="CV Builder Logo">
         </div>
-        <div><div class="font-bold">Ehab ATS</div><div class="text-xs text-slate-400">Resume Platform</div></div>
+        <div>
+          <div class="font-black text-sm bg-gradient-to-r from-amber-300 via-amber-400 to-indigo-300 bg-clip-text text-transparent">ATS Resume Builder</div>
+          <div class="text-[11px] text-slate-400 font-bold">إيهاب شحيطير (Super Admin)</div>
+        </div>
       </div>
       ${navHtml}
       <div class="mt-auto pt-3 border-t border-slate-500/20">
-        <button class="nav-item" onclick="doLogout()"><i class="fas fa-right-from-bracket w-5 text-center"></i><span>خروج</span></button>
+        <button class="nav-item text-rose-400 hover:text-rose-300" onclick="doLogout()"><i class="fas fa-right-from-bracket w-5 text-center"></i><span>تسجيل الخروج</span></button>
       </div>
     </aside>
     <div class="flex-1 min-w-0 flex flex-col">
@@ -453,6 +456,17 @@ function renderApp() {
           <i class="fas fa-search absolute top-1/2 -translate-y-1/2 right-3 text-slate-400 text-sm"></i>
           <input id="global-search" class="input-field !py-2 !pr-9" placeholder="ابحث في السير الذاتية..." onkeydown="if(event.key==='Enter')nav('resumes',{q:this.value})">
         </div>
+        <div class="flex items-center gap-2 mr-auto">
+          <span class="hidden sm:inline-block text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20"><i class="fas fa-crown text-amber-400 ml-1"></i>إيهاب شحيطير</span>
+          <button class="btn-ghost !px-3" onclick="toggleDark()" title="الوضع الليلي"><i class="fas ${S.dark ? 'fa-sun' : 'fa-moon'}"></i></button>
+          <button class="btn-primary !py-2" onclick="newResumeFlow()"><i class="fas fa-plus ml-1"></i>سيرة جديدة</button>
+        </div>
+      </header>
+      <main id="main" class="flex-1 p-4 md:p-6 overflow-x-hidden"></main>
+    </div>
+  </div>`;
+  renderView();
+}
         <div class="flex items-center gap-2 mr-auto">
           <button class="btn-ghost !px-3" onclick="toggleDark()" title="الوضع الليلي"><i class="fas ${S.dark ? 'fa-sun' : 'fa-moon'}"></i></button>
           <button class="btn-primary !py-2" onclick="newResumeFlow()"><i class="fas fa-plus ml-1"></i>سيرة جديدة</button>
