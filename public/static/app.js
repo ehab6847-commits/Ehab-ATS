@@ -467,16 +467,6 @@ function renderApp() {
   </div>`;
   renderView();
 }
-        <div class="flex items-center gap-2 mr-auto">
-          <button class="btn-ghost !px-3" onclick="toggleDark()" title="الوضع الليلي"><i class="fas ${S.dark ? 'fa-sun' : 'fa-moon'}"></i></button>
-          <button class="btn-primary !py-2" onclick="newResumeFlow()"><i class="fas fa-plus ml-1"></i>سيرة جديدة</button>
-        </div>
-      </header>
-      <main id="main" class="flex-1 p-4 md:p-6 overflow-x-hidden"></main>
-    </div>
-  </div>`;
-  renderView();
-}
 
 function renderView() {
   const map = {
