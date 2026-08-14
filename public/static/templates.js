@@ -51,14 +51,18 @@ function tplEsc(s) {
 function resolveName(p) {
   const ar = (p.nameAr || p.fullNameAr || p.fullName || p.name || '').trim();
   let en = (p.nameEn || p.fullNameEn || (/[a-zA-Z]/.test(p.name || '') ? p.name : '') || '').trim();
-  if (!en && ar && typeof translateTextToEnglish === 'function') en = translateTextToEnglish(ar);
+  if (en === 'Full Name' || !en || /[\u0600-\u06FF]/.test(en)) {
+    if (ar && typeof translateTextToEnglish === 'function') en = translateTextToEnglish(ar);
+  }
   return { ar, en: en || ar, main: ar || en };
 }
 
 function resolveTitle(p) {
   const ar = (p.titleAr || p.jobTitleAr || p.jobTitle || p.title || '').trim();
   let en = (p.titleEn || p.jobTitleEn || (/[a-zA-Z]/.test(p.title || '') ? p.title : '') || '').trim();
-  if (!en && ar && typeof translateTextToEnglish === 'function') en = translateTextToEnglish(ar);
+  if (en === 'Job Title' || !en || /[\u0600-\u06FF]/.test(en)) {
+    if (ar && typeof translateTextToEnglish === 'function') en = translateTextToEnglish(ar);
+  }
   return { ar, en: en || ar, main: ar || en };
 }
 
@@ -244,29 +248,34 @@ const SIDE_SECTION_KINDS = ['skills', 'languages', 'certs', 'list'];
 function ensureEnglishData(data) {
   if (!data) return;
   const p = data.personal || {};
-  if (p.nameAr && (!p.nameEn || /[\u0600-\u06FF]/.test(p.nameEn))) {
-    p.nameEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.nameAr) : p.nameAr;
+  const srcName = (p.nameAr || p.fullNameAr || p.fullName || p.name || '').trim();
+  if (srcName && (!p.nameEn || p.nameEn === 'Full Name' || /[\u0600-\u06FF]/.test(p.nameEn))) {
+    p.nameEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcName) : srcName;
   }
-  if (p.titleAr && (!p.titleEn || /[\u0600-\u06FF]/.test(p.titleEn))) {
-    p.titleEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.titleAr) : p.titleAr;
+  const srcTitle = (p.titleAr || p.jobTitleAr || p.title || p.jobTitle || '').trim();
+  if (srcTitle && (!p.titleEn || p.titleEn === 'Job Title' || /[\u0600-\u06FF]/.test(p.titleEn))) {
+    p.titleEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcTitle) : srcTitle;
   }
-  if (p.cityAr && (!p.cityEn || /[\u0600-\u06FF]/.test(p.cityEn))) {
-    p.cityEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.cityAr) : p.cityAr;
+  const srcCity = (p.cityAr || p.city || '').trim();
+  if (srcCity && (!p.cityEn || /[\u0600-\u06FF]/.test(p.cityEn))) {
+    p.cityEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcCity) : srcCity;
   }
 
   (data.sections || []).forEach(sec => {
-    if (sec.titleAr && (!sec.titleEn || /[\u0600-\u06FF]/.test(sec.titleEn))) {
-      sec.titleEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(sec.titleAr) : sec.titleAr;
+    const srcSecTitle = (sec.titleAr || sec.title || '').trim();
+    if (srcSecTitle && (!sec.titleEn || /[\u0600-\u06FF]/.test(sec.titleEn))) {
+      sec.titleEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcSecTitle) : srcSecTitle;
     }
-    if (sec.textAr && (!sec.textEn || /[\u0600-\u06FF]/.test(sec.textEn))) {
-      sec.textEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(sec.textAr) : sec.textAr;
+    const srcSecText = (sec.textAr || sec.text || '').trim();
+    if (srcSecText && (!sec.textEn || /[\u0600-\u06FF]/.test(sec.textEn))) {
+      sec.textEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcSecText) : srcSecText;
     }
     (sec.items || []).forEach(it => {
-      ['role', 'org', 'company', 'degree', 'school', 'desc', 'name', 'level'].forEach(k => {
-        const ar = it[k + 'Ar'];
+      ['role', 'org', 'company', 'degree', 'school', 'desc', 'name', 'level', 'issuer', 'text'].forEach(k => {
+        const ar = it[k + 'Ar'] || it[k];
         const en = it[k + 'En'];
         if (ar && (!en || /[\u0600-\u06FF]/.test(en))) {
-          it[k + 'En'] = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(ar) : ar;
+          it[k + 'En'] = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(String(ar)) : String(ar);
         }
       });
     });

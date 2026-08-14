@@ -45,11 +45,14 @@ function translateTextToEnglish(text) {
   );
 
   // 2. Names
+  s = s.replace(/سليمان مرزيق العازمي/gi, 'Sulaiman Marzeeq Al-Azmi');
+  s = s.replace(/سليمان العازمي/gi, 'Sulaiman Al-Azmi');
   s = s.replace(/هيثم علي البهلول/gi, 'Haytham Ali Al-Bahloul');
   s = s.replace(/حمد هزاع النفيعي/gi, 'Hamad Hazza Al-Nufaei');
   s = s.replace(/عبدالله محمد/gi, 'Abdullah Mohammed');
 
   // 3. Locations (Complete Saudi Cities & Addresses)
+  s = s.replace(/المدينة المنورة،? المملكة العربية السعودية/gi, 'Madinah, Saudi Arabia');
   s = s.replace(/جدة،? المملكة العربية السعودية/gi, 'Jeddah, Saudi Arabia');
   s = s.replace(/جدة/gi, 'Jeddah');
   s = s.replace(/الطائف – الحوية،? المملكة العربية السعودية/gi, 'Taif - Al-Hawiyah, Saudi Arabia');
@@ -75,6 +78,8 @@ function translateTextToEnglish(text) {
   s = s.replace(/المملكة العربية السعودية/gi, 'Saudi Arabia');
 
   // 4. Degrees & Educational Institutions
+  s = s.replace(/الثانوية العامة \(القسم العلمي\)|الثانوية العامة – القسم العلمي/gi, 'High School Diploma (Scientific Stream)');
+  s = s.replace(/القسم العلمي/gi, 'Scientific Stream');
   s = s.replace(/دبلوم القوى الكهربائية|دبلوم قوى كهربائية/gi, 'Diploma in Electrical Power Technology');
   s = s.replace(/تخصص القوى الكهربائية/gi, 'Electrical Power Technology');
   s = s.replace(/شهادة الثانوية العامة|ثانوية عامة|الثانوية العامة/gi, 'High School Diploma');
@@ -85,6 +90,9 @@ function translateTextToEnglish(text) {
   s = s.replace(/جامعة الطائف/gi, 'Taif University');
 
   // 5. Roles & Organizations
+  s = s.replace(/متدرب إداري – جهة تدريب|متدرب إداري/gi, 'Administrative Trainee');
+  s = s.replace(/جهة تدريب/gi, 'Training Organization');
+  s = s.replace(/شركة قطاع خاص/gi, 'Private Sector Company');
   s = s.replace(/التدريب التعاوني – متدرب قوى كهربائية/gi, 'Cooperative Training – Electrical Power Trainee');
   s = s.replace(/التدريب التعاوني|تدريب تعاوني/gi, 'Cooperative Training');
   s = s.replace(/متدرب قوى كهربائية/gi, 'Electrical Power Trainee');
@@ -98,6 +106,10 @@ function translateTextToEnglish(text) {
   s = s.replace(/متدرب – تدريب عملي|تدريب عملي|متدرب/gi, 'Practical Trainee');
 
   // 6. Experience Bullet Points
+  s = s.replace(/المساهمة في تنظيم الملفات والوثائق الإدارية\.?/gi, 'Contributed to organizing administrative files and documents.');
+  s = s.replace(/دعم فريق العمل في تنفيذ المهام اليومية وإعداد التقارير الأساسية\.?/gi, 'Supported the team in executing daily tasks and preparing basic reports.');
+  s = s.replace(/استقبال ومتابعة المعاملات وتنظيم بيانات العمل\.?/gi, 'Received and followed up on transactions and organized operational data.');
+  s = s.replace(/تقديم الدعم الإداري والتنسيق بين الأقسام لضمان سير العمل بكفاءة\.?/gi, 'Provided administrative support and coordinated between departments to ensure efficient workflow.');
   s = s.replace(/اكتساب خبرة عملية في أنظمة القوى الكهربائية الصناعية\.?/gi, 'Gained practical experience in industrial electrical power systems.');
   s = s.replace(/تطبيق أساسيات الصيانة الكهربائية في بيئة صناعية\.?/gi, 'Applied electrical maintenance fundamentals in an industrial environment.');
   s = s.replace(/المساعدة في استكشاف الأعطال الكهربائية والمساهمة في معالجتها\.?/gi, 'Assisted in troubleshooting electrical faults and contributing to repairs.');
@@ -117,15 +129,13 @@ function translateTextToEnglish(text) {
   s = s.replace(/تنظيم الملفات والمستندات وترتيب البيانات\.?/gi, 'Organized files, documents, and data entries.');
 
   // 7. Training Courses & Certifications
-  s = s.replace(/دورة تعليم الإنقاذ والسلامة المائية – مركز دار العاشرة الرياضي\.?/gi, 'Water Rescue & Safety Course – Dar Al-Ashira Sports Center');
-  s = s.replace(/دورة تعليم الإنقاذ والسلامة المائية/gi, 'Water Rescue & Safety Course');
-  s = s.replace(/مركز دار العاشرة الرياضي/gi, 'Dar Al-Ashira Sports Center');
-  s = s.replace(/دورة الحاسب الآلي – مدة 6 أشهر، وتشمل معالجة النصوص وإدخال البيانات\.?/gi, '6-Month Computer Course (Word Processing & Data Entry)');
-  s = s.replace(/دورة الحاسب الآلي/gi, 'Computer Skills Course');
-  s = s.replace(/مدة 6 أشهر، وتشمل معالجة النصوص وإدخال البيانات/gi, '6 Months Duration (Word Processing & Data Entry)');
-  s = s.replace(/دورة مهارات إدارة الحشود الأساسية\.?/gi, 'Basic Crowd Management Skills Course');
-  s = s.replace(/أساسيات مهارات الحاسب الآلي\.?/gi, 'Computer Skills Fundamentals');
-  s = s.replace(/مهارات التواصل والعمل ضمن فريق\.?/gi, 'Communication & Teamwork Skills');
+  s = s.replace(/دورة مقدمة من صندوق تنمية الموارد البشرية \(هدف\)\.?/gi, 'Introductory Course by Human Resources Development Fund (HADAF)');
+  s = s.replace(/صندوق تنمية الموارد البشرية \(هدف\)|صندوق تنمية الموارد البشرية/gi, 'Human Resources Development Fund (HADAF)');
+  s = s.replace(/برنامج جداول البيانات Microsoft Excel\.?/gi, 'Microsoft Excel Data Spreadsheets Program');
+  s = s.replace(/دورة أساسيات الحاسب الآلي\.?/gi, 'Computer Fundamentals Course');
+  s = s.replace(/برنامج معالجة النصوص Microsoft Word\.?/gi, 'Microsoft Word Processing Program');
+  s = s.replace(/برنامج العروض التقديمية Microsoft PowerPoint\.?/gi, 'Microsoft PowerPoint Presentations Program');
+  s = s.replace(/رخصة قيادة خصوصي\.?/gi, 'Private Driving License');
 
   // 8. Skills
   s = s.replace(/الصيانة الكهربائية/gi, 'Electrical Maintenance');

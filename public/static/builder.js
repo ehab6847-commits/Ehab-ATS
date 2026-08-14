@@ -166,6 +166,11 @@ function bScalePreview() {
 
 /* ---------- form ---------- */
 function renderBuilderForm() {
+  if (B.resume.language === 'en' || B.resume.language === 'bilingual') {
+    if (typeof ensureEnglishData === 'function') {
+      ensureEnglishData(B.data);
+    }
+  }
   const p = B.data.personal || {};
   const pf = (k, label, dir) => `<div><label class="fld">${label}</label><input class="input-field !py-1.5" ${dir ? 'dir="' + dir + '"' : ''} value="${bEsc(p[k] || '')}" oninput="bPersonal('${k}', this.value)"></div>`;
   const sections = (B.data.sections || []).map((sec, i) => bSectionCard(sec, i)).join('');
