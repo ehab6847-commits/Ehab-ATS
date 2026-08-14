@@ -64,15 +64,21 @@ function resolveTitle(p) {
 
 function mkPick(lang) {
   return function (item, arKey, enKey) {
-    const ar = item[arKey] || '';
-    const en = item[enKey] || '';
+    if (!item) return '';
+    const baseKey = arKey.replace(/Ar$/, '');
+    const ar = (item[arKey] || item[baseKey] || item[baseKey + 'Ar'] || '').trim();
+    let en = (item[enKey] || item[baseKey + 'En'] || (/[a-zA-Z]/.test(item[baseKey] || '') ? item[baseKey] : '') || '').trim();
+
     if (lang === 'en') {
-      const val = en || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(ar) : '') || ar;
-      return tplEsc(val);
+      if (!en || /[\u0600-\u06FF]/.test(en)) {
+        en = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(ar || en) : en;
+      }
+      return tplEsc(en || ar);
     }
     if (lang === 'bilingual') {
-      if (ar && en) return tplEsc(ar) + '<span class="cv-bilingual-sub">' + tplEsc(en) + '</span>';
-      return tplEsc(ar || en);
+      const enVal = en || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(ar) : '');
+      if (ar && enVal) return tplEsc(ar) + '<span class="cv-bilingual-sub">' + tplEsc(enVal) + '</span>';
+      return tplEsc(ar || enVal);
     }
     return tplEsc(ar || en);
   };
