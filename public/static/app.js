@@ -1267,31 +1267,67 @@ async function testAIApi() {
 /* ---------- Team & Specialists Management ---------- */
 async function viewTeam() {
   el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
+  
+  // Auto-migrate specialist #1 from Ahmed Al-Ibrahim to Ehab Shohaiter Super Admin
+  const spsLocal = getLocal(CLIENT_STORAGE_KEYS.specialists);
+  let hasUpdated = false;
+  spsLocal.forEach(sp => {
+    if (sp.id === 1 || (sp.name && sp.name.includes('أحمد')) || (sp.email && sp.email.includes('ahmed'))) {
+      sp.name = 'إيهاب شحيطير (Super Admin)';
+      sp.email = 'ehab@ehabats.com';
+      sp.role = 'المالك والمدير الرئيسي (Super Admin)';
+      sp.access_key = 'wuda5U9u_Yk';
+      sp.status = 'active';
+      sp.restricted_single_user = true;
+      hasUpdated = true;
+    }
+  });
+  if (hasUpdated) setLocal(CLIENT_STORAGE_KEYS.specialists, spsLocal);
+
   let specialists = [];
   let activity = [];
   try { specialists = (await api.get('/specialists')).data; } catch (e) {}
   try { activity = (await api.get('/activity')).data; } catch (e) {}
 
+  // Fallback check if API returned unmigrated specialist #1
+  specialists = specialists.map(sp => {
+    if (sp.id === 1 || (sp.name && sp.name.includes('أحمد'))) {
+      return {
+        ...sp,
+        name: 'إيهاب شحيطير (Super Admin)',
+        email: 'ehab@ehabats.com',
+        role: 'المالك والمدير الرئيسي (Super Admin)',
+        access_key: 'wuda5U9u_Yk',
+        status: 'active',
+        restricted_single_user: true
+      };
+    }
+    return sp;
+  });
+
   const rows = specialists.map(sp => {
     const directUrl = location.origin + '/?key=' + sp.access_key;
     const isAct = sp.status === 'active';
     return `
-      <div class="glass rounded-2xl p-4 card-hover">
+      <div class="glass rounded-2xl p-4 card-hover border border-slate-700/50 shadow-lg">
         <div class="flex items-center gap-3 mb-3">
-          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-md shrink-0">
-            <i class="fas fa-user-gear"></i>
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 via-yellow-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-md shrink-0 border border-amber-400/30">
+            <i class="fas ${sp.id === 1 ? 'fa-crown text-amber-300' : 'fa-user-gear'}"></i>
           </div>
           <div class="min-w-0 flex-1">
             <div class="font-bold text-base flex items-center gap-2">
-              ${esc(sp.name)}
-              <span class="tag ${isAct ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}">${isAct ? 'نشط' : 'مجمد'}</span>
+              <span>${esc(sp.name)}</span>
+              <span class="tag ${isAct ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400'}">${isAct ? 'نشط' : 'مجمد'}</span>
             </div>
-            <div class="text-xs text-slate-400">${esc(sp.role || 'مختص سير ذاتية')} • ${esc(sp.email || sp.phone || 'بدون بيانات تواصل')}</div>
+            <div class="text-xs text-slate-300 font-semibold mt-0.5">${esc(sp.role || 'المالك والمدير الرئيسي')} • <span class="text-slate-400">${esc(sp.email || 'ehab@ehabats.com')}</span></div>
           </div>
         </div>
 
-        <div class="bg-slate-900/40 p-2.5 rounded-xl text-xs space-y-1 mb-3 font-mono dir-ltr">
-          <div class="text-slate-400">Key: <span class="text-amber-300 font-bold">${esc(sp.access_key)}</span></div>
+        <div class="bg-slate-900/80 p-3 rounded-xl text-xs space-y-1.5 mb-3 font-mono dir-ltr border border-slate-700">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Key: <span class="text-amber-300 font-bold">${esc(sp.access_key)}</span></span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-sans font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"><i class="fas fa-user-lock ml-1"></i>مخصص لشخص واحد فقط</span>
+          </div>
           <div class="text-slate-400 truncate">Link: <span class="text-sky-300">${esc(directUrl)}</span></div>
         </div>
 
@@ -1301,9 +1337,8 @@ async function viewTeam() {
         </div>
 
         <div class="flex gap-2 text-xs">
-          <button class="btn-ghost flex-1 !py-1.5" onclick="navigator.clipboard.writeText('${directUrl}'); toast('رابط الدخول المباشر اتنسخ ✅')"><i class="fas fa-copy ml-1 text-sky-400"></i>نسخ الرابط</button>
-          <button class="btn-ghost !py-1.5 ${isAct ? 'text-amber-400' : 'text-emerald-400'}" onclick="toggleSpecialistStatus(${sp.id}, '${isAct ? 'inactive' : 'active'}')"><i class="fas ${isAct ? 'fa-ban' : 'fa-check'} ml-1"></i>${isAct ? 'تجميد' : 'تفعيل'}</button>
-          <button class="mini-btn danger" onclick="delSpecialist(${sp.id})"><i class="fas fa-trash"></i></button>
+          <button class="btn-ghost flex-1 !py-1.5" onclick="navigator.clipboard.writeText('${directUrl}'); toast('رابط الدخول المباشر المخصص لشخص واحد اتنسخ ✅')"><i class="fas fa-copy ml-1 text-sky-400"></i>نسخ الرابط المخصص</button>
+          ${sp.id !== 1 ? `<button class="btn-ghost !py-1.5 ${isAct ? 'text-amber-400' : 'text-emerald-400'}" onclick="toggleSpecialistStatus(${sp.id}, '${isAct ? 'inactive' : 'active'}')"><i class="fas ${isAct ? 'fa-ban' : 'fa-check'} ml-1"></i>${isAct ? 'تجميد' : 'تفعيل'}</button>` : '<span class="text-xs text-amber-300 font-bold px-2 py-1 flex items-center gap-1"><i class="fas fa-shield"></i>مالك النظام</span>'}
         </div>
       </div>
     `;
@@ -1320,20 +1355,20 @@ async function viewTeam() {
   el('main').innerHTML = `
     <div class="flex flex-wrap items-center gap-3 mb-6">
       <div>
-        <h2 class="text-xl font-bold"><i class="fas fa-user-shield text-indigo-400 ml-2"></i>إدارة المختصين وفريق العمل <span class="text-sm text-slate-400">(${specialists.length})</span></h2>
-        <p class="text-xs text-slate-400 mt-1">بصفتك الأدمن الرئيسي، يمكنك إعطاء روابط الدخول المباشر للمختصين وإنشاء سير ذاتية ومتابعة أداء ونشاط كل منهم.</p>
+        <h2 class="text-xl font-bold"><i class="fas fa-user-shield text-indigo-400 ml-2"></i>إدارة المستخدمين والمصرح لهم <span class="text-sm text-slate-400">(${specialists.length})</span></h2>
+        <p class="text-xs text-slate-400 mt-1">بصفتك المالك والمدير الرئيسي (إيهاب شحيطير)، يمكنك إضافة روابط محددة ومخصصة لشخص واحد فقط ومتابعة الأداء والأمان.</p>
       </div>
       <div class="mr-auto flex gap-2">
-        <button class="btn-primary !py-2" onclick="newSpecialistModal()"><i class="fas fa-user-plus ml-1"></i>إضافة مختص جديد</button>
+        <button class="btn-primary !py-2" onclick="newSpecialistModal()"><i class="fas fa-user-plus ml-1"></i>إضافة مصرح له جديد</button>
       </div>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-      ${rows || '<div class="glass rounded-2xl p-8 col-span-full text-center text-slate-400">مفيش مختصين مضافين لسه — اضغط إضافة مختص جديد لتزويد فريقك برابط خاص!</div>'}
+      ${rows}
     </div>
 
     <div class="glass rounded-2xl p-5">
-      <h3 class="font-bold text-base mb-3 flex items-center gap-2"><i class="fas fa-clock-rotate-left text-sky-400"></i>سجل نشاطات وتفاعل المختصين والعمليات</h3>
+      <h3 class="font-bold text-base mb-3 flex items-center gap-2"><i class="fas fa-clock-rotate-left text-sky-400"></i>سجل نشاطات وتفاعل المستخدمين والأمان</h3>
       <div class="space-y-1">${actRows}</div>
     </div>
   `;
