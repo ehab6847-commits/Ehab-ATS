@@ -39,7 +39,7 @@ function logLocalActivity(action, entity, entityId, details) {
 // Seed initial data if empty
 if (!localStorage.getItem(CLIENT_STORAGE_KEYS.specialists)) {
   setLocal(CLIENT_STORAGE_KEYS.specialists, [
-    { id: 1, name: 'أحمد الإبراهيم (مختص رئيسي)', email: 'ahmed@ehabats.com', phone: '0501234567', role: 'مختص سير ذاتية', access_key: 'sp_demo1', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() }
+    { id: 1, name: 'إيهاب شحيطير (Super Admin & المالك الرئيسي)', email: 'ehab@ehabats.com', phone: '0501234567', role: 'المالك والمدير الرئيسي', access_key: 'wuda5U9u_Yk', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() }
   ]);
 }
 if (!localStorage.getItem(CLIENT_STORAGE_KEYS.clients)) {
@@ -254,7 +254,7 @@ api.defaults.adapter = async function (config) {
       }
     } else {
       resultText = JSON.stringify({
-        personal: { nameAr: 'أحمد الإبراهيم', nameEn: 'Ahmed Al-Ibrahim', titleAr: 'مطور برمجيات متكامل', titleEn: 'Full Stack Software Engineer', email: 'ahmed@example.com', phone: '0501234567', cityAr: 'الرياض', cityEn: 'Riyadh' },
+        personal: { nameAr: 'إيهاب شحيطير', nameEn: 'Ehab Shohaiter', titleAr: 'المالك والمدير الرئيسي — Super Admin', titleEn: 'Owner & Super Admin', email: 'ehab@ehabats.com', phone: '0501234567', cityAr: 'جدة', cityEn: 'Jeddah' },
         sections: [
           { id: 's1', type: 'summary', titleAr: 'الملخص المهني', titleEn: 'Professional Summary', textAr: 'مطور برمجيات بخبرة أكثر من 5 سنوات في بناء وتطوير التطبيقات السحابية والنظم الموزعة.', textEn: 'Full Stack Engineer with 5+ years of experience in building cloud applications.', visible: true },
           { id: 's2', type: 'experience', titleAr: 'الخبرات العملية', titleEn: 'Work Experience', visible: true, items: [{ roleAr: 'مطور برمجيات أول', roleEn: 'Senior Software Engineer', orgAr: 'شركة التقنية المتقدمة', orgEn: 'Advanced Tech Co', start: '2021', end: 'الحالي', descAr: '• قمت بتطوير وإدارة المنصات السحابية بنجاح.\n• رفعت كفاءة النظام بنسبة 30%.', descEn: '• Developed high throughput microservices.\n• Improved performance by 30%.' }] },

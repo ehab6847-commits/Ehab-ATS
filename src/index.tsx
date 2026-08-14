@@ -25,7 +25,7 @@ class MemoryDB {
   private idCounter = 1
 
   private specialists: any[] = [
-    { id: 1, name: 'أحمد الإبراهيم (مختص رئيسي)', email: 'ahmed@ehabats.com', phone: '0501234567', role: 'specialist', access_key: 'sp_demo1', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() }
+    { id: 1, name: 'إيهاب شحيطير (Super Admin & المالك الرئيسي)', email: 'ehab@ehabats.com', phone: '0501234567', role: 'super_admin', access_key: 'wuda5U9u_Yk', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() }
   ]
 
   prepare(sql: string) {
