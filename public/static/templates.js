@@ -50,21 +50,26 @@ function tplEsc(s) {
 
 function resolveName(p) {
   const ar = (p.nameAr || p.fullNameAr || p.fullName || p.name || '').trim();
-  const en = (p.nameEn || p.fullNameEn || p.name || '').trim();
-  return { ar, en, main: ar || en };
+  let en = (p.nameEn || p.fullNameEn || (/[a-zA-Z]/.test(p.name || '') ? p.name : '') || '').trim();
+  if (!en && ar && typeof translateTextToEnglish === 'function') en = translateTextToEnglish(ar);
+  return { ar, en: en || ar, main: ar || en };
 }
 
 function resolveTitle(p) {
   const ar = (p.titleAr || p.jobTitleAr || p.jobTitle || p.title || '').trim();
-  const en = (p.titleEn || p.jobTitleEn || p.title || '').trim();
-  return { ar, en, main: ar || en };
+  let en = (p.titleEn || p.jobTitleEn || (/[a-zA-Z]/.test(p.title || '') ? p.title : '') || '').trim();
+  if (!en && ar && typeof translateTextToEnglish === 'function') en = translateTextToEnglish(ar);
+  return { ar, en: en || ar, main: ar || en };
 }
 
 function mkPick(lang) {
   return function (item, arKey, enKey) {
     const ar = item[arKey] || '';
     const en = item[enKey] || '';
-    if (lang === 'en') return tplEsc(en || ar);
+    if (lang === 'en') {
+      const val = en || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(ar) : '') || ar;
+      return tplEsc(val);
+    }
     if (lang === 'bilingual') {
       if (ar && en) return tplEsc(ar) + '<span class="cv-bilingual-sub">' + tplEsc(en) + '</span>';
       return tplEsc(ar || en);
@@ -77,7 +82,7 @@ function secTitle(sec, lang, showIcons) {
   const def = SECTION_TYPES[sec.type] || SECTION_TYPES.custom;
   let t;
   if (sec.type === 'custom') {
-    t = lang === 'en' ? (sec.titleEn || sec.titleAr || 'Custom') : (sec.titleAr || sec.titleEn || 'قسم');
+    t = lang === 'en' ? (sec.titleEn || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(sec.titleAr) : '') || sec.titleAr || 'Custom Section') : (sec.titleAr || sec.titleEn || 'قسم');
   } else {
     t = lang === 'en' ? def.en : (lang === 'bilingual' ? def.ar + ' | ' + def.en : def.ar);
   }
@@ -87,9 +92,11 @@ function secTitle(sec, lang, showIcons) {
 
 function dateRange(item, lang) {
   const cur = lang === 'en' ? 'Present' : 'حتى الآن';
-  const end = item.current ? cur : (item.end || '');
-  if (!item.start && !end) return '';
-  return `<span class="cv-item-date">${tplEsc(item.start || '')}${item.start && end ? ' — ' : ''}${tplEsc(end)}</span>`;
+  let end = item.current ? cur : (item.end || '');
+  if (lang === 'en' && (end === 'حتى الآن' || end.includes('الآن') || end.includes('الحالي'))) end = 'Present';
+  let start = item.start || '';
+  if (!start && !end) return '';
+  return `<span class="cv-item-date">${tplEsc(start)}${start && end ? ' — ' : ''}${tplEsc(end)}</span>`;
 }
 
 function renderSectionBody(sec, lang, tpl) {
@@ -98,7 +105,7 @@ function renderSectionBody(sec, lang, tpl) {
   const kind = (SECTION_TYPES[sec.type] || {}).kind || sec.kind || 'custom';
 
   if (kind === 'text') {
-    const txt = lang === 'en' ? (sec.textEn || sec.textAr) : (lang === 'bilingual' && sec.textAr && sec.textEn ? sec.textAr + '\n\n' + sec.textEn : (sec.textAr || sec.textEn));
+    let txt = lang === 'en' ? (sec.textEn || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(sec.textAr) : '') || sec.textAr) : (lang === 'bilingual' && sec.textAr && sec.textEn ? sec.textAr + '\n\n' + sec.textEn : (sec.textAr || sec.textEn));
     return `<p class="cv-item-desc" style="margin:0">${tplEsc(txt || '')}</p>`;
   }
 
@@ -188,11 +195,11 @@ function renderContact(p, lang, allowContactIcons) {
   
   if (p.phone) bits.push(`<span dir="ltr">${ic('fas fa-phone')}${tplEsc(p.phone)}</span>`);
   if (p.email) bits.push(`<span>${ic('fas fa-envelope')}${tplEsc(p.email)}</span>`);
-  const city = lang === 'en' ? (p.cityEn || p.city) : (p.city || p.cityEn);
+  const city = lang === 'en' ? (p.cityEn || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.cityAr || p.city) : '') || p.city) : (p.cityAr || p.city || p.cityEn);
   if (city) bits.push(`<span>${ic('fas fa-map-marker-alt')}${tplEsc(city)}</span>`);
   if (p.linkedin) bits.push(`<span dir="ltr">${ic('fab fa-linkedin')}${tplEsc(p.linkedin)}</span>`);
   if (p.website) bits.push(`<span dir="ltr">${ic('fas fa-globe')}${tplEsc(p.website)}</span>`);
-  if (p.nationality) bits.push(`<span>${ic('fas fa-flag')}${tplEsc(p.nationality)}</span>`);
+  if (p.nationality) bits.push(`<span>${ic('fas fa-flag')}${tplEsc(lang === 'en' ? (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.nationality) : p.nationality) : p.nationality)}</span>`);
 
   if (bits.length === 0) return '';
   const sep = `<span class="cv-contact-sep">•</span>`;

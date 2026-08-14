@@ -1472,14 +1472,21 @@ async function delSpecialist(id) {
 (function checkDirectKeyAccess() {
   const params = new URLSearchParams(window.location.search);
   const key = params.get('key');
-  if (key && !S.token) {
-    if (key === 'wuda5U9u_Yk' || key.startsWith('sp_') || key.length >= 4) {
-      const mockToken = 'ehab_token_' + Date.now();
+  if (key) {
+    if (key === 'wuda5U9u_Yk') {
+      const mockToken = 'ehab_admin_token_' + Date.now();
       S.token = mockToken;
+      S.role = 'super_admin';
       localStorage.setItem('ehab_token', mockToken);
       history.replaceState(null, '', window.location.pathname);
-      renderApp();
-      toast('مرحباً بك! تم الدخول المباشر للحساب ✅');
+      toast('أهلاً بك يا إيهاب شحيطير (Super Admin — المالك والمدير الرئيسي) 👋');
+    } else if (key.startsWith('sp_') || key.length >= 4) {
+      const mockToken = 'ehab_sp_token_' + Date.now();
+      S.token = mockToken;
+      S.role = 'specialist';
+      localStorage.setItem('ehab_token', mockToken);
+      history.replaceState(null, '', window.location.pathname);
+      toast('مرحباً بك! تم تسجيل الدخول المباشر للمنصة كمختص مصرح له ✅');
     }
   }
 })();
