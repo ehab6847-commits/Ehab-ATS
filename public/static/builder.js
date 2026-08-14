@@ -821,6 +821,12 @@ function printResumePDF() {
   if (!B || !B.data) return toast('لا توجد سيرة مفتوحة للتنزيل', 'err');
   closeModal();
 
+  // Auto-fit layout if needed before opening print window
+  const previewPage = document.querySelector('#b-preview .cv-page') || document.querySelector('.cv-page');
+  if (previewPage && previewPage.scrollHeight > 1123) {
+    bAutoFitSinglePage(true);
+  }
+
   const p = B.data.personal || {};
   const tpl = B.resume.template || 'canva_purple';
   const lang = B.resume.language || 'ar';
@@ -842,7 +848,8 @@ function printResumePDF() {
 <title>${bEsc(title)}</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;600;700&family=Almarai:wght@300;400;700&family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;800&family=Changa:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;600;700&family=Inter:wght@300;400;600;700&family=Kufam:wght@400;600;700&family=Montserrat:wght@300;400;600;700&family=Noto+Sans+Arabic:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&family=Readex+Pro:wght@300;400;600;700&family=Roboto:wght@300;400;600;700&family=Rubik:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;600;700&family=Almarai:wght@300;400;700&family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;800&family=Changa:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;600;700&family=Inter:wght@300;400;600;700&family=Kufam:wght@400;600;700&family=Montserrat:wght@300;400;600;700&family=Noto+Sans+Arabic:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&family=Readex+Pro:wght@300;400;600;700&family=Roboto:wght@300;400;600;700&family=Rubik:wght@300;400;500;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="/static/styles.css" rel="stylesheet">
 <link href="/static/templates.css" rel="stylesheet">
 <style>
 @page { size: A4 portrait; margin: 0; }
@@ -851,29 +858,44 @@ function printResumePDF() {
   print-color-adjust: exact !important;
   color-adjust: exact !important;
 }
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 210mm !important;
+  min-height: 297mm !important;
+  background: #ffffff !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+.cv-page {
+  width: 210mm !important;
+  height: 297mm !important;
+  max-height: 297mm !important;
+  overflow: hidden !important;
+  margin: 0 auto !important;
+  box-shadow: none !important;
+  border: none !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
 @media print {
   .no-print { display: none !important; }
   html, body {
     margin: 0 !important;
     padding: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    overflow: hidden !important;
     background: #ffffff !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
   }
   .cv-page {
-    margin: 0 auto !important;
+    margin: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    overflow: hidden !important;
     box-shadow: none !important;
-    width: 100% !important;
     border: none !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  .cv-sec-title {
-    border-bottom-style: solid !important;
-    -webkit-print-color-adjust: exact !important;
-  }
-  .cv-chip, .cv-skill-fill, .cv-side, .cv-header-band {
-    -webkit-print-color-adjust: exact !important;
   }
 }
 body { background: #0f172a; padding: 20px; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; align-items: center; }
@@ -883,7 +905,7 @@ body { background: #0f172a; padding: 20px; font-family: 'Cairo', sans-serif; dis
 </head>
 <body>
 <div class="print-banner no-print">
-  <div><b>اختر "حفظ بتنسيق PDF" (Save as PDF) من نافذة الطباعة لتنزيل الملف بالتنسيق والخط والرموز كاملة</b></div>
+  <div><b>اختر "حفظ بتنسيق PDF" (Save as PDF) من نافذة الطباعة لتنزيل الملف بالتنسيق والخط والرموز كاملة في صفحة واحدة A4</b></div>
   <button class="print-btn" onclick="window.print()"><i class="fas fa-file-pdf ml-1"></i>حفظ / تنزيل PDF الآن</button>
 </div>
 ${cvHtml}
@@ -891,7 +913,7 @@ ${cvHtml}
 window.onload = function() {
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function() {
-      setTimeout(function() { window.print(); }, 250);
+      setTimeout(function() { window.print(); }, 300);
     });
   } else {
     setTimeout(function() { window.print(); }, 600);
