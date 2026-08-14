@@ -238,15 +238,17 @@ api.defaults.adapter = async function (config) {
   // AI Generation (Offline Smart AI Engine)
   if (url === '/ai/generate' && method === 'post') {
     const task = body.task || 'full_resume';
-    const rawPrompt = body.prompt || '';
+    const rawPrompt = body.prompt != null ? body.prompt : '';
     const lang = body.language || 'ar';
 
+    const promptStr = typeof rawPrompt === 'string' ? rawPrompt : (typeof rawPrompt === 'object' ? JSON.stringify(rawPrompt) : String(rawPrompt));
+
     // Strip out prompt instructions if present to isolate clean user text
-    let cleanPrompt = rawPrompt
+    let cleanPrompt = promptStr
       .replace(/^استخرج ونظم وحول النص والمعلومات التالية إلى سيرة ذاتية مكتملة الحقول ومحتوى احترافي جداً:\s*"?/gi, '')
       .replace(/"?\s*أرجع البيانات كـ JSON[\s\S]*$/gi, '')
       .trim();
-    if (!cleanPrompt) cleanPrompt = rawPrompt;
+    if (!cleanPrompt) cleanPrompt = promptStr;
 
     let resultText = '';
 
@@ -272,12 +274,14 @@ api.defaults.adapter = async function (config) {
       });
     }
 
+    const safeResultText = typeof resultText === 'string' ? resultText : JSON.stringify(resultText || '');
+
     const aiHist = getLocal(CLIENT_STORAGE_KEYS.aiHistory);
-    aiHist.unshift({ id: Date.now(), provider: 'Smart AI Engine 🚀', task, prompt: prompt.slice(0, 100), response: resultText.slice(0, 200), created_at: new Date().toISOString() });
+    aiHist.unshift({ id: Date.now(), provider: 'Smart AI Engine 🚀', task, prompt: promptStr.slice(0, 100), response: safeResultText.slice(0, 200), created_at: new Date().toISOString() });
     setLocal(CLIENT_STORAGE_KEYS.aiHistory, aiHist);
 
     logLocalActivity('ai_generate', 'ai', body.resume_id || null, `توليد الذكاء الاصطناعي: ${task}`);
-    return { data: { text: resultText, provider: 'Smart AI Engine 🚀' }, status: 200, headers: {}, config };
+    return { data: { text: safeResultText, provider: 'Smart AI Engine 🚀' }, status: 200, headers: {}, config };
   }
 
   return { data: { ok: true }, status: 200, headers: {}, config };

@@ -689,8 +689,10 @@ app.post('/api/ai/generate', async (c) => {
   }
 
   try {
+    const safePrompt = typeof prompt === 'string' ? prompt : JSON.stringify(prompt || '')
+    const safeText = typeof text === 'string' ? text : JSON.stringify(text || '')
     await db.prepare('INSERT INTO ai_history (provider,task,prompt,response,resume_id) VALUES (?,?,?,?,?)')
-      .bind(used, b.task || 'generate', prompt.slice(0, 1000), text.slice(0, 10000), b.resume_id || null).run()
+      .bind(used, b.task || 'generate', safePrompt.slice(0, 1000), safeText.slice(0, 10000), b.resume_id || null).run()
   } catch {}
 
   return c.json({ text, provider: used })
