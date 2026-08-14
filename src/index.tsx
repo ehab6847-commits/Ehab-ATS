@@ -134,6 +134,18 @@ class MemoryDB {
               const rId = params[params.length - 1]
               const r = self.resumes.find(x => x.id == rId)
               if (r) {
+                let pIdx = 0
+                for (const f of ['title', 'language', 'template', 'status', 'client_id', 'is_favorite', 'ats_score']) {
+                  if (s.includes(`${f.toUpperCase()}=?`)) {
+                    r[f] = params[pIdx++]
+                  }
+                }
+                if (s.includes('DATA=?')) {
+                  r.data = params[pIdx++]
+                }
+                if (s.includes('CUSTOMIZATION=?')) {
+                  r.customization = params[pIdx++]
+                }
                 r.updated_at = now
               }
             } else if (s.startsWith('DELETE FROM SPECIALISTS')) {
