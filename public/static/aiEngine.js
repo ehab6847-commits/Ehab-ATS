@@ -187,7 +187,32 @@ function translateTextToEnglish(text) {
       .replace(/الالتزام بالمواعيد/g, 'Punctuality')
       .replace(/والأنظمة/g, 'and regulations')
       .replace(/التعاون مع فريق العمل/g, 'Collaborated with team members')
-      .replace(/إنجاز المهام المطلوبة/g, 'Completing required tasks');
+      .replace(/إنجاز المهام المطلوبة/g, 'Completing required tasks')
+      .replace(/خبرة|خبرات/g, 'Experience')
+      .replace(/مهارة|مهارات/g, 'Skills')
+      .replace(/دورة|دورات/g, 'Training & Courses')
+      .replace(/شهادة|شهادات/g, 'Certifications')
+      .replace(/جامعة/g, 'University')
+      .replace(/كلية/g, 'College')
+      .replace(/مدرسة/g, 'School')
+      .replace(/شركة/g, 'Company')
+      .replace(/مؤسسة/g, 'Establishment')
+      .replace(/مستشفى/g, 'Hospital')
+      .replace(/مركز/g, 'Center')
+      .replace(/إدارة/g, 'Management')
+      .replace(/قسم/g, 'Department')
+      .replace(/مشروع/g, 'Project')
+      .replace(/عمليات/g, 'Operations')
+      .replace(/خدمة/g, 'Service')
+      .replace(/دعم/g, 'Support')
+      .replace(/تطوير/g, 'Development')
+      .replace(/تصميم/g, 'Design')
+      .replace(/تنفيذ/g, 'Execution')
+      .replace(/متابعة/g, 'Monitoring')
+      .replace(/إعداد/g, 'Preparation')
+      .replace(/تقديم/g, 'Providing')
+      .replace(/الحالي|حتى الآن/g, 'Present')
+      .replace(/[\u0600-\u06FF]+/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   return s;

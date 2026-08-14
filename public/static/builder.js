@@ -107,6 +107,12 @@ function exitBuilder() {
 /* ---------- state & autosave ---------- */
 function bSet(field, val) {
   B.resume[field] = val;
+  if (field === 'language' && (val === 'en' || val === 'bilingual')) {
+    if (typeof ensureEnglishData === 'function') {
+      ensureEnglishData(B.data);
+    }
+    renderBuilderForm();
+  }
   bTouched();
   if (field === 'template' || field === 'language') bPreview();
 }
