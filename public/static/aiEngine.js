@@ -28,6 +28,61 @@ function cleanContentLine(s) {
   return str;
 }
 
+// Universal Phonetic & Dictionary Arabic -> English Name Transliteration Engine
+function translateArabicNameToEnglish(str) {
+  if (!str) return '';
+  let s = str.trim();
+
+  const fullMap = {
+    'سليمان مرزيق العازمي': 'Sulaiman Marzeeq Al-Azmi',
+    'سليمان العازمي': 'Sulaiman Al-Azmi',
+    'أحمد إبراهيم': 'Ahmed Ibrahim',
+    'احمد ابراهيم': 'Ahmed Ibrahim',
+    'إيهاب شحيطير': 'Ehab Shohaiter',
+    'ايهاب شحيطير': 'Ehab Shohaiter',
+    'حمد هزاع النفيعي': 'Hamad Hazza Al-Nufaei',
+    'هيثم علي البهلول': 'Haytham Ali Al-Bahloul'
+  };
+  if (fullMap[s]) return fullMap[s];
+
+  const wordMap = {
+    'سليمان': 'Sulaiman', 'سلمان': 'Salman', 'سلطان': 'Sultan', 'سعود': 'Saud',
+    'مرزيق': 'Marzeeq', 'مرزوق': 'Marzooq', 'العازمي': 'Al-Azmi', 'النفيعي': 'Al-Nufaei',
+    'العتيبي': 'Al-Otaibi', 'القحطاني': 'Al-Qahtani', 'الشهري': 'Al-Shehri',
+    'الغامدي': 'Al-Ghamdi', 'الدوسري': 'Al-Dawsari', 'الزهراني': 'Al-Zahrani',
+    'العنزي': 'Al-Enezi', 'الشمري': 'Al-Shammari', 'المطيري': 'Al-Mutairi',
+    'الحربي': 'Al-Harbi', 'المالكي': 'Al-Malki', 'السبيعي': 'Al-Subaie',
+    'أحمد': 'Ahmed', 'احمد': 'Ahmed', 'محمد': 'Mohammed', 'محمود': 'Mahmoud',
+    'علي': 'Ali', 'حسن': 'Hassan', 'حسين': 'Hussein', 'إبراهيم': 'Ibrahim', 'ابراهيم': 'Ibrahim',
+    'عبدالله': 'Abdullah', 'عبد الله': 'Abdullah', 'عبدالرحمن': 'Abdulrahman', 'عبد الرحمن': 'Abdulrahman',
+    'عبدالعزيز': 'Abdulaziz', 'عبد العزيز': 'Abdulaziz', 'عبدالمجيد': 'Abdulmajeed',
+    'فهد': 'Fahad', 'فيصل': 'Faisal', 'خالد': 'Khalid', 'تركي': 'Turki',
+    'عمر': 'Omar', 'عثمان': 'Othman', 'يوسف': 'Youssef', 'صالح': 'Saleh',
+    'ناصر': 'Nasser', 'ماجد': 'Majed', 'وليد': 'Waleed', 'ياسر': 'Yasser',
+    'إيهاب': 'Ehab', 'ايهاب': 'Ehab', 'شحيطير': 'Shohaiter'
+  };
+
+  return s.split(/\s+/).map(w => {
+    const cleanW = w.trim();
+    if (!cleanW) return '';
+    if (wordMap[cleanW]) return wordMap[cleanW];
+    let res = cleanW
+      .replace(/^ال/, 'Al-')
+      .replace(/عبد\s*/, 'Abdul')
+      .replace(/أ|إ|آ|ا/g, 'a')
+      .replace(/ب/g, 'b').replace(/ت|ة/g, 't').replace(/ث/g, 'th')
+      .replace(/ج/g, 'j').replace(/ح/g, 'h').replace(/خ/g, 'kh')
+      .replace(/د/g, 'd').replace(/ذ/g, 'dh').replace(/ر/g, 'r')
+      .replace(/ز/g, 'z').replace(/س/g, 's').replace(/ش/g, 'sh')
+      .replace(/ص/g, 's').replace(/ض/g, 'd').replace(/ط/g, 't')
+      .replace(/ظ/g, 'z').replace(/ع/g, 'a').replace(/غ/g, 'gh')
+      .replace(/ف/g, 'f').replace(/ق/g, 'q').replace(/ك/g, 'k')
+      .replace(/ل/g, 'l').replace(/م/g, 'm').replace(/ن/g, 'n')
+      .replace(/ه/g, 'h').replace(/و/g, 'w').replace(/ي|ى|ئ/g, 'y');
+    return res ? res.charAt(0).toUpperCase() + res.slice(1) : '';
+  }).filter(Boolean).join(' ');
+}
+
 // Deep Universal Arabic -> English Resume Translator
 function translateTextToEnglish(text) {
   if (!text) return '';

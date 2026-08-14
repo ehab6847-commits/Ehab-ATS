@@ -52,7 +52,11 @@ function resolveName(p) {
   const ar = (p.nameAr || p.fullNameAr || p.fullName || p.name || '').trim();
   let en = (p.nameEn || p.fullNameEn || (/[a-zA-Z]/.test(p.name || '') ? p.name : '') || '').trim();
   if (en === 'Full Name' || !en || /[\u0600-\u06FF]/.test(en)) {
-    if (ar && typeof translateTextToEnglish === 'function') en = translateTextToEnglish(ar);
+    if (ar) {
+      en = typeof translateArabicNameToEnglish === 'function'
+        ? translateArabicNameToEnglish(ar)
+        : (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(ar) : ar);
+    }
   }
   return { ar, en: en || ar, main: ar || en };
 }
@@ -250,7 +254,9 @@ function ensureEnglishData(data) {
   const p = data.personal || {};
   const srcName = (p.nameAr || p.fullNameAr || p.fullName || p.name || '').trim();
   if (srcName && (!p.nameEn || p.nameEn === 'Full Name' || /[\u0600-\u06FF]/.test(p.nameEn))) {
-    p.nameEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcName) : srcName;
+    p.nameEn = typeof translateArabicNameToEnglish === 'function'
+      ? translateArabicNameToEnglish(srcName)
+      : (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcName) : srcName);
   }
   const srcTitle = (p.titleAr || p.jobTitleAr || p.title || p.jobTitle || '').trim();
   if (srcTitle && (!p.titleEn || p.titleEn === 'Job Title' || /[\u0600-\u06FF]/.test(p.titleEn))) {
