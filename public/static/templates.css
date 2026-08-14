@@ -24,8 +24,9 @@
 .cv-section { margin-top: var(--cv-sec-gap, 22px); }
 .cv-sec-title {
   font-size: 1.08em; font-weight: 800; color: var(--cv-color, #1e293b);
-  padding-bottom: 5px; margin: 0 0 10px; display: flex; align-items: center; gap: 8px;
+  padding-bottom: 8px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px;
   border-bottom: var(--cv-line, 2px solid #1e293b);
+  line-height: 1.35;
 }
 .cv-sec-title i { font-size: .9em; color: var(--cv-accent, inherit); }
 
@@ -181,8 +182,9 @@
   text-transform: uppercase;
   color: var(--cv-color, #0f172a);
   border-bottom: 1.5px solid var(--cv-color, #334155);
-  padding-bottom: 2px;
+  padding-bottom: 6px;
   margin: 8px 0 6px;
+  line-height: 1.35;
 }
 
 .cv-bilingual-split-page .cv-section {
@@ -282,7 +284,8 @@
 }
 .cv-canva-card .cv-sec-title {
   border-bottom: 2px solid rgba(0,0,0,0.08);
-  padding-bottom: 6px;
+  padding-bottom: 8px;
   font-size: 1.12em;
+  line-height: 1.35;
 }
 
