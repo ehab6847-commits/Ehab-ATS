@@ -235,11 +235,47 @@ function renderHeader(tpl, data, cust, lang) {
 
 const SIDE_SECTION_KINDS = ['skills', 'languages', 'certs', 'list'];
 
+function ensureEnglishData(data) {
+  if (!data) return;
+  const p = data.personal || {};
+  if (p.nameAr && (!p.nameEn || /[\u0600-\u06FF]/.test(p.nameEn))) {
+    p.nameEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.nameAr) : p.nameAr;
+  }
+  if (p.titleAr && (!p.titleEn || /[\u0600-\u06FF]/.test(p.titleEn))) {
+    p.titleEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.titleAr) : p.titleAr;
+  }
+  if (p.cityAr && (!p.cityEn || /[\u0600-\u06FF]/.test(p.cityEn))) {
+    p.cityEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.cityAr) : p.cityAr;
+  }
+
+  (data.sections || []).forEach(sec => {
+    if (sec.titleAr && (!sec.titleEn || /[\u0600-\u06FF]/.test(sec.titleEn))) {
+      sec.titleEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(sec.titleAr) : sec.titleAr;
+    }
+    if (sec.textAr && (!sec.textEn || /[\u0600-\u06FF]/.test(sec.textEn))) {
+      sec.textEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(sec.textAr) : sec.textAr;
+    }
+    (sec.items || []).forEach(it => {
+      ['role', 'org', 'company', 'degree', 'school', 'desc', 'name', 'level'].forEach(k => {
+        const ar = it[k + 'Ar'];
+        const en = it[k + 'En'];
+        if (ar && (!en || /[\u0600-\u06FF]/.test(en))) {
+          it[k + 'En'] = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(ar) : ar;
+        }
+      });
+    });
+  });
+}
+
 function renderTemplate(templateId, data, cust, language) {
   const tpl = TEMPLATE_DEFS[templateId] || TEMPLATE_DEFS.ats1;
   cust = cust || {};
   data = data || {};
   const lang = language || 'ar';
+
+  if (lang === 'en' || lang === 'bilingual') {
+    ensureEnglishData(data);
+  }
   const dir = lang === 'en' ? 'ltr' : 'rtl';
   const color = cust.themeColor || tpl.color;
   const accent = cust.accentColor || tpl.accent;

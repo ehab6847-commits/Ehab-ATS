@@ -34,16 +34,15 @@ function translateTextToEnglish(text) {
   let s = text;
 
   // 1. Objectives & Summaries
-  if (s.includes('القوى الكهربائية') || s.includes('الكلية التقنية')) {
-    s = s.replace(/خريج دبلوم في تخصص القوى الكهربائية.*التطوير المستمر\.?/gi, 
-      'Electrical Power Technology Diploma graduate with practical training in industrial electrical systems, maintenance, and troubleshooting, alongside crowd management experience. Seeking a professional opportunity to apply technical knowledge, enhance practical expertise, support maintenance operations, and adhere to quality and safety standards in a professional work environment. Possesses strong teamwork skills, quick learning ability, high responsibility, and commitment to continuous development.'
-    );
-  }
-  if (s.includes('ثانوية عامة') || s.includes('الثانوية العامة')) {
-    s = s.replace(/خريج ثانوية عامة طموح ومنظم.*التطوير المهني المستمر\.?/gi,
-      'Ambitious and organized high school graduate seeking an entry-level position in a professional environment to develop skills, gain practical experience, and contribute effectively to organizational goals and team success.'
-    );
-  }
+  s = s.replace(/(خريج ثانوية عامة\s*)?طموح ومنظم.*التطور المهني المستمر\.?/gi,
+    'Ambitious and organized professional seeking an entry-level position in a dynamic work environment to develop skills, gain practical experience, and contribute effectively to organizational goals, teamwork, and continuous professional growth.'
+  );
+  s = s.replace(/خريج دبلوم في تخصص القوى الكهربائية.*التطوير المستمر\.?/gi, 
+    'Electrical Power Technology Diploma graduate with practical training in industrial electrical systems, maintenance, and troubleshooting, alongside crowd management experience. Seeking a professional opportunity to apply technical knowledge, enhance practical expertise, support maintenance operations, and adhere to quality and safety standards in a professional work environment.'
+  );
+  s = s.replace(/طموح ومنظم.*تطوير مهاراتي واكتساب الخبرات العملية.*العمل بروح الفريق.*/gi,
+    'Ambitious and organized candidate seeking to start a professional career in an engaging environment to enhance my skills, gain practical experience, work collaboratively with team members, and contribute effectively toward achieving organizational objectives and continuous career development.'
+  );
 
   // 2. Names
   s = s.replace(/هيثم علي البهلول/gi, 'Haytham Ali Al-Bahloul');
@@ -111,11 +110,13 @@ function translateTextToEnglish(text) {
   s = s.replace(/التعاون مع فريق العمل لضمان انسيابية حركة الحشود\.?/gi, 'Collaborated with team members to ensure smooth crowd movement.');
   s = s.replace(/التعامل مع المواقف المختلفة أثناء العمل بهدوء ومسؤولية\.?/gi, 'Handled operational situations calmly and responsibly.');
   s = s.replace(/المساعدة في تنفيذ المهام اليومية وتنظيم الأعمال وفق تعليمات المشرف\.?/gi, 'Assisted in daily operations and task organization per supervisor instructions.');
+  s = s.replace(/المساعدة في تنفيذ المهام الإدارية اليومية\.?/gi, 'Assisted in executing daily administrative tasks.');
+  s = s.replace(/التعامل باحترام واحترافية مع الزملاء والمراجعين\.?/gi, 'Interacted respectfully and professionally with colleagues and visitors.');
   s = s.replace(/اكتساب خبرة أولية في بيئة العمل والالتزام بالمواعيد والأنظمة\.?/gi, 'Gained initial work environment experience and maintained punctuality.');
   s = s.replace(/التعاون مع فريق العمل وإنجاز المهام المطلوبة\.?/gi, 'Collaborated with team members to complete required tasks.');
   s = s.replace(/تنظيم الملفات والمستندات وترتيب البيانات\.?/gi, 'Organized files, documents, and data entries.');
 
-  // 7. Training Courses
+  // 7. Training Courses & Certifications
   s = s.replace(/دورة تعليم الإنقاذ والسلامة المائية – مركز دار العاشرة الرياضي\.?/gi, 'Water Rescue & Safety Course – Dar Al-Ashira Sports Center');
   s = s.replace(/دورة تعليم الإنقاذ والسلامة المائية/gi, 'Water Rescue & Safety Course');
   s = s.replace(/مركز دار العاشرة الرياضي/gi, 'Dar Al-Ashira Sports Center');
@@ -124,11 +125,7 @@ function translateTextToEnglish(text) {
   s = s.replace(/مدة 6 أشهر، وتشمل معالجة النصوص وإدخال البيانات/gi, '6 Months Duration (Word Processing & Data Entry)');
   s = s.replace(/دورة مهارات إدارة الحشود الأساسية\.?/gi, 'Basic Crowd Management Skills Course');
   s = s.replace(/أساسيات مهارات الحاسب الآلي\.?/gi, 'Computer Skills Fundamentals');
-  s = s.replace(/مهارات التواصل والعمل ضمن فريق/gi, 'Communication & Teamwork Skills');
-  s = s.replace(/دورة/gi, 'Course:');
-  s = s.replace(/شهادة/gi, 'Certificate:');
-  s = s.replace(/مركز/gi, 'Center');
-  s = s.replace(/معهد/gi, 'Institute');
+  s = s.replace(/مهارات التواصل والعمل ضمن فريق\.?/gi, 'Communication & Teamwork Skills');
 
   // 8. Skills
   s = s.replace(/الصيانة الكهربائية/gi, 'Electrical Maintenance');
@@ -145,6 +142,7 @@ function translateTextToEnglish(text) {
   s = s.replace(/التواصل الفعال/gi, 'Effective Communication');
   s = s.replace(/سرعة التعلم|القدرة على التعلم والتطور المهني/gi, 'Fast Learner & Professional Development');
   s = s.replace(/تحمل المسؤولية/gi, 'Responsibility & Accountability');
+  s = s.replace(/استخدام أساسيات الحاسب الآلي/gi, 'Basic Computer Literacy');
 
   // 9. Languages
   s = s.replace(/العربية/gi, 'Arabic');
@@ -153,12 +151,44 @@ function translateTextToEnglish(text) {
   s = s.replace(/مستوى متوسط/gi, 'Intermediate');
   s = s.replace(/مبتدئ/gi, 'Beginner');
   s = s.replace(/متقدم/gi, 'Advanced');
+  s = s.replace(/ممتاز/gi, 'Fluent / Professional');
 
-  // 10. General Terms
+  // 10. Hijri Date & General Terms
+  s = s.replace(/(\d{4})\s*هـ/g, '$1 AH');
+  s = s.replace(/هـ/g, '');
   s = s.replace(/سنة التخرج:?/gi, 'Graduation Year:');
   s = s.replace(/الهاتف:?/gi, 'Phone:');
   s = s.replace(/البريد الإلكتروني:?/gi, 'Email:');
   s = s.replace(/الموقع:?/gi, 'Location:');
+
+  // 11. Universal Dictionary Fallback Replacer for any remaining Arabic phrases
+  if (/[\u0600-\u06FF]/.test(s)) {
+    s = s
+      .replace(/طموح ومنظم/g, 'Ambitious and organized')
+      .replace(/أسعى إلى بدء مسيرتي المهنية/g, 'seeking to start my professional career')
+      .replace(/في بيئة عمل احترافية/g, 'in a professional work environment')
+      .replace(/تتيح لي تطوير مهاراتي/g, 'allowing me to develop my skills')
+      .replace(/واكتساب الخبرات العملية/g, 'and gain practical experience')
+      .replace(/مع الالتزام بالمسؤوليات/g, 'with commitment to responsibilities')
+      .replace(/والتعليمات/g, 'and instructions')
+      .replace(/والعمل بروح الفريق/g, 'working with team spirit')
+      .replace(/والمساهمة بفاعلية/g, 'and contributing effectively')
+      .replace(/في تحقيق أهداف جهة العمل/g, 'to achieving organization goals')
+      .replace(/والتطور المهني المستمر/g, 'and continuous professional growth')
+      .replace(/المساعدة في تنفيذ المهام/g, 'Assisted in executing tasks')
+      .replace(/الإدارية اليومية/g, 'daily administrative')
+      .replace(/التعامل باحترام واحترافية/g, 'Interacted respectfully and professionally')
+      .replace(/مع الزملاء والمراجعين/g, 'with colleagues and visitors')
+      .replace(/تنفيذ المهام اليومية/g, 'Executing daily tasks')
+      .replace(/تنظيم الأعمال/g, 'Organizing work')
+      .replace(/وفق تعليمات المشرف/g, 'per supervisor instructions')
+      .replace(/اكتساب خبرة/g, 'Gained experience')
+      .replace(/بيئة العمل/g, 'work environment')
+      .replace(/الالتزام بالمواعيد/g, 'Punctuality')
+      .replace(/والأنظمة/g, 'and regulations')
+      .replace(/التعاون مع فريق العمل/g, 'Collaborated with team members')
+      .replace(/إنجاز المهام المطلوبة/g, 'Completing required tasks');
+  }
 
   return s;
 }
