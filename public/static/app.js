@@ -1264,6 +1264,11 @@ async function testAIApi() {
   }
 }
 
+function isSuperAdmin() {
+  const tok = S.token || localStorage.getItem('ehab_token') || '';
+  return tok.startsWith('ehab_admin_token_') || tok.startsWith('token_admin_') || S.role === 'super_admin';
+}
+
 /* ---------- Team & Specialists Management ---------- */
 async function viewTeam() {
   el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
@@ -1305,6 +1310,8 @@ async function viewTeam() {
     return sp;
   });
 
+  const canManage = isSuperAdmin();
+
   const rows = specialists.map(sp => {
     const directUrl = location.origin + '/?key=' + sp.access_key;
     const isAct = sp.status === 'active';
@@ -1338,7 +1345,7 @@ async function viewTeam() {
 
         <div class="flex gap-2 text-xs">
           <button class="btn-ghost flex-1 !py-1.5" onclick="navigator.clipboard.writeText('${directUrl}'); toast('رابط الدخول المباشر المخصص لشخص واحد اتنسخ ✅')"><i class="fas fa-copy ml-1 text-sky-400"></i>نسخ الرابط المخصص</button>
-          ${sp.id !== 1 ? `<button class="btn-ghost !py-1.5 ${isAct ? 'text-amber-400' : 'text-emerald-400'}" onclick="toggleSpecialistStatus(${sp.id}, '${isAct ? 'inactive' : 'active'}')"><i class="fas ${isAct ? 'fa-ban' : 'fa-check'} ml-1"></i>${isAct ? 'تجميد' : 'تفعيل'}</button>` : '<span class="text-xs text-amber-300 font-bold px-2 py-1 flex items-center gap-1"><i class="fas fa-shield"></i>مالك النظام</span>'}
+          ${canManage && sp.id !== 1 ? `<button class="btn-ghost !py-1.5 ${isAct ? 'text-amber-400' : 'text-emerald-400'}" onclick="toggleSpecialistStatus(${sp.id}, '${isAct ? 'inactive' : 'active'}')"><i class="fas ${isAct ? 'fa-ban' : 'fa-check'} ml-1"></i>${isAct ? 'تجميد' : 'تفعيل'}</button>` : '<span class="text-xs text-amber-300 font-bold px-2 py-1 flex items-center gap-1"><i class="fas fa-shield"></i>مالك النظام</span>'}
         </div>
       </div>
     `;
@@ -1356,11 +1363,15 @@ async function viewTeam() {
     <div class="flex flex-wrap items-center gap-3 mb-6">
       <div>
         <h2 class="text-xl font-bold"><i class="fas fa-user-shield text-indigo-400 ml-2"></i>إدارة المستخدمين والمصرح لهم <span class="text-sm text-slate-400">(${specialists.length})</span></h2>
-        <p class="text-xs text-slate-400 mt-1">بصفتك المالك والمدير الرئيسي (إيهاب شحيطير)، يمكنك إضافة روابط محددة ومخصصة لشخص واحد فقط ومتابعة الأداء والأمان.</p>
+        <p class="text-xs text-slate-400 mt-1">بصفتك المالك والمدير الرئيسي (إيهاب شحيطير)، يمكنك التحكم الكامل وإدارة روابط المصرح لهم.</p>
       </div>
+      ${canManage ? `
       <div class="mr-auto flex gap-2">
-        <button class="btn-primary !py-2" onclick="newSpecialistModal()"><i class="fas fa-user-plus ml-1"></i>إضافة مصرح له جديد</button>
-      </div>
+        <button class="btn-primary !py-2 !bg-gradient-to-r !from-amber-500 !to-indigo-600 shadow-md" onclick="newSpecialistModal()"><i class="fas fa-user-plus ml-1"></i>إضافة مصرح له جديد (حصري للأدمن)</button>
+      </div>` : `
+      <div class="mr-auto">
+        <span class="text-xs text-amber-300 font-bold px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20"><i class="fas fa-lock ml-1"></i>إضافة مصرح جديد هي صلاحية حصرية لـ إيهاب شحيطير</span>
+      </div>`}
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -1375,12 +1386,16 @@ async function viewTeam() {
 }
 
 function newSpecialistModal() {
+  if (!isSuperAdmin()) {
+    return toast('⛔ إضافة مصرح له جديد هي صلاحية حصرية للمالك والمدير الرئيسي (إيهاب شحيطير) فقط', 'err');
+  }
+
   openModal(`
-    <h3 class="font-bold text-lg mb-3"><i class="fas fa-user-plus text-indigo-400 ml-2"></i>إضافة مختص جديد لإنشاء السير الذاتية</h3>
-    <p class="text-xs text-slate-400 mb-4">أدخل بيانات المختص، وسيتم توليد رابط دخول مباشر خاص به يمكنك مشاركته معه فوراً:</p>
+    <h3 class="font-bold text-lg mb-3"><i class="fas fa-user-plus text-indigo-400 ml-2"></i>إضافة مصرح له جديد (خاص بالمدير الرئيسي)</h3>
+    <p class="text-xs text-slate-400 mb-4">أدخل بيانات الشخص المصرّح له، وسيتم توليد رابط مخصص له لشخص واحد فقط:</p>
 
     <div class="space-y-3">
-      <div><label class="fld">اسم المختص / الكاتب *</label><input id="sp-name" class="input-field !py-2" placeholder="مثال: أستاذة نورة - كاتب سير احترافية"></div>
+      <div><label class="fld">اسم الشخص / المختص المصرّح له *</label><input id="sp-name" class="input-field !py-2" placeholder="مثال: أستاذة نورة - كاتب سير احترافية"></div>
       <div><label class="fld">البريد الإلكتروني</label><input id="sp-email" class="input-field !py-2" dir="ltr" placeholder="norah@example.com"></div>
       <div><label class="fld">رقم التليفون / الواتساب</label><input id="sp-phone" class="input-field !py-2" dir="ltr" placeholder="0500000000"></div>
       <div>
@@ -1394,13 +1409,16 @@ function newSpecialistModal() {
     </div>
 
     <div class="flex justify-end gap-2 mt-5">
-      <button class="btn-primary" onclick="createSpecialist()"><i class="fas fa-check ml-1"></i>توليد رابط المختص</button>
+      <button class="btn-primary" onclick="createSpecialist()"><i class="fas fa-check ml-1"></i>توليد الرابط المخصص</button>
       <button class="btn-ghost" onclick="closeModal()">إلغاء</button>
     </div>
   `, true);
 }
 
 async function createSpecialist() {
+  if (!isSuperAdmin()) {
+    return toast('⛔ إضافة مصرح له جديد هي صلاحية حصرية للمالك والمدير الرئيسي (إيهاب شحيطير) فقط', 'err');
+  }
   const name = el('sp-name').value.trim();
   if (!name) return toast('ادخل اسم المختص', 'err');
   const email = el('sp-email').value.trim();
@@ -1417,7 +1435,7 @@ async function createSpecialist() {
         <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center text-2xl mb-3">
           <i class="fas fa-check-circle"></i>
         </div>
-        <h3 class="font-bold text-lg mb-1">تمت إضافة المختص بنجاح! 🎉</h3>
+        <h3 class="font-bold text-lg mb-1">تمت إضافة المصرّح له بنجاح! 🎉</h3>
         <p class="text-xs text-slate-400 mb-4">انسخ رابط الدخول المباشر التالي وأرسله للمختص ليتمكن من دخول المنصة وإنشاء السير الذاتية فوراً:</p>
 
         <div class="bg-slate-900/60 p-3 rounded-xl text-xs dir-ltr font-mono select-all break-all text-sky-300 mb-4 border border-slate-500/20">
