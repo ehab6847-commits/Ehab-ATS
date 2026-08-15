@@ -13,11 +13,11 @@ const TEMPLATE_DEFS = {
   corporate:     { name: 'مؤسسي', nameEn: 'Corporate', group: 'bw', layout: 'topbar', header: 'band', color: '#1f2937', accent: '#4b5563', line: '2px solid #1f2937', bandBg: '#1f2937' },
   executive:     { name: 'تنفيذي', nameEn: 'Executive', group: 'bw', layout: 'single', header: 'center', color: '#111827', accent: '#6b7280', line: '3px double #111827', serif: true },
   creative:      { name: 'إبداعي', nameEn: 'Creative', group: 'color', layout: 'sidebar', header: 'side', color: '#7c3aed', accent: '#8b5cf6', line: '2px solid #7c3aed', sideBg: '#4c1d95', sideText: '#f5f3ff' },
-  modern:        { name: 'عصري', nameEn: 'Modern', group: 'color', layout: 'topbar', header: 'band', color: '#0891b2', accent: '#06b6d4', line: '2px solid #0891b2', bandBg: 'linear-gradient(135deg,#0e7490,#155e75)' },
+  modern:        { name: 'عصري', nameEn: 'Modern', group: 'color', layout: 'sidebar', header: 'side', color: '#0891b2', accent: '#06b6d4', line: '2px solid #0891b2', sideBg: '#0e7490', sideText: '#ecfeff' },
   minimal:       { name: 'مينيمال', nameEn: 'Minimal', group: 'color', layout: 'single', header: 'right', color: '#e11d48', accent: '#f43f5e', line: '1px solid #fda4af' },
   elegant:       { name: 'أنيق', nameEn: 'Elegant', group: 'color', layout: 'single', header: 'center', color: '#92400e', accent: '#b45309', line: '1.5px solid #d97706', serif: true },
   blue:          { name: 'أزرق احترافي', nameEn: 'Blue Professional', group: 'color', layout: 'sidebar', header: 'side', color: '#1d4ed8', accent: '#3b82f6', line: '2px solid #1d4ed8', sideBg: '#1e3a8a', sideText: '#eff6ff' },
-  green:         { name: 'أخضر', nameEn: 'Green', group: 'color', layout: 'topbar', header: 'band', color: '#047857', accent: '#10b981', line: '2px solid #047857', bandBg: '#065f46' },
+  green:         { name: 'أخضر', nameEn: 'Green', group: 'color', layout: 'sidebar', header: 'side', color: '#047857', accent: '#10b981', line: '2px solid #047857', sideBg: '#065f46', sideText: '#ecfdf5' },
   navy:          { name: 'كحلي', nameEn: 'Navy', group: 'color', layout: 'sidebar', header: 'side', color: '#0f172a', accent: '#334155', line: '2px solid #0f172a', sideBg: '#0f172a', sideText: '#f1f5f9' },
   academic:      { name: 'أكاديمي', nameEn: 'Academic', group: 'color', layout: 'single', header: 'center', color: '#5b21b6', accent: '#7c3aed', line: '1.5px solid #7c3aed', serif: true },
   healthcare:    { name: 'صحي', nameEn: 'Healthcare', group: 'color', layout: 'topbar', header: 'band', color: '#0d9488', accent: '#14b8a6', line: '2px solid #0d9488', bandBg: 'linear-gradient(135deg,#0f766e,#115e59)' },
@@ -429,7 +429,7 @@ function renderTemplate(templateId, data, cust, language) {
     const hasTitle = Boolean(tr.ar || tr.en);
     const jtHtml = hasTitle ? `<div class="cv-jobtitle">${tplEsc(jt || '')}</div>` : '';
     return `<div class="${cls}" dir="${dir}" ${styleAttr}>
-      <div class="sidebar-wrap">
+      <div class="cv-sidebar-wrap">
         <aside class="cv-side">
           ${photo}
           <h1 class="cv-name" style="font-size:1.55em">${tplEsc(name || '')}</h1>

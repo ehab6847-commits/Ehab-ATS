@@ -56,17 +56,17 @@
 .cv-lang-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: .93em; }
 .cv-lang-level { color: #64748b; font-size: .88em; }
 
-.cv-sidebar-wrap { display: flex; min-height: 1123px; }
-.cv-side { width: 34%; background: var(--cv-side-bg, #1e293b); color: var(--cv-side-text, #f1f5f9); padding: 34px 24px; }
+.cv-sidebar-wrap, .sidebar-wrap { display: flex !important; flex-direction: row !important; min-height: 1123px; width: 100%; box-sizing: border-box; }
+.cv-side { width: 34%; min-width: 235px; max-width: 275px; background: var(--cv-side-bg, #1e293b); color: var(--cv-side-text, #f1f5f9); padding: 30px 20px; box-sizing: border-box; }
 .cv-side .cv-name, .cv-side .cv-jobtitle { color: inherit; }
-.cv-side .cv-sec-title { color: inherit; border-bottom: 2px solid rgba(255,255,255,.35); }
+.cv-side .cv-sec-title { color: inherit; border-bottom: 2px solid rgba(255,255,255,.35); padding-bottom: 6px; }
 .cv-side .cv-contact { flex-direction: column; gap: 8px; color: inherit; align-items: flex-start; }
 .cv-side .cv-contact i { color: inherit; opacity: .8; }
 .cv-side .cv-chip { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.22); color: inherit; }
 .cv-side .cv-skill-bar { background: rgba(255,255,255,.2); }
 .cv-side .cv-skill-fill { background: #fff; }
-.cv-side .cv-item-desc, .cv-side .cv-item-date, .cv-side .cv-lang-level, .cv-side .cv-item-org { color: inherit; opacity: .82; }
-.cv-main-col { flex: 1; padding: 34px 30px; }
+.cv-side .cv-item-desc, .cv-side .cv-item-date, .cv-side .cv-lang-level, .cv-side .cv-item-org { color: inherit; opacity: .88; }
+.cv-main-col { flex: 1; padding: 30px 26px; box-sizing: border-box; overflow: hidden; }
 
 .cv-serif .cv-name, .cv-serif .cv-sec-title { font-family: 'Amiri', 'Georgia', serif; }
 .cv-page[dir="ltr"].cv-serif .cv-name, .cv-page[dir="ltr"].cv-serif .cv-sec-title { font-family: 'Georgia', serif; }
