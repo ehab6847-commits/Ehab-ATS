@@ -86,6 +86,10 @@ function translateArabicNameToEnglish(str) {
 // Deep Universal Arabic -> English Resume Translator
 function translateTextToEnglish(text) {
   if (!text) return '';
+  // Guard: If text is ALREADY in English (0 Arabic characters), preserve it 100% unchanged!
+  if (/[\u0600-\u06FF]/.test(text) === false) {
+    return text;
+  }
   let s = text;
 
   // 1. Objectives & Summaries
@@ -284,36 +288,36 @@ function translateTextToEnglish(text) {
 }
 
 function classifySectionHeading(rawLine) {
-  const clean = sanitizeText(rawLine).toLowerCase();
-  if (!clean || clean.length > 30) return null;
+  const clean = sanitizeText(rawLine).toLowerCase().trim();
+  if (!clean || clean.length > 50) return null;
 
-  if (/^(الهدف المهني|الهدف الوظيفي|الهدف|الملخص المهني|الملخص|نبذة عامة|نبذة|مقدمة|profile|summary|objective|about)$/i.test(clean) ||
-      (clean.startsWith('الهدف') && clean.length < 20) || (clean.startsWith('الملخص') && clean.length < 20)) {
+  if (/^(الهدف المهني|الهدف الوظيفي|الهدف|الملخص المهني|الملخص|نبذة عامة|نبذة|مقدمة|profile|summary|professional summary|executive summary|career summary|objective|about|about me)$/i.test(clean) ||
+      (clean.startsWith('الهدف') && clean.length < 25) || (clean.startsWith('الملخص') && clean.length < 25)) {
     return 'summary';
   }
 
-  if (/^(المؤهل العلمي|المؤهلات العلمية|المؤهلات الأكاديمية|المؤهلات|التعليم|المؤهل|دراستي|education|academic|qualifications)$/i.test(clean) ||
-      (clean.startsWith('المؤهل') && clean.length < 20) || (clean.startsWith('التعليم') && clean.length < 20)) {
+  if (/^(المؤهل العلمي|المؤهلات العلمية|المؤهلات الأكاديمية|المؤهلات|التعليم|المؤهل|دراستي|education|academic background|academic qualifications|qualifications|academic)$/i.test(clean) ||
+      (clean.startsWith('المؤهل') && clean.length < 25) || (clean.startsWith('التعليم') && clean.length < 25)) {
     return 'education';
   }
 
-  if (/^(الخبرات العملية|الخبرة العملية|الخبرات المهنية|الخبرات|الخبرة|خبراتي|التاريخ المهني|السجل المهني|experience|work|employment|jobs)$/i.test(clean) ||
-      (clean.startsWith('الخبرات') && clean.length < 20) || (clean.startsWith('الخبرة') && clean.length < 20)) {
+  if (/^(الخبرات العملية|الخبرة العملية|الخبرات المهنية|الخبرات|الخبرة|خبراتي|التاريخ المهني|السجل المهني|professional experience|work experience|employment history|experience|work|employment|jobs|career history)$/i.test(clean) ||
+      (clean.startsWith('الخبرات') && clean.length < 25) || (clean.startsWith('الخبرة') && clean.length < 25)) {
     return 'experience';
   }
 
-  if (/^(الدورات التدريبية|الدورات|الكورسات|الشهادات التدريبية|الاعتمادات|التدريب|courses|certifications|certificates|training)$/i.test(clean) ||
-      (clean.startsWith('الدورات') && clean.length < 20) || (clean.startsWith('الكورسات') && clean.length < 20)) {
+  if (/^(الدورات التدريبية|الدورات|الكورسات|الشهادات التدريبية|الاعتمادات|التدريب|training courses|courses|certifications|certificates|training|professional courses)$/i.test(clean) ||
+      (clean.startsWith('الدورات') && clean.length < 25) || (clean.startsWith('الكورسات') && clean.length < 25)) {
     return 'training';
   }
 
-  if (/^(المهارات المهنية|المهارات الشخصية|المهارات والتقنيات|المهارات|مهاراتي|تقنيات|skills|competencies|abilities)$/i.test(clean) ||
-      (clean.startsWith('المهارات') && clean.length < 20)) {
+  if (/^(المهارات المهنية|المهارات الشخصية|المهارات والتقنيات|المهارات|مهاراتي|تقنيات|skills|technical skills|core competencies|competencies|abilities)$/i.test(clean) ||
+      (clean.startsWith('المهارات') && clean.length < 25)) {
     return 'skills';
   }
 
-  if (/^(اللغات والمهارات اللغوية|اللغات|لغاتي|languages)$/i.test(clean) ||
-      (clean.startsWith('اللغات') && clean.length < 20)) {
+  if (/^(اللغات والمهارات اللغوية|اللغات|لغاتي|languages|language proficiency)$/i.test(clean) ||
+      (clean.startsWith('اللغات') && clean.length < 25)) {
     return 'languages';
   }
 
