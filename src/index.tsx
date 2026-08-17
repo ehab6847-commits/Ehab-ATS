@@ -25,7 +25,12 @@ class MemoryDB {
   private idCounter = 1
 
   private specialists: any[] = [
-    { id: 1, name: 'إيهاب شحيطير (Super Admin & المالك الرئيسي)', email: 'ehab@ehabats.com', phone: '0501234567', role: 'super_admin', access_key: 'wuda5U9u_Yk', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() }
+    { id: 1, name: 'إيهاب شحيطير (Super Admin & المالك الرئيسي)', email: 'ehab@ehabats.com', phone: '0501234567', role: 'super_admin', access_key: 'wuda5U9u_Yk', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() },
+    { id: 2, name: 'يزن سمير', email: 'yazan@ehabats.com', phone: '', role: 'specialist', access_key: 'sp_yzn_892k', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() },
+    { id: 3, name: 'الشيخ غانم', email: 'ghanem@ehabats.com', phone: '', role: 'specialist', access_key: 'sp_ghnm_437m', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() },
+    { id: 4, name: 'شهاب احمد عبدالله', email: 'shehab@ehabats.com', phone: '', role: 'specialist', access_key: 'sp_shhb_651v', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() },
+    { id: 5, name: 'المهندس نصر', email: 'nasr@ehabats.com', phone: '', role: 'specialist', access_key: 'sp_nsr_928t', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() },
+    { id: 6, name: 'مختص 5 (متاح للتعيين)', email: 'slot5@ehabats.com', phone: '', role: 'specialist', access_key: 'sp_usr5_174w', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() }
   ]
 
   prepare(sql: string) {

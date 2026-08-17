@@ -71,10 +71,15 @@ function renderBuilder() {
 
       <div class="mr-auto flex items-center gap-1.5 flex-wrap">
         <span id="b-save-ind" class="text-xs text-slate-400"><i class="fas fa-check"></i> محفوظ</span>
-        <button class="btn-primary !bg-gradient-to-r !from-purple-600 !to-indigo-600 !py-1.5 !px-3 text-xs shadow-md" onclick="bOneShotAIModal()" title="ضع معلومات السيرة دفعة واحدة ليقوم الذكاء الاصطناعي بتعبئتها وتوليدها بنفس القالب المختار حالياً"><i class="fas fa-wand-magic-sparkles text-amber-300 ml-1"></i>توليد من نص دفعة واحدة</button>
-        <button class="btn-ghost !py-1.5 !px-3 text-xs" onclick="bVersionsModal()" title="الإصدارات"><i class="fas fa-clock-rotate-left"></i></button>
-        <button class="btn-ghost !py-1.5 !px-3 text-xs" onclick="bAIModal()" title="مساعد AI الشامل"><i class="fas fa-wand-magic-sparkles text-violet-400 ml-1"></i>ذكاء اصطناعي</button>
-        <button class="btn-ghost !py-1.5 !px-3 text-xs" onclick="bExportMenu()" title="تصدير"><i class="fas fa-file-export ml-1"></i>تصدير</button>
+        
+        <!-- Prominent Download & Share Buttons -->
+        <button class="btn-primary !bg-gradient-to-r !from-emerald-600 !to-teal-600 hover:!from-emerald-500 hover:!to-teal-500 !py-1.5 !px-3.5 text-xs font-bold shadow-lg flex items-center gap-1.5 text-white" onclick="generateDirectPDF()" title="تحميل ملف PDF فوري عالي الدقة A4"><i class="fas fa-download text-amber-300"></i><span>تنزيل PDF</span></button>
+        <button class="btn-ghost !bg-slate-800 hover:!bg-slate-700 !py-1.5 !px-3 text-xs font-semibold flex items-center gap-1.5 text-emerald-400 border border-emerald-500/30" onclick="bShareModal()" title="مشاركة السيرة عبر واتساب وفيسبوك وتيليجرام"><i class="fa-brands fa-whatsapp text-emerald-400 text-sm"></i><i class="fas fa-share-nodes text-sky-400"></i><span>مشاركة</span></button>
+
+        <button class="btn-primary !bg-gradient-to-r !from-purple-600 !to-indigo-600 !py-1.5 !px-3 text-xs shadow-md" onclick="bOneShotAIModal()" title="ضع معلومات السيرة دفعة واحدة ليقوم الذكاء الاصطناعي بتعبئتها وتوليدها بنفس القالب المختار حالياً"><i class="fas fa-wand-magic-sparkles text-amber-300 ml-1"></i>توليد من نص</button>
+        <button class="btn-ghost !py-1.5 !px-2.5 text-xs" onclick="bVersionsModal()" title="الإصدارات"><i class="fas fa-clock-rotate-left"></i></button>
+        <button class="btn-ghost !py-1.5 !px-2.5 text-xs" onclick="bAIModal()" title="مساعد AI الشامل"><i class="fas fa-wand-magic-sparkles text-violet-400 ml-1"></i>AI</button>
+        <button class="btn-ghost !py-1.5 !px-2.5 text-xs" onclick="bExportMenu()" title="تصدير وتنسيقات أخرى"><i class="fas fa-file-export ml-1"></i>تصدير</button>
         <button class="btn-primary !py-1.5 text-xs" onclick="bSave(true)"><i class="fas fa-save ml-1"></i>حفظ</button>
       </div>
     </header>
@@ -720,14 +725,85 @@ ${dataJson}
   }
 }
 
+/* ---------- share & export modal ---------- */
+function bShareModal() {
+  if (!B || !B.data) return toast('لا توجد سيرة مفتوحة للمشاركة', 'err');
+  const p = B.data.personal || {};
+  const name = p.nameAr || p.nameEn || 'المتقدم';
+  const title = B.resume.title || 'سيرة ذاتية احترافية';
+  const slug = B.resume.public_slug || ('cv-' + B.id);
+  const publicUrl = location.origin + '/?cv=' + slug;
+  
+  const waText = encodeURIComponent('📄 مرحباً، إليك رابط السيرة الذاتية المهنية (' + title + ') لـ ' + name + ':\n' + publicUrl + '\nتم إنشاؤها عبر منصة ATS Resume Builder.');
+  const waUrl = 'https://api.whatsapp.com/send?text=' + waText;
+  const fbUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(publicUrl);
+  const tgUrl = 'https://t.me/share/url?url=' + encodeURIComponent(publicUrl) + '&text=' + encodeURIComponent('السيرة الذاتية لـ ' + name);
+  const mailUrl = 'mailto:?subject=' + encodeURIComponent('السيرة الذاتية — ' + name) + '&body=' + encodeURIComponent('السلام عليكم،\n\nيرجى الاطلاع على السيرة الذاتية عبر الرابط التالي:\n' + publicUrl);
+
+  openModal(`
+    <div class="text-center mb-4">
+      <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center text-xl mb-2">
+        <i class="fa-brands fa-whatsapp text-2xl text-emerald-400"></i>
+      </div>
+      <h3 class="font-bold text-lg">مشاركة وتنزيل السيرة الذاتية 🚀</h3>
+      <p class="text-xs text-slate-400 mt-1">${bEsc(title)} — ${bEsc(name)}</p>
+    </div>
+
+    <!-- Quick Social Share Buttons Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5">
+      <a href="${waUrl}" target="_blank" class="glass rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 transition-all card-hover group text-decoration-none cursor-pointer">
+        <i class="fa-brands fa-whatsapp text-2xl group-hover:scale-110 transition-transform"></i>
+        <span class="text-xs font-bold text-slate-200">واتساب</span>
+      </a>
+      <a href="${tgUrl}" target="_blank" class="glass rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-sky-600/20 border border-sky-500/30 text-sky-400 transition-all card-hover group text-decoration-none cursor-pointer">
+        <i class="fa-brands fa-telegram text-2xl group-hover:scale-110 transition-transform"></i>
+        <span class="text-xs font-bold text-slate-200">تيليجرام</span>
+      </a>
+      <a href="${fbUrl}" target="_blank" class="glass rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 transition-all card-hover group text-decoration-none cursor-pointer">
+        <i class="fa-brands fa-facebook text-2xl group-hover:scale-110 transition-transform"></i>
+        <span class="text-xs font-bold text-slate-200">فيسبوك</span>
+      </a>
+      <a href="${mailUrl}" class="glass rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-purple-600/20 border border-purple-500/30 text-purple-400 transition-all card-hover group text-decoration-none cursor-pointer">
+        <i class="fas fa-envelope text-2xl group-hover:scale-110 transition-transform"></i>
+        <span class="text-xs font-bold text-slate-200">الإيميل</span>
+      </a>
+    </div>
+
+    <!-- Direct Public Link Copy Section -->
+    <div class="bg-slate-900/80 p-3 rounded-xl mb-4 border border-slate-700 text-xs">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-slate-400 font-bold"><i class="fas fa-link ml-1 text-sky-400"></i>رابط السيرة أونلاين:</span>
+        <button class="btn-primary !py-1 !px-2.5 text-[11px]" onclick="navigator.clipboard.writeText('${publicUrl}'); toast('تم نسخ رابط السيرة بنجاح ✅')"><i class="fas fa-copy ml-1"></i>نسخ الرابط</button>
+      </div>
+      <div class="dir-ltr font-mono text-sky-300 truncate select-all">${bEsc(publicUrl)}</div>
+    </div>
+
+    <!-- Direct Download Options -->
+    <div class="border-t border-slate-700/60 pt-3">
+      <div class="text-xs text-slate-400 font-bold mb-2.5">تنزيل السيرة فوراً:</div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <button class="btn-primary !bg-gradient-to-r !from-emerald-600 !to-teal-600 !py-2 text-xs font-bold shadow-md" onclick="closeModal(); generateDirectPDF()"><i class="fas fa-file-pdf ml-1"></i>PDF فوري</button>
+        <button class="btn-ghost !py-2 text-xs text-sky-300" onclick="closeModal(); exportDocx(${B.id})"><i class="fas fa-file-word ml-1 text-sky-400"></i>Word (DOCX)</button>
+        <button class="btn-ghost !py-2 text-xs text-slate-300" onclick="closeModal(); exportTxt(${B.id})"><i class="fas fa-file-lines ml-1 text-amber-400"></i>نص ATS (TXT)</button>
+        <button class="btn-ghost !py-2 text-xs text-slate-300" onclick="bPDFEditorModal()"><i class="fas fa-sliders ml-1 text-purple-400"></i>محرر PDF</button>
+      </div>
+    </div>
+
+    <div class="flex justify-end mt-4">
+      <button class="btn-ghost" onclick="closeModal()">إغلاق</button>
+    </div>
+  `, true);
+}
+
 /* ---------- export menu & print PDF ---------- */
 function bExportMenu() {
   const slug = B ? B.resume.public_slug : '';
   openModal(`
     <h3 class="font-bold text-lg mb-4"><i class="fas fa-file-export text-amber-400 ml-2"></i>تصدير وتنزيل السيرة الذاتية</h3>
     <div class="space-y-2.5">
-      <button class="btn-primary w-full !justify-start !py-2.5 shadow-md !bg-gradient-to-r !from-rose-600 !to-indigo-600" onclick="bPDFEditorModal()"><i class="fas fa-sliders ml-2 text-white"></i>فتح محرر ومولد الـ PDF المباشر (Built-in PDF Editor)</button>
-      <button class="btn-ghost w-full !justify-start !py-2.5 text-rose-300 hover:text-rose-200" onclick="generateDirectPDF()"><i class="fas fa-file-pdf ml-2 text-rose-400"></i>تحميل PDF عالي الدقة فوراً (A4)</button>
+      <button class="btn-primary w-full !justify-start !py-2.5 shadow-md !bg-gradient-to-r !from-emerald-600 !to-teal-600" onclick="generateDirectPDF()"><i class="fas fa-file-pdf ml-2 text-amber-300"></i>تحميل PDF فوري عالي الدقة (A4)</button>
+      <button class="btn-ghost w-full !justify-start !py-2.5 text-emerald-400" onclick="bShareModal()"><i class="fa-brands fa-whatsapp ml-2 text-emerald-400"></i>مشاركة عبر واتساب ومواقع التواصل</button>
+      <button class="btn-ghost w-full !justify-start !py-2.5 text-purple-300" onclick="bPDFEditorModal()"><i class="fas fa-sliders ml-2 text-purple-400"></i>فتح محرر ومولد الـ PDF المباشر</button>
       <button class="btn-ghost w-full !justify-start !py-2.5" onclick="exportDocx(${B.id})"><i class="fas fa-file-word ml-2 text-sky-400"></i>تحميل Word (DOCX)</button>
       <button class="btn-ghost w-full !justify-start !py-2.5" onclick="exportJson(${B.id})"><i class="fas fa-code ml-2 text-amber-400"></i>تحميل JSON (نسخة احتياطية كاملة)</button>
       <button class="btn-ghost w-full !justify-start !py-2.5" onclick="exportTxt(${B.id})"><i class="fas fa-file-lines ml-2 text-slate-400"></i>تحميل TXT (نص خام للـ ATS)</button>
