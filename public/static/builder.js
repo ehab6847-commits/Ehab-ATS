@@ -83,9 +83,16 @@ function renderBuilder() {
         <button class="btn-primary !py-1.5 text-xs" onclick="bSave(true)"><i class="fas fa-save ml-1"></i>حفظ</button>
       </div>
     </header>
+    
+    <!-- Mobile View Switcher Tab Bar -->
+    <div class="md:hidden flex items-center justify-center p-2 bg-slate-900 border-b border-slate-700/60 sticky top-[58px] z-20 gap-2">
+      <button id="b-tab-form" class="btn-primary !py-1.5 !px-4 text-xs font-bold shadow-md flex-1 !bg-indigo-600 text-white" onclick="bSwitchMobileTab('form')"><i class="fas fa-pen-to-square ml-1.5"></i>تعديل السيرة</button>
+      <button id="b-tab-preview" class="btn-ghost !py-1.5 !px-4 text-xs font-bold flex-1 text-slate-300 border border-slate-700" onclick="bSwitchMobileTab('preview')"><i class="fas fa-eye ml-1.5 text-sky-400"></i>معاينة السيرة 👁️</button>
+    </div>
+
     <div class="builder-grid flex-1">
       <div class="builder-form-col" id="b-form"></div>
-      <div class="builder-preview-col" id="b-preview-col">
+      <div class="builder-preview-col hidden-mobile" id="b-preview-col">
         <div id="b-preview-wrap" style="transform-origin:top center"></div>
       </div>
     </div>
@@ -93,6 +100,30 @@ function renderBuilder() {
   renderBuilderForm();
   bPreview();
   window.addEventListener('resize', bScalePreview);
+}
+
+function bSwitchMobileTab(tab) {
+  const formCol = document.getElementById('b-form');
+  const prevCol = document.getElementById('b-preview-col');
+  const btnForm = document.getElementById('b-tab-form');
+  const btnPrev = document.getElementById('b-tab-preview');
+  if (!formCol || !prevCol) return;
+
+  if (tab === 'preview') {
+    formCol.classList.add('hidden-mobile');
+    prevCol.classList.remove('hidden-mobile');
+    prevCol.classList.add('mobile-active');
+    if (btnPrev) { btnPrev.className = 'btn-primary !py-1.5 !px-4 text-xs font-bold shadow-md flex-1 !bg-indigo-600 text-white'; }
+    if (btnForm) { btnForm.className = 'btn-ghost !py-1.5 !px-4 text-xs font-bold flex-1 text-slate-300 border border-slate-700'; }
+    bPreview();
+    setTimeout(bScalePreview, 60);
+  } else {
+    prevCol.classList.add('hidden-mobile');
+    prevCol.classList.remove('mobile-active');
+    formCol.classList.remove('hidden-mobile');
+    if (btnForm) { btnForm.className = 'btn-primary !py-1.5 !px-4 text-xs font-bold shadow-md flex-1 !bg-indigo-600 text-white'; }
+    if (btnPrev) { btnPrev.className = 'btn-ghost !py-1.5 !px-4 text-xs font-bold flex-1 text-slate-300 border border-slate-700'; }
+  }
 }
 
 function bChangeFontSize(delta) {
@@ -161,12 +192,17 @@ function bScalePreview() {
   const col = document.getElementById('b-preview-col');
   const wrap = document.getElementById('b-preview-wrap');
   if (!col || !wrap) return;
-  const avail = col.clientWidth - 32;
-  const scale = Math.min(1, avail / 794);
+  const colWidth = col.clientWidth > 0 ? col.clientWidth : window.innerWidth;
+  const avail = Math.max(300, colWidth - 24);
+  const scale = Math.min(1, Math.max(0.32, avail / 794));
   wrap.style.transform = 'scale(' + scale + ')';
   wrap.style.width = '794px';
-  wrap.style.margin = '16px auto';
-  wrap.style.height = (wrap.scrollHeight * scale) + 'px';
+  wrap.style.margin = '8px auto';
+  wrap.style.transformOrigin = 'top center';
+  
+  const pageEl = wrap.querySelector('.cv-page');
+  const naturalH = pageEl ? pageEl.scrollHeight : (wrap.scrollHeight || 1123);
+  wrap.style.height = (naturalH * scale + 40) + 'px';
 }
 
 /* ---------- form ---------- */
@@ -685,6 +721,9 @@ async function runOneShotAI() {
     renderBuilderForm();
     bPreview();
     closeModal();
+    if (window.innerWidth <= 900 && typeof bSwitchMobileTab === 'function') {
+      bSwitchMobileTab('preview');
+    }
     toast('تم تعبئة وتوليد السيرة الذاتية بنجاح على القالب المختار ✅ (' + bEsc(data.provider) + ')');
   } catch (e) {
     if (st) st.innerHTML = '<span class="text-rose-400"><i class="fas fa-circle-xmark ml-1"></i> ' + bEsc(e.message || 'فشل التوليد') + '</span>';
@@ -857,12 +896,12 @@ async function generateDirectPDF() {
   if (!B || !B.data) return toast('لا توجد سيرة مفتوحة', 'err');
   
   const p = (B && B.data && B.data.personal) || {};
-  const filename = (p.nameAr || p.nameEn || (B && B.resume && B.resume.title) || 'Sira_CV') + '.pdf';
-  
-  const element = document.querySelector('#b-preview .cv-page') || document.querySelector('#pdf-editor-canvas .cv-page') || document.querySelector('.cv-page');
-  if (!element) return toast('تعذر العثور على نموذج المعاينة للسيرة الذاتية', 'err');
+  const filename = (p.nameAr || p.nameEn || (B && B.resume && B.resume.title) || 'CV-ATS') + '.pdf';
+  const tpl = (B && B.resume && B.resume.template) || 'canva_purple';
+  const lang = (B && B.resume && B.resume.language) || 'ar';
+  const cust = B.cust || {};
 
-  toast('جاري تحضير ملف الـ PDF المطابق للمعاينة 100%... 📄');
+  toast('جاري تجهيز وتنزيل ملف الـ PDF عالي الدقة... 📄');
 
   const ensureScript = (src, globalKey) => {
     return new Promise((resolve) => {
@@ -883,22 +922,41 @@ async function generateDirectPDF() {
   await ensureScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'html2canvas');
   await ensureScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'jspdf');
 
+  // Create isolated off-screen rendering sandbox at exact standard A4 width (794px)
+  // This guarantees full rendering regardless of mobile screen width or hidden tabs!
+  const renderSandbox = document.createElement('div');
+  renderSandbox.style.position = 'fixed';
+  renderSandbox.style.left = '-9999px';
+  renderSandbox.style.top = '0';
+  renderSandbox.style.width = '794px';
+  renderSandbox.style.minHeight = '1123px';
+  renderSandbox.style.background = '#ffffff';
+  renderSandbox.style.zIndex = '-9999';
+  renderSandbox.style.opacity = '1';
+  renderSandbox.style.pointerEvents = 'none';
+
+  renderSandbox.innerHTML = renderTemplate(tpl, B.data, cust, lang);
+  document.body.appendChild(renderSandbox);
+
   try {
     if (document.fonts && document.fonts.ready) {
       await document.fonts.ready;
     }
+    await new Promise(r => setTimeout(r, 200));
 
+    const targetEl = renderSandbox.querySelector('.cv-page') || renderSandbox;
     const html2canvasFunc = window.html2canvas;
     const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
 
     if (html2canvasFunc && jsPDFClass) {
-      // 100% WYSIWYG: Capture preview element EXACTLY as custom-formatted by user (fonts, sizes, margins)
-      const canvas = await html2canvasFunc(element, {
-        scale: 2.5,
+      const canvas = await html2canvasFunc(targetEl, {
+        scale: 2.2,
         useCORS: true,
         allowTaint: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: 794,
+        windowWidth: 1200
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 0.98);
@@ -908,23 +966,30 @@ async function generateDirectPDF() {
         format: 'a4'
       });
 
-      // Fit captured preview image to exact A4 dimensions (210mm x 297mm)
       pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
-
       pdf.save(filename);
-      toast('تم تنزيل الـ PDF بنفس الخط والتنسيق والمقاس المختار من قِبَلك 100% بنجاح ✅');
+      toast('تم تنزيل السيرة بصيغة PDF بنجاح 📄✅');
     } else {
       printResumePDF();
     }
   } catch (err) {
-    console.error('Exact PDF Export Error:', err);
+    console.error('PDF Export Error:', err);
     printResumePDF();
+  } finally {
+    if (renderSandbox.parentNode) {
+      renderSandbox.parentNode.removeChild(renderSandbox);
+    }
   }
 }
 
 function printResumePDF() {
   if (!B || !B.data) return toast('لا توجد سيرة مفتوحة للتنزيل', 'err');
   closeModal();
+
+  // On mobile devices, direct PDF rendering is 100% reliable and doesn't rely on popup windows
+  if (window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    return generateDirectPDF();
+  }
 
   const p = B.data.personal || {};
   const tpl = B.resume.template || 'canva_purple';
@@ -936,8 +1001,7 @@ function printResumePDF() {
 
   const printWin = window.open('', '_blank', 'width=950,height=1150');
   if (!printWin) {
-    toast('يرجى السماح بفتح النوافذ المنبثقة من المتصفح لتنزيل الـ PDF', 'err');
-    return;
+    return generateDirectPDF();
   }
 
   printWin.document.write(`<!DOCTYPE html>
