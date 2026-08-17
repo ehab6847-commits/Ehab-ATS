@@ -11,6 +11,10 @@
 .cv-contact span { display: inline-flex; align-items: center; gap: 5px; }
 .cv-contact i { color: var(--cv-color, #4f46e5); font-size: .95em; }
 .cv-contact-sep { color: var(--cv-accent, #94a3b8); font-size: 0.85em; margin: 0 4px; opacity: 0.7; }
+.cv-link { text-decoration: none; color: inherit; }
+.cv-link:hover { opacity: 0.85; text-decoration: underline; }
+.cv-link-blue { color: #2563eb !important; font-weight: 600; }
+.cv-header-band .cv-link-blue { color: #93c5fd !important; }
 
 .cv-header-center { text-align: center; }
 .cv-header-center .cv-contact { justify-content: center; }

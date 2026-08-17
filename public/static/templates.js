@@ -219,12 +219,28 @@ function renderContact(p, lang, allowContactIcons) {
   const show = allowContactIcons !== false;
   const ic = (i) => show ? `<i class="${i}"></i>` : '';
   
-  if (p.phone) bits.push(`<span dir="ltr">${ic('fas fa-phone')}${tplEsc(p.phone)}</span>`);
-  if (p.email) bits.push(`<span>${ic('fas fa-envelope')}${tplEsc(p.email)}</span>`);
+  if (p.phone) {
+    const rawPhone = String(p.phone).replace(/\s+/g, '');
+    bits.push(`<span dir="ltr"><a href="tel:${tplEsc(rawPhone)}" class="cv-link" style="color:inherit;text-decoration:none;">${ic('fas fa-phone')}${tplEsc(p.phone)}</a></span>`);
+  }
+  if (p.email) {
+    bits.push(`<span><a href="mailto:${tplEsc(p.email)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:none;font-weight:600;">${ic('fas fa-envelope')}${tplEsc(p.email)}</a></span>`);
+  }
   const city = lang === 'en' ? (p.cityEn || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.cityAr || p.city) : '') || p.city) : (p.cityAr || p.city || p.cityEn);
   if (city) bits.push(`<span>${ic('fas fa-map-marker-alt')}${tplEsc(city)}</span>`);
-  if (p.linkedin) bits.push(`<span dir="ltr">${ic('fab fa-linkedin')}${tplEsc(p.linkedin)}</span>`);
-  if (p.website) bits.push(`<span dir="ltr">${ic('fas fa-globe')}${tplEsc(p.website)}</span>`);
+  
+  if (p.linkedin) {
+    let lkUrl = p.linkedin.trim();
+    if (!lkUrl.startsWith('http://') && !lkUrl.startsWith('https://')) {
+      lkUrl = 'https://' + (lkUrl.startsWith('linkedin.com') ? '' : 'linkedin.com/in/') + lkUrl.replace(/^@/, '');
+    }
+    bits.push(`<span dir="ltr"><a href="${tplEsc(lkUrl)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#0a66c2;text-decoration:none;font-weight:600;">${ic('fab fa-linkedin')}${tplEsc(p.linkedin)}</a></span>`);
+  }
+  if (p.website) {
+    let webUrl = p.website.trim();
+    if (!webUrl.startsWith('http://') && !webUrl.startsWith('https://')) webUrl = 'https://' + webUrl;
+    bits.push(`<span dir="ltr"><a href="${tplEsc(webUrl)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#0284c7;text-decoration:none;">${ic('fas fa-globe')}${tplEsc(p.website)}</a></span>`);
+  }
   if (p.nationality) bits.push(`<span>${ic('fas fa-flag')}${tplEsc(lang === 'en' ? (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.nationality) : p.nationality) : p.nationality)}</span>`);
 
   if (bits.length === 0) return '';

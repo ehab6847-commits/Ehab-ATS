@@ -1019,8 +1019,29 @@ async function generateDirectPDF() {
       });
 
       pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+
+      // Embed clickable PDF hyperlink annotations for email (mailto), LinkedIn, website, and phone
+      try {
+        const targetRect = targetEl.getBoundingClientRect();
+        const links = targetEl.querySelectorAll('a[href]');
+        links.forEach((a) => {
+          const href = a.getAttribute('href');
+          if (!href) return;
+          const rect = a.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0 && targetRect.width > 0 && targetRect.height > 0) {
+            const xMm = ((rect.left - targetRect.left) / targetRect.width) * 210;
+            const yMm = ((rect.top - targetRect.top) / targetRect.height) * 297;
+            const wMm = (rect.width / targetRect.width) * 210;
+            const hMm = (rect.height / targetRect.height) * 297;
+            pdf.link(xMm, yMm, wMm, hMm, { url: href });
+          }
+        });
+      } catch (e) {
+        console.warn('PDF Link annotations notice:', e);
+      }
+
       pdf.save(filename);
-      toast('تم تنزيل السيرة بصيغة PDF بنجاح 📄✅');
+      toast('تم تنزيل السيرة بصيغة PDF مع روابط بريد ولينكد إن تفاعلية بنجاح 📄✅');
     } else {
       printResumePDF();
     }
