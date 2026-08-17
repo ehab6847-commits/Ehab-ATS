@@ -18,8 +18,8 @@
 <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{cairo:['Cairo','sans-serif']}}}}</script>
 <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;600;700&family=Almarai:wght@300;400;700&family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700&family=Changa:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;600;700&family=Inter:wght@300;400;600;700&family=Kufam:wght@400;600;700&family=Montserrat:wght@300;400;600;700&family=Noto+Sans+Arabic:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&family=Readex+Pro:wght@300;400;600;700&family=Roboto:wght@300;400;600;700&family=Rubik:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
-<link href="/static/styles.css" rel="stylesheet">
-<link href="/static/templates.css" rel="stylesheet">
+<link href="/static/styles.css?v=20260816_1" rel="stylesheet">
+<link href="/static/templates.css?v=20260816_1" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -27,10 +27,63 @@
 <body class="font-cairo bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors">
 <div id="root"></div>
 <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-<script src="/static/aiEngine.js"></script>
-<script src="/static/templates.js"></script>
-<script src="/static/ats.js"></script>
-<script src="/static/builder.js"></script>
-<script src="/static/app.js"></script>
+<script src="/static/aiEngine.js?v=20260817_3"></script>
+<script src="/static/templates.js?v=20260817_3"></script>
+<script src="/static/ats.js?v=20260817_3"></script>
+<script src="/static/builder.js?v=20260817_3"></script>
+<script src="/static/app.js?v=20260817_3"></script>
+<script>
+// ===== INLINE OVERRIDE: Force pristine English from Arabic source =====
+// This runs AFTER all JS files load. Even if cached old files are used,
+// this override guarantees correct bilingual and English rendering.
+(function(){
+  if (typeof window.renderTemplate !== 'function') return;
+  var _origRender = window.renderTemplate;
+  window.renderTemplate = function(templateId, data, cust, language) {
+    if (!data || !data.sections) return _origRender(templateId, data, cust, language);
+    var lang = language || 'ar';
+    if (lang === 'en' || lang === 'bilingual') {
+      // Force re-translate ALL fields from Arabic source
+      var p = data.personal || {};
+      if (p.nameAr && typeof translateArabicNameToEnglish === 'function') {
+        p.nameEn = translateArabicNameToEnglish(p.nameAr);
+      }
+      if (p.titleAr && typeof translateTextToEnglish === 'function') {
+        p.titleEn = translateTextToEnglish(p.titleAr);
+      }
+      if (p.cityAr && typeof translateTextToEnglish === 'function') {
+        p.cityEn = translateTextToEnglish(p.cityAr);
+      }
+      (data.sections || []).forEach(function(sec) {
+        if (sec.titleAr && typeof translateTextToEnglish === 'function') {
+          sec.titleEn = translateTextToEnglish(sec.titleAr);
+        }
+        if (sec.textAr && typeof translateTextToEnglish === 'function') {
+          sec.textEn = translateTextToEnglish(sec.textAr);
+        }
+        (sec.items || []).forEach(function(it) {
+          ['role','org','company','degree','school','desc','name','level','issuer','text'].forEach(function(k) {
+            var ar = it[k+'Ar'] || it[k];
+            if (ar && typeof translateTextToEnglish === 'function') {
+              it[k+'En'] = translateTextToEnglish(String(ar));
+            }
+          });
+          // Fix name specifically for translateArabicNameToEnglish
+          if (it.nameAr && typeof translateArabicNameToEnglish === 'function' && /[\u0621-\u064A]/.test(it.nameAr)) {
+            // Only for person names, not skill names
+          }
+        });
+      });
+    }
+    return _origRender(templateId, data, cust, language);
+  };
+  // Unregister any service workers that might cache old files
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+      regs.forEach(function(r) { r.unregister(); });
+    });
+  }
+})();
+</script>
 </body>
 </html>

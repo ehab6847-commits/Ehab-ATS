@@ -50,22 +50,18 @@ function tplEsc(s) {
 
 function resolveName(p) {
   const ar = (p.nameAr || p.fullNameAr || p.fullName || p.name || '').trim();
-  let en = (p.nameEn || p.fullNameEn || (/[a-zA-Z]/.test(p.name || '') ? p.name : '') || '').trim();
-  if (en === 'Full Name' || !en || /[\u0600-\u06FF]/.test(en)) {
-    if (ar) {
-      en = typeof translateArabicNameToEnglish === 'function'
-        ? translateArabicNameToEnglish(ar)
-        : (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(ar) : ar);
-    }
+  let en = (p.nameEn || p.fullNameEn || '').trim();
+  if (ar && typeof translateArabicNameToEnglish === 'function') {
+    en = translateArabicNameToEnglish(ar);
   }
   return { ar, en: en || ar, main: ar || en };
 }
 
 function resolveTitle(p) {
   const ar = (p.titleAr || p.jobTitleAr || p.jobTitle || p.title || '').trim();
-  let en = (p.titleEn || p.jobTitleEn || (/[a-zA-Z]/.test(p.title || '') ? p.title : '') || '').trim();
-  if (en === 'Job Title' || !en || /[\u0600-\u06FF]/.test(en)) {
-    if (ar && typeof translateTextToEnglish === 'function') en = translateTextToEnglish(ar);
+  let en = (p.titleEn || p.jobTitleEn || '').trim();
+  if (ar && typeof translateTextToEnglish === 'function') {
+    en = translateTextToEnglish(ar);
   }
   return { ar, en: en || ar, main: ar || en };
 }
@@ -75,17 +71,24 @@ function mkPick(lang) {
     if (!item) return '';
     const baseKey = arKey.replace(/Ar$/, '');
     const ar = (item[arKey] || item[baseKey] || item[baseKey + 'Ar'] || '').trim();
-    let en = (item[enKey] || item[baseKey + 'En'] || (/[a-zA-Z]/.test(item[baseKey] || '') ? item[baseKey] : '') || '').trim();
+    let en = (item[enKey] || item[baseKey + 'En'] || '').trim();
 
     if (lang === 'en') {
-      if (!en || /[\u0600-\u06FF]/.test(en)) {
-        en = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(ar || en) : en;
+      if (ar && typeof translateTextToEnglish === 'function') {
+        return tplEsc(translateTextToEnglish(ar));
       }
       return tplEsc(en || ar);
     }
     if (lang === 'bilingual') {
-      const enVal = en || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(ar) : '');
-      if (ar && enVal) return tplEsc(ar) + '<span class="cv-bilingual-sub">' + tplEsc(enVal) + '</span>';
+      let enVal = '';
+      if (ar && typeof translateTextToEnglish === 'function') {
+        enVal = translateTextToEnglish(ar);
+      } else {
+        enVal = en;
+      }
+      if (ar && enVal && ar !== enVal) {
+        return tplEsc(ar) + '<span class="cv-bilingual-sub">' + tplEsc(enVal) + '</span>';
+      }
       return tplEsc(ar || enVal);
     }
     return tplEsc(ar || en);
@@ -119,7 +122,16 @@ function renderSectionBody(sec, lang, tpl) {
   const kind = (SECTION_TYPES[sec.type] || {}).kind || sec.kind || 'custom';
 
   if (kind === 'text') {
-    let txt = lang === 'en' ? (sec.textEn || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(sec.textAr) : '') || sec.textAr) : (lang === 'bilingual' && sec.textAr && sec.textEn ? sec.textAr + '\n\n' + sec.textEn : (sec.textAr || sec.textEn));
+    let txt;
+    if (lang === 'en') {
+      txt = (sec.textAr && typeof translateTextToEnglish === 'function') ? translateTextToEnglish(sec.textAr) : (sec.textEn || sec.textAr || '');
+    } else if (lang === 'bilingual') {
+      // In bilingual split mode, this is called separately for 'ar' and 'en' columns
+      // so just return Arabic text
+      txt = sec.textAr || sec.textEn || '';
+    } else {
+      txt = sec.textAr || sec.textEn || '';
+    }
     return `<p class="cv-item-desc" style="margin:0">${tplEsc(txt || '')}</p>`;
   }
 
@@ -253,34 +265,33 @@ function ensureEnglishData(data) {
   if (!data) return;
   const p = data.personal || {};
   const srcName = (p.nameAr || p.fullNameAr || p.fullName || p.name || '').trim();
-  if (srcName && (!p.nameEn || p.nameEn === 'Full Name' || /[\u0600-\u06FF]/.test(p.nameEn))) {
+  if (srcName) {
     p.nameEn = typeof translateArabicNameToEnglish === 'function'
       ? translateArabicNameToEnglish(srcName)
       : (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcName) : srcName);
   }
   const srcTitle = (p.titleAr || p.jobTitleAr || p.title || p.jobTitle || '').trim();
-  if (srcTitle && (!p.titleEn || p.titleEn === 'Job Title' || /[\u0600-\u06FF]/.test(p.titleEn))) {
+  if (srcTitle) {
     p.titleEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcTitle) : srcTitle;
   }
   const srcCity = (p.cityAr || p.city || '').trim();
-  if (srcCity && (!p.cityEn || /[\u0600-\u06FF]/.test(p.cityEn))) {
+  if (srcCity) {
     p.cityEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcCity) : srcCity;
   }
 
   (data.sections || []).forEach(sec => {
     const srcSecTitle = (sec.titleAr || sec.title || '').trim();
-    if (srcSecTitle && (!sec.titleEn || /[\u0600-\u06FF]/.test(sec.titleEn))) {
+    if (srcSecTitle) {
       sec.titleEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcSecTitle) : srcSecTitle;
     }
     const srcSecText = (sec.textAr || sec.text || '').trim();
-    if (srcSecText && (!sec.textEn || /[\u0600-\u06FF]/.test(sec.textEn))) {
+    if (srcSecText) {
       sec.textEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcSecText) : srcSecText;
     }
     (sec.items || []).forEach(it => {
       ['role', 'org', 'company', 'degree', 'school', 'desc', 'name', 'level', 'issuer', 'text'].forEach(k => {
         const ar = it[k + 'Ar'] || it[k];
-        const en = it[k + 'En'];
-        if (ar && (!en || /[\u0600-\u06FF]/.test(en))) {
+        if (ar) {
           it[k + 'En'] = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(String(ar)) : String(ar);
         }
       });

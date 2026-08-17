@@ -109,7 +109,7 @@ function bSet(field, val) {
   B.resume[field] = val;
   if (field === 'language' && (val === 'en' || val === 'bilingual')) {
     if (typeof ensureEnglishData === 'function') {
-      ensureEnglishData(B.data);
+      ensureEnglishData(B.data, true);
     }
     renderBuilderForm();
   }
@@ -166,10 +166,8 @@ function bScalePreview() {
 
 /* ---------- form ---------- */
 function renderBuilderForm() {
-  if (B.resume.language === 'en' || B.resume.language === 'bilingual') {
-    if (typeof ensureEnglishData === 'function') {
-      ensureEnglishData(B.data);
-    }
+  if (typeof ensureEnglishData === 'function') {
+    ensureEnglishData(B.data);
   }
   const p = B.data.personal || {};
   const pf = (k, label, dir) => `<div><label class="fld">${label}</label><input class="input-field !py-1.5" ${dir ? 'dir="' + dir + '"' : ''} value="${bEsc(p[k] || '')}" oninput="bPersonal('${k}', this.value)"></div>`;
