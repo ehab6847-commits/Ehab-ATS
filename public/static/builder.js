@@ -4,23 +4,48 @@ const B = { id: null, resume: null, data: null, cust: null, dirty: false, saveTi
 function bEsc(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function bid() { return 'x' + Math.random().toString(36).slice(2, 9); }
 
-const FONTS_LIST = [
-  { name: 'Cairo', ar: 'Cairo (كايرو - عصري)' },
-  { name: 'Tajawal', ar: 'Tajawal (تاجوال - احترافي)' },
-  { name: 'Amiri', ar: 'Amiri (أميري - كلاسيكي)' },
-  { name: 'Almarai', ar: 'Almarai (المراعي - ناعم)' },
-  { name: 'Changa', ar: 'Changa (شانجا - بارز)' },
-  { name: 'Kufam', ar: 'Kufam (كوفام - هندسي)' },
-  { name: 'Readex Pro', ar: 'Readex Pro (ريدكس - حديث)' },
-  { name: 'Noto Sans Arabic', ar: 'Noto Sans Arabic (نوتو)' },
-  { name: 'Alexandria', ar: 'Alexandria (الإسكندرية)' },
-  { name: 'IBM Plex Sans Arabic', ar: 'IBM Plex (تقني)' },
-  { name: 'Rubik', ar: 'Rubik (روبرك - دائري)' },
-  { name: 'Inter', ar: 'Inter (إنتر - عالمي)' },
-  { name: 'Roboto', ar: 'Roboto (روبوتو - حديث)' },
-  { name: 'Montserrat', ar: 'Montserrat (مونتسيرات)' },
-  { name: 'Outfit', ar: 'Outfit (أوتفيت - مميز)' }
+const ARABIC_FONTS = [
+  { name: 'Cairo', ar: 'Cairo (كايرو - عصري رسمي)' },
+  { name: 'Tajawal', ar: 'Tajawal (تاجوال - احترافي للشركات)' },
+  { name: 'Almarai', ar: 'Almarai (المراعي - ناعم وأنيق)' },
+  { name: 'IBM Plex Sans Arabic', ar: 'IBM Plex (آي بي إم بلكس - تقني عالمي)' },
+  { name: 'Alexandria', ar: 'Alexandria (الإسكندرية - حديث ومقروء)' },
+  { name: 'Readex Pro', ar: 'Readex Pro (ريدكس برو - هندسي عصري)' },
+  { name: 'Noto Sans Arabic', ar: 'Noto Sans (نوتو سانس - قياسي ومعتمد)' },
+  { name: 'Amiri', ar: 'Amiri (أميري - كلاسيكي عريق)' },
+  { name: 'Changa', ar: 'Changa (شانجا - عريض وجريء)' },
+  { name: 'Kufam', ar: 'Kufam (كوفام - كوفي حديث)' },
+  { name: 'Rubik', ar: 'Rubik (روبيك - انسيابي ودائري)' },
+  { name: 'Noto Kufi Arabic', ar: 'Noto Kufi (نوتو كوفي - هندسي رسمي)' },
+  { name: 'Mada', ar: 'Mada (مدى - بسيط وواضح)' },
+  { name: 'Marhey', ar: 'Marhey (مرحي - جذاب وحيوي)' },
+  { name: 'Reem Kufi', ar: 'Reem Kufi (ريم كوفي - كوفي تراثي عصري)' },
+  { name: 'Aref Ruqaa', ar: 'Aref Ruqaa (عارف رقعة - رقعة مميز)' },
+  { name: 'Lateef', ar: 'Lateef (لطيف - رشيق وواضح)' },
+  { name: 'Scheherazade New', ar: 'Scheherazade (شهرزاد - نسخي كلاسيكي)' },
+  { name: 'El Messiri', ar: 'El Messiri (المسيري - فني أنيق)' },
+  { name: 'Lemonada', ar: 'Lemonada (ليمونادة - مرح وعصري)' }
 ];
+
+const ENGLISH_FONTS = [
+  { name: 'Inter', en: 'Inter (إنتر - معيار الـ ATS العالمي)' },
+  { name: 'Roboto', en: 'Roboto (روبوتو - قياسي واحترافي)' },
+  { name: 'Montserrat', en: 'Montserrat (مونتسيرات - هندسي أنيق)' },
+  { name: 'Outfit', en: 'Outfit (أوتفيت - مودرن وعصري)' },
+  { name: 'Poppins', en: 'Poppins (بوبينز - متناسق ودائري)' },
+  { name: 'Open Sans', en: 'Open Sans (أوبن سانس - مقروء وواضح)' },
+  { name: 'Lato', en: 'Lato (لاتو - كلاسيكي وتنفيذي)' },
+  { name: 'Plus Jakarta Sans', en: 'Plus Jakarta (جاكرتا سانس - تقني فاخر)' },
+  { name: 'Space Grotesk', en: 'Space Grotesk (سبيس غروتسك - حديث ومبتكر)' },
+  { name: 'Raleway', en: 'Raleway (ريلواي - راقي ورفيع)' },
+  { name: 'Playfair Display', en: 'Playfair Display (بليفير ديسبلاي - سيرف فاخر)' },
+  { name: 'Merriweather', en: 'Merriweather (ميريويذر - مقروء ورسمي)' },
+  { name: 'Fira Sans', en: 'Fira Sans (فيرا سانس - تنفيذي متقن)' },
+  { name: 'Work Sans', en: 'Work Sans (ورك سانس - عملي للوظائف)' },
+  { name: 'Oswald', en: 'Oswald (أوزوالد - بارز للعناوين)' }
+];
+
+const FONTS_LIST = ARABIC_FONTS;
 
 async function openBuilder(id) {
   try {
@@ -41,8 +66,12 @@ function renderBuilder() {
   const r = B.resume;
   const c = B.cust || {};
   const tplOpts = Object.entries(TEMPLATE_DEFS).map(([k, t]) => `<option value="${k}" ${r.template === k ? 'selected' : ''}>${bEsc(t.name)}</option>`).join('');
-  const fontOptsAr = FONTS_LIST.map(f => `<option value="${f.name}" ${(c.fontAr || 'Cairo') === f.name ? 'selected' : ''}>${bEsc(f.ar)}</option>`).join('');
+  const fontOptsAr = ARABIC_FONTS.map(f => `<option value="${f.name}" ${(c.fontAr || 'Cairo') === f.name ? 'selected' : ''}>${bEsc(f.ar)}</option>`).join('');
+  const fontOptsEn = ENGLISH_FONTS.map(f => `<option value="${f.name}" ${(c.fontEn || 'Inter') === f.name ? 'selected' : ''}>${bEsc(f.en)}</option>`).join('');
   
+  const isEnOnly = r.language === 'en';
+  const isBilingual = r.language === 'bilingual';
+
   document.getElementById('root').innerHTML = `
   <div dir="rtl" class="min-h-screen flex flex-col">
     <header class="glass-strong sticky top-0 z-30 flex items-center gap-2 px-3 py-2 flex-wrap" style="min-height:58px">
@@ -57,10 +86,16 @@ function renderBuilder() {
       
       <select id="b-tpl" class="input-field !py-1.5 !w-auto text-xs font-semibold" onchange="bSet('template', this.value)">${tplOpts}</select>
       
-      <!-- Quick Font Family Selector -->
-      <select id="b-font-ar" class="input-field !py-1.5 !w-auto text-xs" onchange="bCust('fontAr', this.value)" title="نوع الخط العربي">
+      <!-- Quick Font Family Selectors (20 Arabic & 15 English) -->
+      ${!isEnOnly ? `
+      <select id="b-font-ar" class="input-field !py-1.5 !w-auto text-xs" onchange="bCust('fontAr', this.value)" title="نوع الخط العربي (20 خط)">
         ${fontOptsAr}
-      </select>
+      </select>` : ''}
+
+      ${(isEnOnly || isBilingual) ? `
+      <select id="b-font-en" class="input-field !py-1.5 !w-auto text-xs" onchange="bCust('fontEn', this.value)" title="نوع الخط الإنجليزي (15 خط)">
+        ${fontOptsEn}
+      </select>` : ''}
 
       <!-- Quick Font Size Controls -->
       <div class="flex items-center gap-1 glass px-2 py-1 rounded-lg">
@@ -143,14 +178,18 @@ function exitBuilder() {
 /* ---------- state & autosave ---------- */
 function bSet(field, val) {
   B.resume[field] = val;
-  if (field === 'language' && (val === 'en' || val === 'bilingual')) {
-    if (typeof ensureEnglishData === 'function') {
-      ensureEnglishData(B.data, true);
+  if (field === 'language') {
+    if (val === 'en' || val === 'bilingual') {
+      if (typeof ensureEnglishData === 'function') {
+        ensureEnglishData(B.data, true);
+      }
     }
-    renderBuilderForm();
+    bTouched();
+    renderBuilder();
+    return;
   }
   bTouched();
-  if (field === 'template' || field === 'language') bPreview();
+  if (field === 'template') bPreview();
 }
 function bTouched() {
   B.dirty = true;
@@ -505,21 +544,21 @@ ${JSON.stringify(sec)}
 /* ---------- customization panel ---------- */
 function bCustomizationPanel() {
   const c = B.cust || {};
-  const fontOptsAr = FONTS_LIST.map(f => `<option value="${f.name}" ${(c.fontAr || 'Cairo') === f.name ? 'selected' : ''}>${bEsc(f.ar)}</option>`).join('');
-  const fontOptsEn = FONTS_LIST.map(f => `<option value="${f.name}" ${(c.fontEn || 'Inter') === f.name ? 'selected' : ''}>${bEsc(f.name)}</option>`).join('');
+  const fontOptsAr = ARABIC_FONTS.map(f => `<option value="${f.name}" ${(c.fontAr || 'Cairo') === f.name ? 'selected' : ''}>${bEsc(f.ar)}</option>`).join('');
+  const fontOptsEn = ENGLISH_FONTS.map(f => `<option value="${f.name}" ${(c.fontEn || 'Inter') === f.name ? 'selected' : ''}>${bEsc(f.en)}</option>`).join('');
 
   return `
   <div class="section-card mt-3 collapsed" id="b-cust-card">
     <div class="section-head" onclick="document.getElementById('b-cust-card').classList.toggle('collapsed')">
-      <i class="fas fa-palette text-pink-400"></i><span class="font-bold">التخصيص والألوان والخطوط (15 نوع خط)</span>
+      <i class="fas fa-palette text-pink-400"></i><span class="font-bold">التخصيص والألوان والخطوط (20 خط عربي + 15 خط إنجليزي)</span>
       <i class="fas fa-chevron-down mr-auto text-slate-400 text-xs"></i>
     </div>
     <div class="section-body">
       <div class="grid grid-cols-2 gap-2">
         <div><label class="fld">اللون الأساسي</label><input type="color" class="input-field !p-1 !h-9" value="${bEsc(c.themeColor || '#1a3a5c')}" oninput="bCust('themeColor', this.value)"></div>
         <div><label class="fld">لون التمييز</label><input type="color" class="input-field !p-1 !h-9" value="${bEsc(c.accentColor || '#2d6da3')}" oninput="bCust('accentColor', this.value)"></div>
-        <div><label class="fld">خط النص العربي (15 خط)</label><select class="input-field !py-1.5 text-xs" onchange="bCust('fontAr', this.value)">${fontOptsAr}</select></div>
-        <div><label class="fld">خط النص الإنجليزي</label><select class="input-field !py-1.5 text-xs" onchange="bCust('fontEn', this.value)">${fontOptsEn}</select></div>
+        <div><label class="fld">خط النص العربي (20 خط)</label><select class="input-field !py-1.5 text-xs" onchange="bCust('fontAr', this.value)">${fontOptsAr}</select></div>
+        <div><label class="fld">خط النص الإنجليزي (15 خط)</label><select class="input-field !py-1.5 text-xs" onchange="bCust('fontEn', this.value)">${fontOptsEn}</select></div>
         <div><label class="fld">حجم الخط: <span id="cs-fs">${c.fontSize || 14}</span>px</label><input type="range" min="10" max="24" value="${c.fontSize || 14}" class="w-full" oninput="document.getElementById('cs-fs').textContent=this.value; bCust('fontSize', +this.value)"></div>
         <div><label class="fld">تباعد الأسطر: <span id="cs-lh">${c.lineHeight || 1.55}</span></label><input type="range" min="1.2" max="2.2" step="0.05" value="${c.lineHeight || 1.55}" class="w-full" oninput="document.getElementById('cs-lh').textContent=this.value; bCust('lineHeight', +this.value)"></div>
         <div><label class="fld">الهوامش الخارجية: <span id="cs-mg">${c.margin || 40}</span>px</label><input type="range" min="15" max="80" value="${c.margin || 40}" class="w-full" oninput="document.getElementById('cs-mg').textContent=this.value; bCust('margin', +this.value)"></div>
