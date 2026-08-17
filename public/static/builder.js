@@ -28,6 +28,7 @@ const ARABIC_FONTS = [
 ];
 
 const ENGLISH_FONTS = [
+  { name: 'Times New Roman', en: 'Times New Roman (تايمز نيو رومان - كلاسيكي رسمي)' },
   { name: 'Inter', en: 'Inter (إنتر - معيار الـ ATS العالمي)' },
   { name: 'Roboto', en: 'Roboto (روبوتو - قياسي واحترافي)' },
   { name: 'Montserrat', en: 'Montserrat (مونتسيرات - هندسي أنيق)' },

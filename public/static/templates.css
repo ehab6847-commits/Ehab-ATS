@@ -1,6 +1,6 @@
 /* ===== Ehab ATS — CV template styles ===== */
 .cv-page { font-family: var(--cv-font-ar, 'Cairo'), sans-serif; font-size: var(--cv-fs, 14px); line-height: var(--cv-lh, 1.55); }
-.cv-page[dir="ltr"] { font-family: var(--cv-font-en, 'Inter'), sans-serif; }
+.cv-page[dir="ltr"] { font-family: var(--cv-font-en, 'Inter'), 'Times New Roman', Times, serif, sans-serif; }
 .cv-inner { padding: var(--cv-margin, 40px); }
 
 .cv-name { font-size: 2em; font-weight: 800; margin: 0; color: var(--cv-color, #1e293b); }
