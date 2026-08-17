@@ -744,8 +744,9 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     const dates = cleanL.match(/(?:14\d{2}هـ?|20\d{2}|19\d{2})/g);
     const isActionBullet = /^(المساعدة|دعم|المساهمة|تقديم|إعداد|تنظيم|تنفيذ|متابعة|اكتساب|تطوير|تطبيق|إدارة|استقبال|العمل|Assisted|Supported|Contributed|Provided|Prepared|Organized|Executed|Developed|Gained|Applied|•|\-)/i.test(cleanL);
     const isLocationOrDate = /(?:المملكة|السعودية|الرياض|جدة|مكة|الدمام|الطائف|Saudi|Riyadh|Jeddah|Dammam|Taif|\b14\d{2}\b|\b20\d{2}\b)/i.test(cleanL) && !/(?:^متدرب|^موظف|^أخصائي|^مدير|^مهندس|^فني|^مساعد|^Trainee|^Specialist|^Manager|^Engineer|^Officer)/i.test(cleanL);
-    const isExplicitHeader = (cleanL.includes('|') || /(?:^متدرب|^موظف|^أخصائي|^مدير|^مهندس|^فني|^مساعد|^Trainee|^Specialist|^Manager|^Engineer|^Officer)/i.test(cleanL)) && !isLocationOrDate && !isActionBullet;
+    const isExplicitHeader = (cleanL.includes('|') || /(?:^متدرب|^موظف|^أخصائي|^مدير|^مهندس|^فني|^مساعد|^محاسب|^مندوب|^سكرتير|^Trainee|^Specialist|^Manager|^Engineer|^Officer|^Accountant|^Secretary)/i.test(cleanL)) && !isLocationOrDate && !isActionBullet;
     const isCompanyOrDept = /(?:مستشفى|شركة|مؤسسة|مصنع|قسم|وزارة|هيئة|مركز|Hospital|Company|Department|Corp|Factory|Center)/i.test(cleanL) && !isActionBullet && !isExplicitHeader && cleanL.length < 90;
+    const isDurationLine = /(?:مدة الخبرة|سنة|سنتين|أشهر|شهر|years?|months?)/i.test(cleanL) && !isActionBullet;
 
     if (isExplicitHeader) {
       if (currentExp && (currentExp.roleAr || currentExp.orgAr || currentExp.descAr)) {
@@ -773,15 +774,62 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
       return;
     }
 
-    if (currentExp && (isCompanyOrDept || isLocationOrDate) && !isActionBullet) {
+    // NEW: If we see a company/org name and the current experience ALREADY has an org AND has description,
+    // this is a NEW experience, not additional info for the current one
+    if (isCompanyOrDept && !isActionBullet) {
+      if (currentExp && currentExp.orgAr && currentExp.descAr) {
+        // Current experience already has org + description = it's complete. Start new one.
+        expItems.push(currentExp);
+        currentExp = {
+          roleAr: '',
+          roleEn: '',
+          orgAr: cleanL,
+          orgEn: translateTextToEnglish(cleanL),
+          start: dates ? dates[0] : '',
+          end: '',
+          descAr: '',
+          descEn: ''
+        };
+        return;
+      }
+      // Otherwise, set org on the current experience
+      if (currentExp) {
+        if (dates && !currentExp.start) currentExp.start = dates[0];
+        if (!currentExp.orgAr) {
+          currentExp.orgAr = cleanL;
+          currentExp.orgEn = translateTextToEnglish(cleanL);
+        } else {
+          currentExp.orgAr += ' | ' + cleanL;
+          currentExp.orgEn += ' | ' + translateTextToEnglish(cleanL);
+        }
+      } else {
+        // No current exp yet, start a new one with this company name
+        currentExp = {
+          roleAr: '',
+          roleEn: '',
+          orgAr: cleanL,
+          orgEn: translateTextToEnglish(cleanL),
+          start: dates ? dates[0] : '',
+          end: '',
+          descAr: '',
+          descEn: ''
+        };
+      }
+      return;
+    }
+
+    if (currentExp && isLocationOrDate && !isActionBullet) {
       if (dates && !currentExp.start) currentExp.start = dates[0];
-      if (!currentExp.orgAr) {
+      if (!currentExp.orgAr && !isLocationOrDate) {
         currentExp.orgAr = cleanL;
         currentExp.orgEn = translateTextToEnglish(cleanL);
-      } else {
-        currentExp.orgAr += ' | ' + cleanL;
-        currentExp.orgEn += ' | ' + translateTextToEnglish(cleanL);
       }
+      return;
+    }
+
+    // Duration line: attach to current exp but don't treat as description
+    if (currentExp && isDurationLine && !isActionBullet) {
+      if (dates && !currentExp.start) currentExp.start = dates[0];
       return;
     }
 

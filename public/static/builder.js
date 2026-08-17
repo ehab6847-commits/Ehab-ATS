@@ -685,15 +685,27 @@ async function runOneShotAI() {
 
   const prompt = `استخرج ونظم وحول النص والمعلومات التالية إلى سيرة ذاتية مكتملة الحقول ومحتوى احترافي جداً:
 "${text}"
+
+**تعليمات مهمة جداً:**
+1. كل خبرة عملية مختلفة (شركة أو جهة مختلفة) يجب أن تكون عنصر (item) مستقل ومنفصل تماماً في مصفوفة items داخل قسم experience. لا تدمج خبرتين في عنصر واحد أبداً!
+2. كل مرحلة تعليمية مختلفة يجب أن تكون عنصر مستقل في قسم education.
+3. كل مهارة يجب أن تكون عنصر مستقل في قسم skills.
+4. حقل descAr و descEn يحتوي فقط المهام والنقاط الخاصة بتلك الخبرة الواحدة، وليس خلط مهام خبرات أخرى.
+5. إذا وجدت خبرتين أو أكثر في النص، أنشئ عنصرين أو أكثر منفصلين.
+
 أرجع البيانات كـ JSON بالبنية التالية فقط (بدون أي شروح أو markdown):
 {
   "personal": { "nameAr": "", "nameEn": "", "titleAr": "", "titleEn": "", "email": "", "phone": "", "cityAr": "", "cityEn": "", "linkedin": "", "website": "", "nationality": "" },
   "sections": [
     { "id": "s1", "type": "summary", "visible": true, "textAr": "", "textEn": "" },
-    { "id": "s2", "type": "experience", "visible": true, "items": [{ "roleAr": "", "roleEn": "", "orgAr": "", "orgEn": "", "start": "", "end": "", "descAr": "", "descEn": "" }] },
+    { "id": "s2", "type": "experience", "visible": true, "items": [
+      { "roleAr": "المسمى الوظيفي 1", "roleEn": "", "orgAr": "اسم الشركة 1", "orgEn": "", "start": "", "end": "", "descAr": "مهام الخبرة الأولى فقط", "descEn": "" },
+      { "roleAr": "المسمى الوظيفي 2", "roleEn": "", "orgAr": "اسم الشركة 2", "orgEn": "", "start": "", "end": "", "descAr": "مهام الخبرة الثانية فقط", "descEn": "" }
+    ] },
     { "id": "s3", "type": "education", "visible": true, "items": [{ "degreeAr": "", "degreeEn": "", "schoolAr": "", "schoolEn": "", "year": "", "gpa": "" }] },
     { "id": "s4", "type": "skills", "visible": true, "items": [{ "nameAr": "", "nameEn": "", "level": 4 }] },
-    { "id": "s5", "type": "languages", "visible": true, "items": [{ "nameAr": "", "nameEn": "", "levelAr": "", "levelEn": "" }] }
+    { "id": "s5", "type": "languages", "visible": true, "items": [{ "nameAr": "", "nameEn": "", "levelAr": "", "levelEn": "" }] },
+    { "id": "s6", "type": "courses", "visible": true, "items": [{ "nameAr": "", "nameEn": "", "issuerAr": "", "issuerEn": "", "year": "" }] }
   ]
 }`;
 
