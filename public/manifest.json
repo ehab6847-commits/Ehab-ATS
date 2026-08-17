@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "ATS Resume Builder — سيرة ذاتية احترافية",
-  "short_name": "CV Builder",
-  "description": "منصة مولد السيرة الذاتية الاحترافية الذكية بالذكاء الاصطناعي — ATS Resume Builder",
+  "name": "CV-ATS — ATS-Friendly Resume Builder",
+  "short_name": "CV-ATS",
+  "description": "منصة CV-ATS لتوليد وفحص السيرة الذاتية الاحترافية المتوافقة مع أنظمة ATS",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -12,7 +12,7 @@
     "window-controls-overlay"
   ],
   "background_color": "#0f172a",
-  "theme_color": "#4f46e5",
+  "theme_color": "#0284c7",
   "orientation": "portrait-primary",
   "categories": [
     "productivity",
@@ -45,9 +45,9 @@
       "purpose": "any"
     },
     {
-      "src": "/static/cv_builder_logo.svg",
+      "src": "/static/logo.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     }
   ],

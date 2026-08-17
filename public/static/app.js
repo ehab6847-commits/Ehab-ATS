@@ -375,17 +375,17 @@ function renderLogin() {
   el('root').innerHTML = `
   <div class="min-h-screen flex items-center justify-center p-4" style="background:radial-gradient(ellipse at top, #1e293b, #0f172a)">
     <div class="glass-strong rounded-3xl p-8 w-full max-w-md text-center" dir="rtl">
-      <div class="w-20 h-20 mx-auto rounded-2xl p-1 bg-slate-900 border border-slate-700 mb-4 shadow-xl shadow-indigo-500/20">
-        <img src="/static/cv_builder_logo.svg" class="w-full h-full object-contain rounded-xl" alt="ATS Resume Builder Logo">
+      <div class="w-24 h-24 mx-auto rounded-2xl p-1 bg-slate-900 border border-cyan-500/30 mb-4 shadow-2xl shadow-cyan-500/20 overflow-hidden">
+        <img src="/static/logo.png" class="w-full h-full object-cover rounded-xl" alt="CV-ATS Logo">
       </div>
-      <h1 class="text-2xl font-black bg-gradient-to-r from-amber-300 via-amber-400 to-indigo-300 bg-clip-text text-transparent mb-1">ATS Resume Builder</h1>
-      <p class="text-slate-400 text-sm mb-6">منصة مولد السيرة الذاتية الاحترافية — إيهاب شحيطير (Super Admin)</p>
+      <h1 class="text-3xl font-black bg-gradient-to-r from-sky-400 via-teal-300 to-indigo-300 bg-clip-text text-transparent mb-1">CV-ATS</h1>
+      <p class="text-slate-400 text-xs mb-6">ATS-Friendly Resume Builder — منصة السيرة الذاتية الذكية</p>
       <input id="login-key" type="password" class="input-field mb-4 text-center" placeholder="مفتاح الدخول لـ إيهاب شحيطير أو المختصين" onkeydown="if(event.key==='Enter')doLogin()">
-      <button class="btn-primary w-full !bg-gradient-to-r !from-amber-500 !to-indigo-600 shadow-lg" onclick="doLogin()"><i class="fas fa-lock-open ml-2"></i>دخول بالنظام الكامل</button>
+      <button class="btn-primary w-full !bg-gradient-to-r !from-sky-500 !to-indigo-600 shadow-lg font-bold" onclick="doLogin()"><i class="fas fa-lock-open ml-2"></i>دخول بالنظام الكامل</button>
       <p id="login-err" class="text-rose-400 text-sm mt-3 hidden">المفتاح غير صحيح، يرجى المحاولة مجدداً</p>
 
       <div class="mt-5 pt-4 border-t border-slate-700/60">
-        <button class="btn-ghost w-full !py-2 text-xs text-emerald-400 hover:bg-emerald-500/10 border border-emerald-500/30 font-bold" onclick="triggerPWAInstall()"><i class="fas fa-mobile-screen-button ml-2"></i>تثبيت كـ تطبيق على الجوال 📲</button>
+        <button class="btn-ghost w-full !py-2 text-xs text-cyan-400 hover:bg-cyan-500/10 border border-cyan-500/30 font-bold" onclick="triggerPWAInstall()"><i class="fas fa-mobile-screen-button ml-2"></i>تثبيت كـ تطبيق على الجوال 📲</button>
       </div>
     </div>
   </div>`;
@@ -401,7 +401,10 @@ async function doLogin() {
   if (key === validAdminKey) {
     const token = 'ehab_admin_token_' + Date.now();
     S.token = token;
+    S.role = 'super_admin';
+    S.name = 'إيهاب شحيطير (Super Admin)';
     localStorage.setItem('ehab_token', token);
+    localStorage.setItem('ehab_user_role', 'super_admin');
     S.view = 'dashboard';
     renderApp();
     toast('أهلاً بك يا إيهاب شحيطير (Super Admin — المالك والمدير الرئيسي) 👋');
@@ -410,12 +413,17 @@ async function doLogin() {
 
   // 2. Client-side authentication check for Specialist key
   if (key.startsWith('sp_') || key.length >= 4) {
+    const sps = getLocal(CLIENT_STORAGE_KEYS.specialists, DEFAULT_SPECIALISTS);
+    const matched = sps.find(x => x.access_key === key && x.status === 'active');
     const token = 'ehab_sp_token_' + Date.now();
     S.token = token;
+    S.role = 'specialist';
+    S.name = matched ? matched.name : 'مختص مصرح له';
     localStorage.setItem('ehab_token', token);
+    localStorage.setItem('ehab_user_role', 'specialist');
     S.view = 'dashboard';
     renderApp();
-    toast('مرحباً بك! تم تسجيل الدخول بنجاح 👋');
+    toast(`مرحباً بك يا ${S.name}! تم تسجيل الدخول بنجاح 👋`);
     return;
   }
 
@@ -470,11 +478,11 @@ function renderApp() {
   <div dir="rtl" class="min-h-screen flex">
     <aside id="sidebar" class="glass-strong w-64 shrink-0 flex flex-col p-4 gap-1 fixed md:static inset-y-0 right-0 z-40">
       <div class="flex items-center gap-3 px-2 py-3 mb-2 border-b border-slate-700/40 pb-3">
-        <div class="w-10 h-10 rounded-xl p-0.5 bg-slate-900 stroke-amber-500 shadow-md shrink-0 overflow-hidden border border-slate-700">
-          <img src="/static/cv_builder_logo.svg" class="w-full h-full object-contain rounded-lg" alt="CV Builder Logo">
+        <div class="w-11 h-11 rounded-xl bg-slate-900 shadow-md shrink-0 overflow-hidden border border-cyan-500/30">
+          <img src="/static/logo.png" class="w-full h-full object-cover" alt="CV-ATS Logo">
         </div>
         <div>
-          <div class="font-black text-sm bg-gradient-to-r from-amber-300 via-amber-400 to-indigo-300 bg-clip-text text-transparent">ATS Resume Builder</div>
+          <div class="font-black text-sm bg-gradient-to-r from-sky-400 via-teal-300 to-indigo-300 bg-clip-text text-transparent">CV-ATS</div>
           <div class="text-[11px] text-slate-400 font-bold truncate max-w-[150px]">${esc(displayName)}</div>
         </div>
       </div>
