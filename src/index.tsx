@@ -260,6 +260,8 @@ async function checkToken(t: string): Promise<boolean> {
 
 app.use('/api/*', cors())
 app.use('/static/*', serveStatic({ root: './public' }))
+app.use('/manifest.json', serveStatic({ root: './public' }))
+app.use('/sw.js', serveStatic({ root: './public' }))
 
 // auth middleware
 app.use('/api/*', async (c, next) => {

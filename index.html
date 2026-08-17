@@ -2,24 +2,31 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ATS Resume Builder — مولد السيرة الذاتية الاحترافية (CV Builder)</title>
 
-<!-- PWA & App Shortcut Metadata -->
+<!-- PWA & Mobile App Native Metadata -->
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/static/cv_builder_logo.svg">
-<link rel="apple-touch-icon" href="/static/cv_builder_logo.svg">
-<meta name="theme-color" content="#4f46e5">
-<meta name="apple-mobile-web-app-title" content="CV Builder">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CV Builder">
+<meta name="application-name" content="CV Builder">
+<meta name="theme-color" content="#4f46e5">
+<meta name="msapplication-TileColor" content="#0f172a">
+<meta name="msapplication-TileImage" content="/static/icon-192.png">
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{cairo:['Cairo','sans-serif']}}}}</script>
 <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;600;700&family=Almarai:wght@300;400;700&family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700&family=Changa:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;600;700&family=Inter:wght@300;400;600;700&family=Kufam:wght@400;600;700&family=Montserrat:wght@300;400;600;700&family=Noto+Sans+Arabic:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&family=Readex+Pro:wght@300;400;600;700&family=Roboto:wght@300;400;600;700&family=Rubik:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
-<link href="/static/styles.css?v=20260816_1" rel="stylesheet">
-<link href="/static/templates.css?v=20260816_1" rel="stylesheet">
+<link href="/static/styles.css?v=20260817_5" rel="stylesheet">
+<link href="/static/templates.css?v=20260817_5" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -27,15 +34,68 @@
 <body class="font-cairo bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors">
 <div id="root"></div>
 <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-<script src="/static/aiEngine.js?v=20260817_4"></script>
-<script src="/static/templates.js?v=20260817_4"></script>
-<script src="/static/ats.js?v=20260817_4"></script>
-<script src="/static/builder.js?v=20260817_4"></script>
-<script src="/static/app.js?v=20260817_4"></script>
+<script src="/static/aiEngine.js?v=20260817_5"></script>
+<script src="/static/templates.js?v=20260817_5"></script>
+<script src="/static/ats.js?v=20260817_5"></script>
+<script src="/static/builder.js?v=20260817_5"></script>
+<script src="/static/app.js?v=20260817_5"></script>
 <script>
+// ===== Service Worker Registration for Real Mobile App Experience =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+      console.log('PWA ServiceWorker registered with scope:', reg.scope);
+    }).catch(function(err) {
+      console.log('PWA ServiceWorker registration failed:', err);
+    });
+  });
+}
+
+// ===== PWA Install Prompt Capture =====
+window._pwaInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  window._pwaInstallPrompt = e;
+});
+
+window.triggerPWAInstall = function() {
+  if (window._pwaInstallPrompt) {
+    window._pwaInstallPrompt.prompt();
+    window._pwaInstallPrompt.userChoice.then(function(choiceResult) {
+      if (choiceResult.outcome === 'accepted') {
+        if (typeof toast === 'function') toast('جاري تثبيت التطبيق على الجوال... 🎉');
+      }
+      window._pwaInstallPrompt = null;
+    });
+  } else {
+    if (typeof openModal === 'function') {
+      openModal(`
+        <div class="text-center py-2">
+          <div class="w-16 h-16 rounded-2xl mx-auto mb-3 shadow-xl border border-amber-400/40 p-1 bg-slate-900">
+            <img src="/static/icon-192.png" class="w-full h-full object-contain rounded-xl" alt="App Icon">
+          </div>
+          <h3 class="font-bold text-lg mb-1">تثبيت التطبيق على الجوال 📲</h3>
+          <p class="text-xs text-slate-300 mb-4">ليظهر التطبيق بأيقونته الرسمية المستقلة على شاشة هاتفك الرئيسية:</p>
+          
+          <div class="bg-slate-900/80 p-3.5 rounded-2xl text-xs space-y-2.5 text-right border border-slate-700 mb-4">
+            <div class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0">1</span>
+              <span>على <b>iPhone (Safari)</b>: اضغط زر المشاركة <i class="fas fa-arrow-up-from-bracket text-sky-400 mx-1"></i> بالأسفل، ثم اختر <b>"إضافة إلى الشاشة الرئيسية" (Add to Home Screen)</b>.</span>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">2</span>
+              <span>على <b>Android (Chrome)</b>: اضغط على القائمة (الثلاث نقاط) <i class="fas fa-ellipsis-vertical text-amber-400 mx-1"></i> بالأعلى، ثم اختر <b>"تثبيت التطبيق" (Install app)</b>.</span>
+            </div>
+          </div>
+          
+          <button class="btn-primary w-full !py-2" onclick="closeModal()">حسناً</button>
+        </div>
+      `, true);
+    }
+  }
+};
+
 // ===== INLINE OVERRIDE: Force pristine English from Arabic source =====
-// This runs AFTER all JS files load. Even if cached old files are used,
-// this override guarantees correct bilingual and English rendering.
 (function(){
   if (typeof window.renderTemplate !== 'function') return;
   var _origRender = window.renderTemplate;
@@ -43,7 +103,6 @@
     if (!data || !data.sections) return _origRender(templateId, data, cust, language);
     var lang = language || 'ar';
     if (lang === 'en' || lang === 'bilingual') {
-      // Force re-translate ALL fields from Arabic source
       var p = data.personal || {};
       if (p.nameAr && typeof translateArabicNameToEnglish === 'function') {
         p.nameEn = translateArabicNameToEnglish(p.nameAr);
@@ -68,21 +127,11 @@
               it[k+'En'] = translateTextToEnglish(String(ar));
             }
           });
-          // Fix name specifically for translateArabicNameToEnglish
-          if (it.nameAr && typeof translateArabicNameToEnglish === 'function' && /[\u0621-\u064A]/.test(it.nameAr)) {
-            // Only for person names, not skill names
-          }
         });
       });
     }
     return _origRender(templateId, data, cust, language);
   };
-  // Unregister any service workers that might cache old files
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function(regs) {
-      regs.forEach(function(r) { r.unregister(); });
-    });
-  }
 })();
 </script>
 </body>

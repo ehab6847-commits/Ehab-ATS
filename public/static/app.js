@@ -380,9 +380,13 @@ function renderLogin() {
       </div>
       <h1 class="text-2xl font-black bg-gradient-to-r from-amber-300 via-amber-400 to-indigo-300 bg-clip-text text-transparent mb-1">ATS Resume Builder</h1>
       <p class="text-slate-400 text-sm mb-6">منصة مولد السيرة الذاتية الاحترافية — إيهاب شحيطير (Super Admin)</p>
-      <input id="login-key" type="password" class="input-field mb-4 text-center" placeholder="مفتاح الدخول لـ إيهاب شحيطير" onkeydown="if(event.key==='Enter')doLogin()">
+      <input id="login-key" type="password" class="input-field mb-4 text-center" placeholder="مفتاح الدخول لـ إيهاب شحيطير أو المختصين" onkeydown="if(event.key==='Enter')doLogin()">
       <button class="btn-primary w-full !bg-gradient-to-r !from-amber-500 !to-indigo-600 shadow-lg" onclick="doLogin()"><i class="fas fa-lock-open ml-2"></i>دخول بالنظام الكامل</button>
       <p id="login-err" class="text-rose-400 text-sm mt-3 hidden">المفتاح غير صحيح، يرجى المحاولة مجدداً</p>
+
+      <div class="mt-5 pt-4 border-t border-slate-700/60">
+        <button class="btn-ghost w-full !py-2 text-xs text-emerald-400 hover:bg-emerald-500/10 border border-emerald-500/30 font-bold" onclick="triggerPWAInstall()"><i class="fas fa-mobile-screen-button ml-2"></i>تثبيت كـ تطبيق على الجوال 📲</button>
+      </div>
     </div>
   </div>`;
   setTimeout(() => el('login-key') && el('login-key').focus(), 100);
@@ -475,13 +479,15 @@ function renderApp() {
         </div>
       </div>
       ${navHtml}
-      <div class="mt-auto pt-3 border-t border-slate-500/20">
+      <div class="mt-auto pt-3 border-t border-slate-500/20 space-y-1">
+        <button class="nav-item text-emerald-400 hover:text-emerald-300 font-bold bg-emerald-500/10 border border-emerald-500/20" onclick="triggerPWAInstall()"><i class="fas fa-mobile-screen-button w-5 text-center"></i><span>تثبيت كـ تطبيق 📲</span></button>
         <button class="nav-item text-rose-400 hover:text-rose-300" onclick="doLogout()"><i class="fas fa-right-from-bracket w-5 text-center"></i><span>تسجيل الخروج</span></button>
       </div>
     </aside>
     <div class="flex-1 min-w-0 flex flex-col">
       <header class="glass sticky top-0 z-30 flex items-center gap-3 px-4 py-2.5" style="min-height:58px">
         <button class="md:hidden btn-ghost !px-3" onclick="el('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+        <button class="md:hidden btn-ghost !px-2.5 text-xs text-emerald-400 border border-emerald-500/30" onclick="triggerPWAInstall()" title="تثبيت التطبيق على الجوال"><i class="fas fa-download ml-1"></i>تثبيت</button>
         <div class="relative flex-1 max-w-md">
           <i class="fas fa-search absolute top-1/2 -translate-y-1/2 right-3 text-slate-400 text-sm"></i>
           <input id="global-search" class="input-field !py-2 !pr-9" placeholder="ابحث في السير الذاتية..." onkeydown="if(event.key==='Enter')nav('resumes',{q:this.value})">

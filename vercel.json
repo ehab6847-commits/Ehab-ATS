@@ -2,6 +2,8 @@
   "outputDirectory": ".",
   "rewrites": [
     { "source": "/static/(.*)", "destination": "/public/static/$1" },
+    { "source": "/manifest.json", "destination": "/public/manifest.json" },
+    { "source": "/sw.js", "destination": "/public/sw.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
