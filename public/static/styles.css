@@ -131,9 +131,7 @@ label.fld { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6p
 
 @media (max-width: 900px) {
   .builder-grid { grid-template-columns: 1fr; height: calc(100vh - 105px); }
-  .builder-form-col.hidden-mobile { display: none !important; }
-  .builder-preview-col.hidden-mobile { display: none !important; }
-  .builder-preview-col.mobile-active { display: block !important; padding: 12px 6px; }
+  .builder-preview-col { padding: 14px 4px; background: #0b0f19; width: 100%; }
 }
 
 .section-card { border: 1.5px solid rgba(100,116,139,.18); border-radius: 14px; margin-bottom: 10px; overflow: hidden; background: rgba(255,255,255,.6); }

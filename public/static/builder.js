@@ -128,8 +128,10 @@ function renderBuilder() {
 
     <div class="builder-grid flex-1">
       <div class="builder-form-col" id="b-form"></div>
-      <div class="builder-preview-col" id="b-preview-col">
-        <div id="b-preview-wrap" style="transform-origin:top center"></div>
+      <div class="builder-preview-col" id="b-preview-col" dir="ltr" style="display:flex; justify-content:center; align-items:flex-start; overflow-x:hidden; overflow-y:auto; width:100%;">
+        <div id="b-preview-outer" style="display:flex; justify-content:center; align-items:flex-start; width:100%; min-height:100%;">
+          <div id="b-preview-wrap" dir="${r.language === 'en' ? 'ltr' : 'rtl'}" style="transform-origin:top center; width:794px; min-width:794px; max-width:794px; margin:0 auto;"></div>
+        </div>
       </div>
     </div>
   </div>`;
@@ -156,12 +158,13 @@ function bSwitchMobileTab(tab) {
 
   if (tab === 'preview') {
     formCol.style.setProperty('display', 'none', 'important');
-    prevCol.style.setProperty('display', 'block', 'important');
+    prevCol.style.setProperty('display', 'flex', 'important');
     prevCol.style.setProperty('visibility', 'visible', 'important');
+    prevCol.style.setProperty('justify-content', 'center', 'important');
     prevCol.style.width = '100%';
     prevCol.style.minHeight = 'calc(100vh - 120px)';
     prevCol.style.background = '#0b0f19';
-    prevCol.style.padding = '12px 6px';
+    prevCol.style.padding = '14px 4px';
     prevCol.style.overflowX = 'hidden';
     prevCol.style.overflowY = 'auto';
 
@@ -173,7 +176,7 @@ function bSwitchMobileTab(tab) {
     }
     bPreview();
     setTimeout(bScalePreview, 40);
-    setTimeout(bScalePreview, 200);
+    setTimeout(bScalePreview, 180);
   } else {
     prevCol.style.setProperty('display', 'none', 'important');
     formCol.style.setProperty('display', 'block', 'important');
@@ -259,18 +262,29 @@ function bScalePreview() {
   const col = document.getElementById('b-preview-col');
   const wrap = document.getElementById('b-preview-wrap');
   if (!col || !wrap) return;
+
   const colWidth = (col.clientWidth > 0) ? col.clientWidth : window.innerWidth;
-  const padding = 16;
-  const avail = Math.max(260, colWidth - padding);
+  const padding = (window.innerWidth <= 768) ? 8 : 24;
+  const avail = Math.max(240, colWidth - padding);
   const scale = Math.min(1, avail / 794);
+
   wrap.style.transform = 'scale(' + scale + ')';
-  wrap.style.width = '794px';
-  wrap.style.margin = '0 auto';
   wrap.style.transformOrigin = 'top center';
-  
+  wrap.style.width = '794px';
+  wrap.style.minWidth = '794px';
+  wrap.style.maxWidth = '794px';
+  wrap.style.margin = '0 auto';
+
   const pageEl = wrap.querySelector('.cv-page') || wrap;
-  const naturalH = pageEl.scrollHeight || 1123;
-  wrap.style.height = (naturalH * scale + 30) + 'px';
+  const naturalH = (pageEl && pageEl.scrollHeight > 0) ? pageEl.scrollHeight : 1123;
+  wrap.style.height = (naturalH * scale + 40) + 'px';
+
+  const outer = document.getElementById('b-preview-outer');
+  if (outer) {
+    outer.style.width = '100%';
+    outer.style.display = 'flex';
+    outer.style.justifyContent = 'center';
+  }
 }
 
 /* ---------- form ---------- */
