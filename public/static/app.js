@@ -63,9 +63,9 @@ if (!localStorage.getItem(CLIENT_STORAGE_KEYS.clients)) {
 if (!localStorage.getItem(CLIENT_STORAGE_KEYS.resumes)) {
   setLocal(CLIENT_STORAGE_KEYS.resumes, [
     {
-      id: 1, client_id: 1, client_name: 'سارة خالد المنصور', title: 'سيرة ذاتية — مديرة مشاريع', language: 'ar', template: 'canva_purple',
+      id: 1, client_id: 1, client_name: 'سارة خالد المنصور', title: 'سيرة ذاتية — مديرة مشاريع', language: 'ar', template: 'ats1',
       data: JSON.stringify({ personal: { nameAr: 'سارة خالد المنصور', titleAr: 'مديرة مشاريع احترافية PMP', email: 'sara@example.com', phone: '0501122334', cityAr: 'الرياض' }, sections: [{ id: 's1', type: 'summary', titleAr: 'الملخص المهني', textAr: 'مديرة مشاريع حاصلة على PMP بخبرة أكثر من 6 سنوات في تحويل الأفكار الاستراتيجية إلى مشاريع ناجحة.', visible: true }] }),
-      customization: JSON.stringify({ primaryColor: '#6d28d9', fontSize: 14 }),
+      customization: JSON.stringify({ primaryColor: '#111827', fontSize: 14 }),
       status: 'final', is_favorite: 1, ats_score: 92, public_slug: 'sara-pm-2026', created_at: new Date().toISOString(), updated_at: new Date().toISOString()
     }
   ]);
@@ -194,7 +194,7 @@ api.defaults.adapter = async function (config) {
       const client = cls.find(c => c.id == body.client_id) || {};
       const newR = {
         id: Date.now(), client_id: body.client_id, client_name: client.name || 'عميل جديد', title: body.title || 'سيرة ذاتية جديدة',
-        language: body.language || 'ar', template: body.template || 'canva_purple',
+        language: body.language || 'ar', template: body.template || 'ats1',
         data: body.data || JSON.stringify({ personal: { nameAr: client.name || 'الاسم الكامل', titleAr: client.job_target || 'المسمى الوظيفي', email: client.email || '', phone: client.phone || '', cityAr: client.city || '' }, sections: [{ id: 's1', type: 'summary', titleAr: 'الملخص المهني', textAr: 'نبذة عن الخبرة والمهارات.', visible: true }] }),
         customization: body.customization || '{}', status: 'draft', is_favorite: 0, ats_score: 85, public_slug: 'cv-' + Math.random().toString(36).slice(2, 9),
         created_at: new Date().toISOString(), updated_at: new Date().toISOString()
@@ -1014,7 +1014,7 @@ async function runAIGenerate() {
       client_id: el('ai-client').value || undefined,
       title: (resumeData.personal?.nameAr || 'سيرة ذاتية') + (job ? ' — ' + job : ''),
       language: lang,
-      template: 'canva_purple',
+      template: 'ats1',
       data: JSON.stringify(resumeData)
     })).data;
 

@@ -128,13 +128,22 @@ function renderBuilder() {
 
     <div class="builder-grid flex-1">
       <div class="builder-form-col" id="b-form"></div>
-      <div class="builder-preview-col hidden-mobile" id="b-preview-col">
+      <div class="builder-preview-col" id="b-preview-col">
         <div id="b-preview-wrap" style="transform-origin:top center"></div>
       </div>
     </div>
   </div>`;
+
   renderBuilderForm();
   bPreview();
+
+  if (window.innerWidth <= 900) {
+    const formCol = document.getElementById('b-form');
+    const prevCol = document.getElementById('b-preview-col');
+    if (formCol) formCol.style.setProperty('display', 'block', 'important');
+    if (prevCol) prevCol.style.setProperty('display', 'none', 'important');
+  }
+
   window.addEventListener('resize', bScalePreview);
 }
 
@@ -146,19 +155,37 @@ function bSwitchMobileTab(tab) {
   if (!formCol || !prevCol) return;
 
   if (tab === 'preview') {
-    formCol.classList.add('hidden-mobile');
-    prevCol.classList.remove('hidden-mobile');
-    prevCol.classList.add('mobile-active');
-    if (btnPrev) { btnPrev.className = 'btn-primary !py-1.5 !px-4 text-xs font-bold shadow-md flex-1 !bg-indigo-600 text-white'; }
-    if (btnForm) { btnForm.className = 'btn-ghost !py-1.5 !px-4 text-xs font-bold flex-1 text-slate-300 border border-slate-700'; }
+    formCol.style.setProperty('display', 'none', 'important');
+    prevCol.style.setProperty('display', 'block', 'important');
+    prevCol.style.setProperty('visibility', 'visible', 'important');
+    prevCol.style.width = '100%';
+    prevCol.style.minHeight = 'calc(100vh - 120px)';
+    prevCol.style.background = '#0b0f19';
+    prevCol.style.padding = '12px 6px';
+    prevCol.style.overflowX = 'hidden';
+    prevCol.style.overflowY = 'auto';
+
+    if (btnPrev) {
+      btnPrev.className = 'btn-primary !py-2 !px-4 text-xs font-bold shadow-lg flex-1 !bg-indigo-600 text-white';
+    }
+    if (btnForm) {
+      btnForm.className = 'btn-ghost !py-2 !px-4 text-xs font-bold flex-1 text-slate-300 border border-slate-700 bg-slate-800/80';
+    }
     bPreview();
-    setTimeout(bScalePreview, 60);
+    setTimeout(bScalePreview, 40);
+    setTimeout(bScalePreview, 200);
   } else {
-    prevCol.classList.add('hidden-mobile');
-    prevCol.classList.remove('mobile-active');
-    formCol.classList.remove('hidden-mobile');
-    if (btnForm) { btnForm.className = 'btn-primary !py-1.5 !px-4 text-xs font-bold shadow-md flex-1 !bg-indigo-600 text-white'; }
-    if (btnPrev) { btnPrev.className = 'btn-ghost !py-1.5 !px-4 text-xs font-bold flex-1 text-slate-300 border border-slate-700'; }
+    prevCol.style.setProperty('display', 'none', 'important');
+    formCol.style.setProperty('display', 'block', 'important');
+    formCol.style.setProperty('visibility', 'visible', 'important');
+    formCol.style.width = '100%';
+
+    if (btnForm) {
+      btnForm.className = 'btn-primary !py-2 !px-4 text-xs font-bold shadow-lg flex-1 !bg-indigo-600 text-white';
+    }
+    if (btnPrev) {
+      btnPrev.className = 'btn-ghost !py-2 !px-4 text-xs font-bold flex-1 text-slate-300 border border-slate-700 bg-slate-800/80';
+    }
   }
 }
 
@@ -232,17 +259,18 @@ function bScalePreview() {
   const col = document.getElementById('b-preview-col');
   const wrap = document.getElementById('b-preview-wrap');
   if (!col || !wrap) return;
-  const colWidth = col.clientWidth > 0 ? col.clientWidth : window.innerWidth;
-  const avail = Math.max(300, colWidth - 24);
-  const scale = Math.min(1, Math.max(0.32, avail / 794));
+  const colWidth = (col.clientWidth > 0) ? col.clientWidth : window.innerWidth;
+  const padding = 16;
+  const avail = Math.max(260, colWidth - padding);
+  const scale = Math.min(1, avail / 794);
   wrap.style.transform = 'scale(' + scale + ')';
   wrap.style.width = '794px';
-  wrap.style.margin = '8px auto';
+  wrap.style.margin = '0 auto';
   wrap.style.transformOrigin = 'top center';
   
-  const pageEl = wrap.querySelector('.cv-page');
-  const naturalH = pageEl ? pageEl.scrollHeight : (wrap.scrollHeight || 1123);
-  wrap.style.height = (naturalH * scale + 40) + 'px';
+  const pageEl = wrap.querySelector('.cv-page') || wrap;
+  const naturalH = pageEl.scrollHeight || 1123;
+  wrap.style.height = (naturalH * scale + 30) + 'px';
 }
 
 /* ---------- form ---------- */
@@ -817,7 +845,7 @@ ${dataJson}
 }
 
 /* ---------- share & export modal ---------- */
-function bShareModal() {
+function bShareModal(pdfBlobUrl) {
   if (!B || !B.data) return toast('لا توجد سيرة مفتوحة للمشاركة', 'err');
   const p = B.data.personal || {};
   const name = p.nameAr || p.nameEn || 'المتقدم';
@@ -832,16 +860,26 @@ function bShareModal() {
   const mailUrl = 'mailto:?subject=' + encodeURIComponent('السيرة الذاتية — ' + name) + '&body=' + encodeURIComponent('السلام عليكم،\n\nيرجى الاطلاع على السيرة الذاتية عبر الرابط التالي:\n' + publicUrl);
 
   openModal(`
-    <div class="text-center mb-4">
+    <div class="text-center mb-3">
       <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center text-xl mb-2">
         <i class="fa-brands fa-whatsapp text-2xl text-emerald-400"></i>
       </div>
-      <h3 class="font-bold text-lg">مشاركة وتنزيل السيرة الذاتية 🚀</h3>
+      <h3 class="font-bold text-lg">خيارات المشاركة وفتح السيرة الذاتية 🚀</h3>
       <p class="text-xs text-slate-400 mt-1">${bEsc(title)} — ${bEsc(name)}</p>
     </div>
 
+    ${pdfBlobUrl ? `
+    <div class="mb-4 bg-emerald-500/15 border border-emerald-500/40 p-3 rounded-2xl flex items-center justify-between gap-2 shadow-inner">
+      <div class="flex items-center gap-2 text-xs text-emerald-300 font-bold">
+        <i class="fas fa-circle-check text-emerald-400 text-base"></i>
+        <span>تم حفظ ملف الـ PDF</span>
+      </div>
+      <a href="${pdfBlobUrl}" target="_blank" class="btn-primary !py-1.5 !px-3.5 text-xs !bg-gradient-to-r !from-emerald-600 !to-teal-600 font-bold flex items-center gap-1.5 shadow-md"><i class="fas fa-file-pdf"></i><span>فتح وعرض الملف 👁️</span></a>
+    </div>
+    ` : ''}
+
     <!-- Quick Social Share Buttons Grid -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
       <a href="${waUrl}" target="_blank" class="glass rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 transition-all card-hover group text-decoration-none cursor-pointer">
         <i class="fa-brands fa-whatsapp text-2xl group-hover:scale-110 transition-transform"></i>
         <span class="text-xs font-bold text-slate-200">واتساب</span>
@@ -908,7 +946,7 @@ function bPDFEditorModal() {
   if (!B || !B.data) return toast('لا توجد سيرة مفتوحة', 'err');
 
   const p = B.data.personal || {};
-  const tpl = B.resume.template || 'canva_purple';
+  const tpl = B.resume.template || 'ats1';
   const lang = B.resume.language || 'ar';
   const cust = B.customization || {};
   const cvHtml = renderTemplate(tpl, B.data, cust, lang);
@@ -949,7 +987,7 @@ async function generateDirectPDF() {
   
   const p = (B && B.data && B.data.personal) || {};
   const filename = (p.nameAr || p.nameEn || (B && B.resume && B.resume.title) || 'CV-ATS') + '.pdf';
-  const tpl = (B && B.resume && B.resume.template) || 'canva_purple';
+  const tpl = (B && B.resume && B.resume.template) || 'ats1';
   const lang = (B && B.resume && B.resume.language) || 'ar';
   const cust = B.cust || {};
 
@@ -1040,8 +1078,15 @@ async function generateDirectPDF() {
         console.warn('PDF Link annotations notice:', e);
       }
 
+      const pdfBlob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(pdfBlob);
+
       pdf.save(filename);
-      toast('تم تنزيل السيرة بصيغة PDF مع روابط بريد ولينكد إن تفاعلية بنجاح 📄✅');
+      toast('تم تنزيل السيرة بصيغة PDF مع روابط تفاعلية بنجاح 📄✅');
+
+      setTimeout(() => {
+        bShareModal(blobUrl);
+      }, 500);
     } else {
       printResumePDF();
     }
@@ -1065,7 +1110,7 @@ function printResumePDF() {
   }
 
   const p = B.data.personal || {};
-  const tpl = B.resume.template || 'canva_purple';
+  const tpl = B.resume.template || 'ats1';
   const lang = B.resume.language || 'ar';
   const cust = B.customization || {};
   const title = (p.nameAr || p.nameEn || B.resume.title || 'Sira') + ' - CV';
