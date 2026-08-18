@@ -845,6 +845,124 @@ ${dataJson}
 }
 
 /* ---------- share & export modal ---------- */
+async function bSharePDFFile() {
+  if (!B || !B.data) return toast('لا توجد سيرة مفتوحة للمشاركة', 'err');
+  const p = (B && B.data && B.data.personal) || {};
+  const filename = (p.nameAr || p.nameEn || (B && B.resume && B.resume.title) || 'CV-ATS') + '.pdf';
+  const tpl = (B && B.resume && B.resume.template) || 'ats1';
+  const lang = (B && B.resume && B.resume.language) || 'ar';
+  const cust = B.cust || {};
+
+  toast('جاري تجهيز ملف الـ PDF للمشاركة المباشرة... 📄📲');
+
+  const ensureScript = (src, globalKey) => {
+    return new Promise((resolve) => {
+      if (window[globalKey] || window[globalKey.toLowerCase()]) return resolve(true);
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        existing.addEventListener('load', () => resolve(true));
+        return setTimeout(() => resolve(!!window[globalKey]), 1500);
+      }
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
+  };
+
+  await ensureScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'html2canvas');
+  await ensureScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'jspdf');
+
+  const renderSandbox = document.createElement('div');
+  renderSandbox.style.position = 'fixed';
+  renderSandbox.style.left = '-9999px';
+  renderSandbox.style.top = '0';
+  renderSandbox.style.width = '794px';
+  renderSandbox.style.minHeight = '1123px';
+  renderSandbox.style.background = '#ffffff';
+  renderSandbox.style.zIndex = '-9999';
+  renderSandbox.style.opacity = '1';
+  renderSandbox.style.pointerEvents = 'none';
+
+  renderSandbox.innerHTML = renderTemplate(tpl, B.data, cust, lang);
+  document.body.appendChild(renderSandbox);
+
+  try {
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    await new Promise(r => setTimeout(r, 200));
+
+    const targetEl = renderSandbox.querySelector('.cv-page') || renderSandbox;
+    const html2canvasFunc = window.html2canvas;
+    const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+
+    if (html2canvasFunc && jsPDFClass) {
+      const canvas = await html2canvasFunc(targetEl, {
+        scale: 2.2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        width: 794,
+        windowWidth: 1200
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      const pdf = new jsPDFClass({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+
+      // Embed clickable PDF hyperlink annotations
+      try {
+        const targetRect = targetEl.getBoundingClientRect();
+        const links = targetEl.querySelectorAll('a[href]');
+        links.forEach((a) => {
+          const href = a.getAttribute('href');
+          if (!href) return;
+          const rect = a.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0 && targetRect.width > 0 && targetRect.height > 0) {
+            const xMm = ((rect.left - targetRect.left) / targetRect.width) * 210;
+            const yMm = ((rect.top - targetRect.top) / targetRect.height) * 297;
+            const wMm = (rect.width / targetRect.width) * 210;
+            const hMm = (rect.height / targetRect.height) * 297;
+            pdf.link(xMm, yMm, wMm, hMm, { url: href });
+          }
+        });
+      } catch (e) {}
+
+      const pdfBlob = pdf.output('blob');
+      const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+      // Native Device Share (WhatsApp, Telegram, AirDrop, etc.) with the actual PDF attached!
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        try {
+          await navigator.share({
+            files: [pdfFile],
+            title: filename,
+            text: '📄 ملف السيرة الذاتية المهنية: ' + (p.nameAr || p.nameEn || '')
+          });
+          toast('تمت مشاركة ملف الـ PDF بنجاح 📲✅');
+          return;
+        } catch (shareErr) {
+          if (shareErr.name === 'AbortError') return; // User cancelled
+        }
+      }
+
+      // If navigator.share with files is not supported (e.g. desktop browser):
+      // Download the PDF file and open the share options modal with the direct file link!
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      pdf.save(filename);
+      bShareModal(blobUrl);
+    }
+  } catch (err) {
+    console.error(err);
+    toast('فشل تجهيز ملف المشاركة', 'err');
+  } finally {
+    if (renderSandbox.parentNode) {
+      renderSandbox.parentNode.removeChild(renderSandbox);
+    }
+  }
+}
+
 function bShareModal(pdfBlobUrl) {
   if (!B || !B.data) return toast('لا توجد سيرة مفتوحة للمشاركة', 'err');
   const p = B.data.personal || {};
@@ -852,59 +970,44 @@ function bShareModal(pdfBlobUrl) {
   const title = B.resume.title || 'سيرة ذاتية احترافية';
   const slug = B.resume.public_slug || ('cv-' + B.id);
   const publicUrl = location.origin + '/?cv=' + slug;
-  
-  const waText = encodeURIComponent('📄 مرحباً، إليك رابط السيرة الذاتية المهنية (' + title + ') لـ ' + name + ':\n' + publicUrl + '\nتم إنشاؤها عبر منصة ATS Resume Builder.');
-  const waUrl = 'https://api.whatsapp.com/send?text=' + waText;
-  const fbUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(publicUrl);
-  const tgUrl = 'https://t.me/share/url?url=' + encodeURIComponent(publicUrl) + '&text=' + encodeURIComponent('السيرة الذاتية لـ ' + name);
-  const mailUrl = 'mailto:?subject=' + encodeURIComponent('السيرة الذاتية — ' + name) + '&body=' + encodeURIComponent('السلام عليكم،\n\nيرجى الاطلاع على السيرة الذاتية عبر الرابط التالي:\n' + publicUrl);
 
   openModal(`
     <div class="text-center mb-3">
       <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center text-xl mb-2">
-        <i class="fa-brands fa-whatsapp text-2xl text-emerald-400"></i>
+        <i class="fas fa-file-pdf text-2xl text-emerald-400"></i>
       </div>
-      <h3 class="font-bold text-lg">خيارات المشاركة وفتح السيرة الذاتية 🚀</h3>
+      <h3 class="font-bold text-lg">خيارات مشاركة وفتح ملف السيرة 🚀</h3>
       <p class="text-xs text-slate-400 mt-1">${bEsc(title)} — ${bEsc(name)}</p>
     </div>
 
-    ${pdfBlobUrl ? `
-    <div class="mb-4 bg-emerald-500/15 border border-emerald-500/40 p-3 rounded-2xl flex items-center justify-between gap-2 shadow-inner">
-      <div class="flex items-center gap-2 text-xs text-emerald-300 font-bold">
-        <i class="fas fa-circle-check text-emerald-400 text-base"></i>
-        <span>تم حفظ ملف الـ PDF</span>
-      </div>
-      <a href="${pdfBlobUrl}" target="_blank" class="btn-primary !py-1.5 !px-3.5 text-xs !bg-gradient-to-r !from-emerald-600 !to-teal-600 font-bold flex items-center gap-1.5 shadow-md"><i class="fas fa-file-pdf"></i><span>فتح وعرض الملف 👁️</span></a>
-    </div>
-    ` : ''}
+    <!-- Direct File Actions: Share File / Open File -->
+    <div class="space-y-2 mb-4">
+      <button class="btn-primary w-full !py-2.5 !px-4 text-xs font-bold !bg-gradient-to-r !from-emerald-600 !to-teal-600 shadow-lg flex items-center justify-center gap-2" onclick="closeModal(); bSharePDFFile()">
+        <i class="fa-brands fa-whatsapp text-lg"></i>
+        <span>مشاركة ملف الـ PDF مباشرة عبر واتساب والتطبيقات 📲</span>
+      </button>
 
-    <!-- Quick Social Share Buttons Grid -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
-      <a href="${waUrl}" target="_blank" class="glass rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 transition-all card-hover group text-decoration-none cursor-pointer">
-        <i class="fa-brands fa-whatsapp text-2xl group-hover:scale-110 transition-transform"></i>
-        <span class="text-xs font-bold text-slate-200">واتساب</span>
+      ${pdfBlobUrl ? `
+      <a href="${pdfBlobUrl}" target="_blank" class="btn-ghost w-full !py-2 !px-4 text-xs font-bold border border-emerald-500/40 text-emerald-300 flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20">
+        <i class="fas fa-arrow-up-right-from-square"></i>
+        <span>فتح وعرض ملف الـ PDF الآن 👁️</span>
       </a>
-      <a href="${tgUrl}" target="_blank" class="glass rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-sky-600/20 border border-sky-500/30 text-sky-400 transition-all card-hover group text-decoration-none cursor-pointer">
-        <i class="fa-brands fa-telegram text-2xl group-hover:scale-110 transition-transform"></i>
-        <span class="text-xs font-bold text-slate-200">تيليجرام</span>
-      </a>
-      <a href="${fbUrl}" target="_blank" class="glass rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 transition-all card-hover group text-decoration-none cursor-pointer">
-        <i class="fa-brands fa-facebook text-2xl group-hover:scale-110 transition-transform"></i>
-        <span class="text-xs font-bold text-slate-200">فيسبوك</span>
-      </a>
-      <a href="${mailUrl}" class="glass rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-purple-600/20 border border-purple-500/30 text-purple-400 transition-all card-hover group text-decoration-none cursor-pointer">
-        <i class="fas fa-envelope text-2xl group-hover:scale-110 transition-transform"></i>
-        <span class="text-xs font-bold text-slate-200">الإيميل</span>
-      </a>
+      ` : `
+      <button class="btn-ghost w-full !py-2 !px-4 text-xs font-bold border border-slate-700 text-slate-200 flex items-center justify-center gap-2" onclick="closeModal(); generateDirectPDF()">
+        <i class="fas fa-download text-emerald-400"></i>
+        <span>تنزيل نسخة PDF إلى الجهاز 📥</span>
+      </button>
+      `}
     </div>
 
-    <!-- Direct Public Link Copy Section -->
-    <div class="bg-slate-900/80 p-3 rounded-xl mb-4 border border-slate-700 text-xs">
-      <div class="flex items-center justify-between mb-1.5">
-        <span class="text-slate-400 font-bold"><i class="fas fa-link ml-1 text-sky-400"></i>رابط السيرة أونلاين:</span>
-        <button class="btn-primary !py-1 !px-2.5 text-[11px]" onclick="navigator.clipboard.writeText('${publicUrl}'); toast('تم نسخ رابط السيرة بنجاح ✅')"><i class="fas fa-copy ml-1"></i>نسخ الرابط</button>
+    <!-- Direct Download Options -->
+    <div class="border-t border-slate-700/60 pt-3">
+      <div class="text-xs text-slate-400 font-bold mb-2.5">تنسيقات إضافية:</div>
+      <div class="grid grid-cols-3 gap-2">
+        <button class="btn-ghost !py-2 text-xs text-sky-300" onclick="closeModal(); exportDocx(${B.id})"><i class="fas fa-file-word ml-1 text-sky-400"></i>Word (DOCX)</button>
+        <button class="btn-ghost !py-2 text-xs text-slate-300" onclick="closeModal(); exportTxt(${B.id})"><i class="fas fa-file-lines ml-1 text-amber-400"></i>نص ATS (TXT)</button>
+        <button class="btn-ghost !py-2 text-xs text-purple-300" onclick="bPDFEditorModal()"><i class="fas fa-sliders ml-1 text-purple-400"></i>محرر PDF</button>
       </div>
-      <div class="dir-ltr font-mono text-sky-300 truncate select-all">${bEsc(publicUrl)}</div>
     </div>
 
     <!-- Direct Download Options -->

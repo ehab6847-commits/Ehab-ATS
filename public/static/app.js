@@ -1582,7 +1582,128 @@ function quickShareResume(id) {
   `, true);
 }
 
-/* ---------- boot & direct link auto-login ---------- */
+/* ---------- boot & direct link auto-login & public view ---------- */
+async function renderPublicResumeView(slug) {
+  const root = document.getElementById('root');
+  if (!root) return;
+  root.innerHTML = '<div class="min-h-screen flex items-center justify-center p-4 bg-slate-950" style="background:radial-gradient(ellipse at top,#1e293b,#0f172a)"><div class="spinner !w-8 !h-8 ml-3"></div><p class="text-slate-300 font-bold text-sm">جاري تحميل السيرة الذاتية...</p></div>';
+
+  let r = null;
+  const rs = getLocal(CLIENT_STORAGE_KEYS.resumes, []);
+  r = rs.find(x => x.public_slug === slug || x.id == slug);
+
+  if (!r) {
+    try {
+      const res = await api.get('/api/public/cv/' + slug);
+      r = res.data;
+    } catch (e) {}
+  }
+
+  if (!r) {
+    root.innerHTML = `
+    <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center" dir="rtl" style="background:radial-gradient(ellipse at top,#1e293b,#0f172a)">
+      <div class="glass-strong p-8 rounded-3xl max-w-md w-full border border-slate-700">
+        <i class="fas fa-file-circle-xmark text-5xl text-rose-400 mb-3"></i>
+        <h2 class="text-xl font-bold text-white mb-2">السيرة الذاتية غير متوفرة</h2>
+        <p class="text-slate-400 text-xs mb-6">يرجى التأكد من صحة الرابط أو طلب ملف الـ PDF مباشرة من صاحب السيرة.</p>
+        <a href="/" class="btn-primary !py-2 !px-5 text-xs">الصفحة الرئيسية</a>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const data = typeof r.data === 'string' ? JSON.parse(r.data || '{}') : (r.data || {});
+  const cust = typeof r.customization === 'string' ? JSON.parse(r.customization || '{}') : (r.customization || {});
+  const p = data.personal || {};
+  const candName = p.nameAr || p.nameEn || r.title || 'سيرة ذاتية';
+  const lang = r.language || 'ar';
+  const tpl = r.template || 'ats1';
+
+  let cvHtml = '';
+  try {
+    cvHtml = renderTemplate(tpl, data, cust, lang);
+  } catch(e) {
+    cvHtml = '<p class="p-6 text-rose-400">فشل عرض القالب: ' + esc(e.message) + '</p>';
+  }
+
+  root.innerHTML = `
+  <div dir="${lang === 'en' ? 'ltr' : 'rtl'}" class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <header class="glass-strong sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 border-b border-slate-700/80 flex-wrap gap-2 shadow-lg">
+      <div class="flex items-center gap-3">
+        <img src="/static/favicon.png" alt="CV-ATS" class="w-8 h-8 rounded-xl shadow border border-sky-500/30">
+        <div>
+          <h1 class="font-bold text-sm text-white">${esc(candName)}</h1>
+          <div class="flex items-center gap-1.5 text-[11px] text-emerald-400 font-semibold">
+            <i class="fas fa-circle-check"></i>
+            <span>سيرة ذاتية متوافقة مع أنظمة ATS</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="pub-download-btn" class="btn-primary !py-1.5 !px-3.5 text-xs font-bold !bg-gradient-to-r !from-emerald-600 !to-teal-600 shadow-md flex items-center gap-1.5" onclick="downloadPublicPDF()"><i class="fas fa-download"></i><span>تحميل ملف PDF 📄</span></button>
+        <button class="btn-ghost !py-1.5 !px-2.5 text-xs border border-slate-700 text-slate-300" onclick="window.print()" title="طباعة"><i class="fas fa-print"></i></button>
+      </div>
+    </header>
+
+    <main class="flex-1 flex justify-center p-3 md:p-8 overflow-y-auto bg-slate-900/70">
+      <div id="pub-cv-wrap" class="shadow-2xl rounded-sm overflow-hidden" style="width:794px; min-height:1123px; background:#fff; transform-origin: top center;">
+        ${cvHtml}
+      </div>
+    </main>
+  </div>`;
+
+  function scalePubView() {
+    const wrap = document.getElementById('pub-cv-wrap');
+    if (!wrap) return;
+    const winW = window.innerWidth;
+    if (winW < 840) {
+      const avail = winW - 20;
+      const scale = Math.min(1, Math.max(0.35, avail / 794));
+      wrap.style.transform = 'scale(' + scale + ')';
+      const pageEl = wrap.querySelector('.cv-page') || wrap;
+      const naturalH = pageEl.scrollHeight || 1123;
+      wrap.style.height = (naturalH * scale + 20) + 'px';
+      wrap.style.margin = '0 auto';
+    } else {
+      wrap.style.transform = 'none';
+      wrap.style.height = 'auto';
+      wrap.style.margin = '0';
+    }
+  }
+  scalePubView();
+  window.addEventListener('resize', scalePubView);
+
+  window.downloadPublicPDF = async function() {
+    const btn = document.getElementById('pub-download-btn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner !w-3.5 !h-3.5 !border-2 inline-block ml-1"></div> جاري التجهيز...'; }
+    toast('جاري تجهيز وتنزيل ملف الـ PDF... 📄');
+
+    try {
+      const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+      const html2canvasFunc = window.html2canvas;
+      const targetEl = document.querySelector('#pub-cv-wrap .cv-page') || document.getElementById('pub-cv-wrap');
+      
+      const canvas = await html2canvasFunc(targetEl, {
+        scale: 2.2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: 794
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      const pdf = new jsPDFClass({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+      pdf.save((candName || 'Resume') + '.pdf');
+      toast('تم تنزيل السيرة بنجاح ✅');
+    } catch(e) {
+      window.print();
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-download ml-1.5"></i>تحميل ملف PDF 📄'; }
+    }
+  };
+}
+
 (function checkDirectKeyAccess() {
   const params = new URLSearchParams(window.location.search);
   const key = params.get('key') || params.get('auth') || params.get('token');
@@ -1612,6 +1733,15 @@ function quickShareResume(id) {
   }
 })();
 
-document.addEventListener('DOMContentLoaded', () => { S.token ? renderApp() : renderLogin(); });
-if (document.readyState !== 'loading') { S.token ? renderApp() : renderLogin(); }
+function initAppBoot() {
+  const params = new URLSearchParams(window.location.search);
+  const cvSlug = params.get('cv') || params.get('view');
+  if (cvSlug) {
+    return renderPublicResumeView(cvSlug);
+  }
+  S.token ? renderApp() : renderLogin();
+}
+
+document.addEventListener('DOMContentLoaded', initAppBoot);
+if (document.readyState !== 'loading') { initAppBoot(); }
 
