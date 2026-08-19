@@ -126,38 +126,69 @@ function renderSectionBody(sec, lang, tpl) {
     if (lang === 'en') {
       txt = (sec.textAr && typeof translateTextToEnglish === 'function') ? translateTextToEnglish(sec.textAr) : (sec.textEn || sec.textAr || '');
     } else if (lang === 'bilingual') {
-      // In bilingual split mode, this is called separately for 'ar' and 'en' columns
-      // so just return Arabic text
       txt = sec.textAr || sec.textEn || '';
     } else {
       txt = sec.textAr || sec.textEn || '';
     }
-    return `<p class="cv-item-desc" style="margin:0">${tplEsc(txt || '')}</p>`;
+    const cleanTxt = String(txt || '').replace(/[\*\_#~`]/g, '').trim();
+    return `<p class="cv-item-desc" style="margin:0;line-height:1.6;font-weight:400">${tplEsc(cleanTxt)}</p>`;
   }
 
   if (kind === 'timeline') {
-    return items.map(it => `
-      <div class="cv-item">
+    return items.map(it => {
+      const roleRaw = v(it, 'roleAr', 'roleEn') || v(it, 'nameAr', 'nameEn');
+      const orgRaw = v(it, 'orgAr', 'orgEn') || v(it, 'companyAr', 'companyEn');
+      const descRaw = v(it, 'descAr', 'descEn');
+
+      const role = String(roleRaw || '').replace(/[\*\_#~`]/g, '').trim();
+      const org = String(orgRaw || '').replace(/[\*\_#~`]/g, '').trim();
+      const desc = String(descRaw || '').replace(/[\*\_#~`]/g, '').trim();
+
+      let descHtml = '';
+      if (desc) {
+        const lines = desc.split(/\r?\n/).map(l => l.replace(/^[•\-\*\d+\.\s]+/, '').trim()).filter(Boolean);
+        if (lines.length > 0) {
+          descHtml = `<ul style="margin:4px 0 0 0;padding-inline-start:18px;list-style-type:disc;">` +
+            lines.map(l => `<li class="cv-item-desc" style="font-weight:400;margin-bottom:3px;list-style:disc;line-height:1.5">${tplEsc(l)}</li>`).join('') +
+            `</ul>`;
+        }
+      }
+
+      return `
+      <div class="cv-item" style="margin-bottom:12px">
         <div class="cv-item-head">
-          <div><span class="cv-item-role">${v(it, 'roleAr', 'roleEn') || v(it, 'nameAr', 'nameEn')}</span>
-          ${(it.orgAr || it.orgEn || it.companyAr || it.companyEn) ? ` <span class="cv-item-org">| ${v(it, 'orgAr', 'orgEn') || v(it, 'companyAr', 'companyEn')}</span>` : ''}</div>
+          <div>
+            <span class="cv-item-role" style="font-weight:700">${tplEsc(role)}</span>
+            ${org ? `<span class="cv-item-org" style="font-weight:600;color:#334155"> | ${tplEsc(org)}</span>` : ''}
+          </div>
           ${dateRange(it, lang)}
         </div>
-        ${(it.descAr || it.descEn) ? `<div class="cv-item-desc">${v(it, 'descAr', 'descEn')}</div>` : ''}
-      </div>`).join('');
+        ${descHtml}
+      </div>`;
+    }).join('');
   }
 
   if (kind === 'education') {
-    return items.map(it => `
-      <div class="cv-item">
+    return items.map(it => {
+      const degRaw = v(it, 'degreeAr', 'degreeEn');
+      const schRaw = v(it, 'schoolAr', 'schoolEn');
+      const degree = String(degRaw || '').replace(/[\*\_#~`]/g, '').trim();
+      const school = String(schRaw || '').replace(/[\*\_#~`]/g, '').trim();
+
+      return `
+      <div class="cv-item" style="margin-bottom:10px">
         <div class="cv-item-head">
-          <div><span class="cv-item-role">${v(it, 'degreeAr', 'degreeEn')}</span>
-          ${(it.schoolAr || it.schoolEn) ? ` <span class="cv-item-org">| ${v(it, 'schoolAr', 'schoolEn')}</span>` : ''}</div>
-          <span class="cv-item-date">${tplEsc(it.year || '')}</span>
+          <div>
+            ${school ? `<span class="cv-item-role" style="font-weight:700">${tplEsc(school)}</span>` : ''}
+            ${(school && degree) ? `<span style="font-weight:400;color:#64748b"> — </span>` : ''}
+            ${degree ? `<span class="cv-item-desc" style="font-weight:400;display:inline;color:inherit">${tplEsc(degree)}</span>` : ''}
+          </div>
+          <span class="cv-item-date" style="font-weight:400">${tplEsc(it.year || '')}</span>
         </div>
-        ${it.gpa ? `<div class="cv-item-desc">${lang === 'en' ? 'GPA' : 'المعدل'}: ${tplEsc(it.gpa)}</div>` : ''}
-        ${(it.descAr || it.descEn) ? `<div class="cv-item-desc">${v(it, 'descAr', 'descEn')}</div>` : ''}
-      </div>`).join('');
+        ${it.gpa ? `<div class="cv-item-desc" style="font-weight:400;margin-top:2px">${lang === 'en' ? 'GPA' : 'المعدل'}: ${tplEsc(it.gpa)}</div>` : ''}
+        ${(it.descAr || it.descEn) ? `<div class="cv-item-desc" style="font-weight:400;margin-top:2px">${tplEsc(String(v(it, 'descAr', 'descEn')).replace(/[\*\_#~`]/g, '').trim())}</div>` : ''}
+      </div>`;
+    }).join('');
   }
 
   if (kind === 'skills') {
@@ -165,30 +196,32 @@ function renderSectionBody(sec, lang, tpl) {
     if (useBars) {
       return items.map(it => `
         <div class="cv-skill-row">
-          <span class="cv-skill-name">${v(it, 'nameAr', 'nameEn')}</span>
+          <span class="cv-skill-name" style="font-weight:400">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
           <div class="cv-skill-bar"><div class="cv-skill-fill" style="width:${Math.min(100, (Number(it.level) || 3) * 20)}%"></div></div>
         </div>`).join('');
     }
-    return `<div class="cv-chips">${items.map(it => `<span class="cv-chip">${v(it, 'nameAr', 'nameEn')}</span>`).join('')}</div>`;
+    return `<div class="cv-chips">${items.map(it => `<span class="cv-chip" style="font-weight:400">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~`]/g, '').trim())}</span>`).join('')}</div>`;
   }
 
   if (kind === 'languages') {
     return items.map(it => `
       <div class="cv-lang-row">
-        <span style="font-weight:600">${v(it, 'nameAr', 'nameEn')}</span>
-        <span class="cv-lang-level">${v(it, 'levelAr', 'levelEn')}</span>
+        <span style="font-weight:600">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
+        <span class="cv-lang-level" style="font-weight:400">${tplEsc(String(v(it, 'levelAr', 'levelEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
       </div>`).join('');
   }
 
   if (kind === 'certs') {
-    return items.map(it => `
-      <div class="cv-item" style="margin-bottom:7px">
-        <div class="cv-item-head">
-          <div><span class="cv-item-role">${v(it, 'nameAr', 'nameEn')}</span>
-          ${(it.orgAr || it.orgEn || it.issuerAr || it.issuerEn) ? ` <span class="cv-item-org">| ${v(it, 'orgAr', 'orgEn') || v(it, 'issuerAr', 'issuerEn')}</span>` : ''}</div>
-          <span class="cv-item-date">${tplEsc(it.year || '')}</span>
-        </div>
-      </div>`).join('');
+    return `<ul style="margin:0;padding-inline-start:18px;list-style-type:disc;">` +
+      items.map(it => {
+        const name = String(v(it, 'nameAr', 'nameEn') || '').replace(/[\*\_#~`]/g, '').trim();
+        const org = String(v(it, 'orgAr', 'orgEn') || v(it, 'issuerAr', 'issuerEn') || '').replace(/[\*\_#~`]/g, '').trim();
+        const yr = it.year ? ` (${tplEsc(it.year)})` : '';
+        return `<li class="cv-item-desc" style="font-weight:400;margin-bottom:4px;list-style:disc;line-height:1.5">
+          <span>${tplEsc(name)}</span>${org ? `<span style="color:#64748b"> — ${tplEsc(org)}</span>` : ''}${yr}
+        </li>`;
+      }).join('') +
+      `</ul>`;
   }
 
   if (kind === 'list') {
