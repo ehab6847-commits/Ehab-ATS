@@ -262,36 +262,36 @@ function renderSectionBody(sec, lang, tpl) {
 function renderContact(p, lang, allowContactIcons) {
   const bits = [];
   const show = allowContactIcons !== false;
-  const ic = (i) => show ? `<i class="${i}"></i>` : '';
+  const ic = (i) => show ? `<i class="${i}" style="margin-inline-end:6px;opacity:0.85;"></i>` : '';
   
   if (p.phone) {
     const rawPhone = String(p.phone).replace(/\s+/g, '');
-    bits.push(`<span dir="ltr"><a href="tel:${tplEsc(rawPhone)}" class="cv-link" style="color:inherit;text-decoration:none;">${ic('fas fa-phone')}${tplEsc(p.phone)}</a></span>`);
+    bits.push(`<span dir="ltr" style="display:inline-flex;align-items:center;"><a href="tel:${tplEsc(rawPhone)}" class="cv-link" style="color:inherit;text-decoration:none;display:inline-flex;align-items:center;">${ic('fas fa-phone')}<span>${tplEsc(p.phone)}</span></a></span>`);
   }
   if (p.email) {
-    bits.push(`<span><a href="mailto:${tplEsc(p.email)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:none;font-weight:600;">${ic('fas fa-envelope')}${tplEsc(p.email)}</a></span>`);
+    bits.push(`<span style="display:inline-flex;align-items:center;"><a href="mailto:${tplEsc(p.email)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;">${ic('fas fa-envelope')}<span>${tplEsc(p.email)}</span></a></span>`);
   }
   const city = lang === 'en' ? (p.cityEn || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.cityAr || p.city) : '') || p.city) : (p.cityAr || p.city || p.cityEn);
-  if (city) bits.push(`<span>${ic('fas fa-map-marker-alt')}${tplEsc(city)}</span>`);
+  if (city) bits.push(`<span style="display:inline-flex;align-items:center;">${ic('fas fa-map-marker-alt')}<span>${tplEsc(city)}</span></span>`);
   
   if (p.linkedin) {
     let lkUrl = p.linkedin.trim();
     if (!lkUrl.startsWith('http://') && !lkUrl.startsWith('https://')) {
       lkUrl = 'https://' + (lkUrl.startsWith('linkedin.com') ? '' : 'linkedin.com/in/') + lkUrl.replace(/^@/, '');
     }
-    bits.push(`<span dir="ltr"><a href="${tplEsc(lkUrl)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#0a66c2;text-decoration:none;font-weight:600;">${ic('fab fa-linkedin')}${tplEsc(p.linkedin)}</a></span>`);
+    bits.push(`<span dir="ltr" style="display:inline-flex;align-items:center;"><a href="${tplEsc(lkUrl)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#0a66c2;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;">${ic('fab fa-linkedin')}<span>${tplEsc(p.linkedin)}</span></a></span>`);
   }
   if (p.website) {
     let webUrl = p.website.trim();
     if (!webUrl.startsWith('http://') && !webUrl.startsWith('https://')) webUrl = 'https://' + webUrl;
-    bits.push(`<span dir="ltr"><a href="${tplEsc(webUrl)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#0284c7;text-decoration:none;">${ic('fas fa-globe')}${tplEsc(p.website)}</a></span>`);
+    bits.push(`<span dir="ltr" style="display:inline-flex;align-items:center;"><a href="${tplEsc(webUrl)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#0284c7;text-decoration:none;display:inline-flex;align-items:center;">${ic('fas fa-globe')}<span>${tplEsc(p.website)}</span></a></span>`);
   }
   const nat = lang === 'en' ? (p.nationalityEn || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.nationalityAr || p.nationality) : '') || p.nationality) : (p.nationalityAr || p.nationality || p.nationalityEn);
-  if (nat) bits.push(`<span>${ic('fas fa-flag')}${tplEsc(nat)}</span>`);
+  if (nat) bits.push(`<span style="display:inline-flex;align-items:center;">${ic('fas fa-flag')}<span>${tplEsc(nat)}</span></span>`);
 
   if (bits.length === 0) return '';
-  const sep = `<span class="cv-contact-sep">•</span>`;
-  return `<div class="cv-contact">${bits.join(sep)}</div>`;
+  const sep = `<span class="cv-contact-sep" style="margin:0 8px;color:#94a3b8;font-weight:300;">|</span>`;
+  return `<div class="cv-contact" style="display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 0;margin-top:8px;">${bits.join(sep)}</div>`;
 }
 
 function renderHeader(tpl, data, cust, lang) {
