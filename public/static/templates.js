@@ -301,7 +301,7 @@ function renderContact(p, lang, allowContactIcons) {
   
   if (p.phone) {
     const rawPhone = String(p.phone).replace(/\s+/g, '');
-    bits.push(`<span dir="ltr" style="display:inline-flex;align-items:center;"><a href="tel:${tplEsc(rawPhone)}" class="cv-link" style="color:inherit;text-decoration:none;display:inline-flex;align-items:center;">${ic('fas fa-phone')}<span>${tplEsc(p.phone)}</span></a></span>`);
+    bits.push(`<span dir="ltr" style="display:inline-flex;align-items:center;"><a href="tel:${tplEsc(rawPhone)}" class="cv-link cv-link-blue" style="color:#2563eb;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;">${ic('fas fa-phone')}<span>${tplEsc(p.phone)}</span></a></span>`);
   }
   if (p.email) {
     bits.push(`<span style="display:inline-flex;align-items:center;"><a href="mailto:${tplEsc(p.email)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;">${ic('fas fa-envelope')}<span>${tplEsc(p.email)}</span></a></span>`);
