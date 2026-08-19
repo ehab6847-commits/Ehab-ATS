@@ -241,7 +241,8 @@ function renderContact(p, lang, allowContactIcons) {
     if (!webUrl.startsWith('http://') && !webUrl.startsWith('https://')) webUrl = 'https://' + webUrl;
     bits.push(`<span dir="ltr"><a href="${tplEsc(webUrl)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#0284c7;text-decoration:none;">${ic('fas fa-globe')}${tplEsc(p.website)}</a></span>`);
   }
-  if (p.nationality) bits.push(`<span>${ic('fas fa-flag')}${tplEsc(lang === 'en' ? (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.nationality) : p.nationality) : p.nationality)}</span>`);
+  const nat = lang === 'en' ? (p.nationalityEn || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.nationalityAr || p.nationality) : '') || p.nationality) : (p.nationalityAr || p.nationality || p.nationalityEn);
+  if (nat) bits.push(`<span>${ic('fas fa-flag')}${tplEsc(nat)}</span>`);
 
   if (bits.length === 0) return '';
   const sep = `<span class="cv-contact-sep">•</span>`;
@@ -294,6 +295,10 @@ function ensureEnglishData(data) {
   if (srcCity) {
     p.cityEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcCity) : srcCity;
   }
+  const srcNat = (p.nationalityAr || p.nationality || '').trim();
+  if (srcNat) {
+    p.nationalityEn = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(srcNat) : srcNat;
+  }
 
   (data.sections || []).forEach(sec => {
     const srcSecTitle = (sec.titleAr || sec.title || '').trim();
@@ -311,6 +316,9 @@ function ensureEnglishData(data) {
           it[k + 'En'] = typeof translateTextToEnglish === 'function' ? translateTextToEnglish(String(ar)) : String(ar);
         }
       });
+      if (it.year && typeof it.year === 'string') {
+        it.year = it.year.replace(/هـ/g, 'H').replace(/ه/g, 'H').trim();
+      }
     });
   });
 }
