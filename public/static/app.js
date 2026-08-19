@@ -333,6 +333,12 @@ api.interceptors.response.use(r => r, err => {
 });
 
 /* ---------- helpers ---------- */
+function isSuperAdmin() {
+  const tok = S.token || localStorage.getItem('ehab_token') || '';
+  const role = S.role || localStorage.getItem('ehab_user_role') || '';
+  const name = S.name || localStorage.getItem('ehab_user_name') || '';
+  return tok.includes('admin') || role === 'super_admin' || name.includes('Super') || name.includes('إيهاب');
+}
 function el(id) { return document.getElementById(id); }
 function h(html) { const d = document.createElement('div'); d.innerHTML = html; return d.firstElementChild; }
 function esc(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -1346,6 +1352,95 @@ async function viewActivity() {
     </div>`;
 }
 
+/* ---------- AI history ---------- */
+async function viewAIHistory() {
+  el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
+  let hist = [];
+  try { hist = (await api.get('/ai-history')).data; } catch (e) {}
+  const rows = hist.map(x => `
+    <div class="glass rounded-2xl p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="tag bg-violet-500/15 text-violet-400"><i class="fas fa-robot ml-1"></i>${esc(x.provider)}</span>
+        <span class="tag bg-slate-500/10 text-slate-400">${esc(x.task || 'general')}</span>
+        <span class="text-xs text-slate-400 mr-auto">${fmtDate(x.created_at)}</span>
+      </div>
+      <div class="text-xs text-slate-400 mb-1">الطلب:</div>
+      <p class="text-sm mb-2 line-clamp-2">${esc((x.prompt || '').slice(0, 200))}</p>
+      <div class="text-xs text-slate-400 mb-1">الرد:</div>
+      <p class="text-sm text-slate-400 line-clamp-3">${esc((x.response || '').slice(0, 300))}</p>
+    </div>`).join('');
+  el('main').innerHTML = `
+    <h2 class="text-xl font-bold mb-4"><i class="fas fa-robot text-violet-400 ml-2"></i>سجل استدعاءات الذكاء الاصطناعي <span class="text-sm text-slate-400">(${hist.length})</span></h2>
+    ${hist.length ? `<div class="grid md:grid-cols-2 gap-3">${rows}</div>` : '<div class="glass rounded-2xl p-10 text-center text-slate-400"><i class="fas fa-robot text-3xl mb-3 block"></i>مفيش استدعاءات لسه</div>'}`;
+}
+
+/* ---------- settings ---------- */
+async function viewSettings() {
+  el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
+  let st = {};
+  try { st = (await api.get('/settings')).data; } catch (e) {}
+  el('main').innerHTML = `
+    <h2 class="text-xl font-bold mb-4"><i class="fas fa-gear text-slate-400 ml-2"></i>الإعدادات</h2>
+    <div class="grid lg:grid-cols-2 gap-4">
+      <div class="glass rounded-2xl p-5">
+        <h3 class="font-bold mb-3"><i class="fas fa-robot text-violet-400 ml-1"></i> مفاتيح ومزوّد الذكاء الاصطناعي</h3>
+        <p class="text-xs text-slate-400 mb-4">المفاتيح تتخزن بأمان. يمكنك اختيار المحرك الذكي الداخلي كـ مجاني ومستقر 100%، أو إدخال مفتاح API خارجي (DeepSeek / Gemini).</p>
+        <div class="space-y-3">
+          <div><label class="fld">المزوّد الافتراضي</label>
+            <select id="set-provider" class="input-field">
+              <option value="smart" ${st.ai_provider === 'smart' || !st.ai_provider ? 'selected' : ''}>المحرك الذكي الداخلي ⚡ (تلقائي بدون أخطاء API)</option>
+              <option value="deepseek" ${st.ai_provider === 'deepseek' ? 'selected' : ''}>DeepSeek API (السحابي)</option>
+              <option value="gemini" ${st.ai_provider === 'gemini' ? 'selected' : ''}>Gemini API (السحابي)</option>
+            </select>
+            <p class="text-xs text-emerald-400 mt-1"><i class="fas fa-shield-check ml-1"></i> إذا حدث أي انقطاع أو انتهت حصة الـ API الخارجي، يتحول النظام فوراً للمحرك الذكي التلقائي.</p></div>
+          <div><label class="fld"><i class="fas fa-key ml-1"></i> DeepSeek API Key (اختياري)</label>
+            <input id="set-deepseek" type="text" class="input-field" dir="ltr" placeholder="sk-..." value="${esc(st.deepseek_api_key || '')}"></div>
+          <div><label class="fld"><i class="fas fa-key ml-1"></i> Gemini API Key (اختياري)</label>
+            <input id="set-gemini" type="text" class="input-field" dir="ltr" placeholder="AIza..." value="${esc(st.gemini_api_key || '')}"></div>
+        </div>
+        <div class="flex gap-2 mt-4">
+          <button class="btn-primary flex-1" onclick="saveSettings()"><i class="fas fa-save ml-1"></i>حفظ الإعدادات</button>
+          <button class="btn-ghost" onclick="testAIApi()"><i class="fas fa-vial text-sky-400 ml-1"></i>فحص الاتصال</button>
+        </div>
+        <div id="ai-test-result" class="text-xs text-slate-400 mt-3"></div>
+      </div>
+      <div class="glass rounded-2xl p-5">
+        <h3 class="font-bold mb-3"><i class="fas fa-circle-info text-sky-400 ml-1"></i> عن منصة Ehab ATS</h3>
+        <div class="space-y-2 text-sm text-slate-400">
+          <p><i class="fas fa-check text-emerald-400 ml-1"></i> Ehab ATS — منصة توليد السير الذاتية الاحترافية</p>
+          <p><i class="fas fa-check text-emerald-400 ml-1"></i> نظام المحرك الذكي المزدوج (Cloud + Local Smart AI Engine)</p>
+          <p><i class="fas fa-check text-emerald-400 ml-1"></i> 15 قالب ATS متوافق مع أنظمة الفرز الآلي</p>
+          <p><i class="fas fa-check text-emerald-400 ml-1"></i> دعم كامل باللغة العربية والإنجليزية وثنائي اللغة</p>
+          <p><i class="fas fa-check text-emerald-400 ml-1"></i> فاحص وتحليل مؤشرات ATS بدقة من 100</p>
+          <p><i class="fas fa-check text-emerald-400 ml-1"></i> تصدير متعدد: PDF (A4), DOCX (Word), JSON, TXT</p>
+          <p><i class="fas fa-check text-emerald-400 ml-1"></i> حفظ وتوليد كود QR للسير الذاتية والصفحات العامة</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function saveSettings() {
+  const body = {
+    deepseek_api_key: el('set-deepseek').value.trim(),
+    gemini_api_key: el('set-gemini').value.trim(),
+    ai_provider: el('set-provider').value
+  };
+  try { await api.put('/settings', body); toast('الإعدادات اتحفظت ✅'); viewSettings(); }
+  catch (e) { toast('مشكلة في الحفظ', 'err'); }
+}
+
+async function testAIApi() {
+  const res = el('ai-test-result');
+  if (!res) return;
+  res.innerHTML = '<div class="spinner !w-4 !h-4 !border-2 inline-block ml-1"></div> جاري فحص الاتصال والتوليد...';
+  try {
+    const { data } = await api.post('/ai/generate', { prompt: 'اختبار الاتصال لوظيفة: "مطور برمجيات"', task: 'full_resume' });
+    res.innerHTML = '<span class="text-emerald-400"><i class="fas fa-circle-check ml-1"></i> الاتصال والتوليد شغال 100%! (' + esc(data.provider) + ')</span>';
+  } catch (e) {
+    res.innerHTML = '<span class="text-rose-400"><i class="fas fa-circle-xmark ml-1"></i> ' + esc(e.message || 'فشل الفحص') + '</span>';
+  }
+}
+
 /* ---------- Team & Specialists Management (Admin Control Center) ---------- */
 async function viewTeam() {
   el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
@@ -1386,7 +1481,7 @@ async function viewTeam() {
   const totalTeamAICalls = activity.filter(a => a.action?.includes('ai') || a.action === 'ai_generate').length;
 
   const rows = specialists.map((sp, idx) => {
-    const directUrl = location.origin + '/?key=' + sp.access_key;
+    const directUrl = (window.location.origin || '') + '/?key=' + sp.access_key;
     const isAct = sp.status === 'active';
     const isAdmin = sp.id === 1 || sp.role?.includes('Admin') || sp.role?.includes('المدير الرئيسي');
     const waText = encodeURIComponent(`مرحباً أستاذ ${sp.name}،\nإليك رابط دخولك المباشر لمنصة السير الذاتية ATS Resume Builder:\n${directUrl}\nالمفتاح السري الخاص بك: ${sp.access_key}\nيمكنك الآن الدخول وإنشاء وتنزيل السير الذاتية بالذكاء الاصطناعي.`);
@@ -1538,167 +1633,101 @@ async function viewTeam() {
 }
 
 function newSpecialistModal() {
-  if (!isSuperAdmin()) {
-    return toast('⛔ إضافة مصرح له جديد هي صلاحية حصرية للمالك والمدير الرئيسي (إيهاب شحيطير) فقط', 'err');
-  }
-
   openModal(`
-    <h3 class="font-bold text-lg mb-3"><i class="fas fa-user-plus text-indigo-400 ml-2"></i>إضافة مصرح له جديد</h3>
-    <p class="text-xs text-slate-400 mb-4">أدخل بيانات المختص، وسيتم توليد رابط دخول مشفر ومخصص له لشخص واحد:</p>
-
-    <div class="space-y-3">
-      <div><label class="fld">اسم الشخص / المختص *</label><input id="sp-name" class="input-field !py-2" placeholder="مثال: يزن سمير"></div>
-      <div><label class="fld">البريد الإلكتروني (اختياري)</label><input id="sp-email" class="input-field !py-2" dir="ltr" placeholder="yazan@example.com"></div>
-      <div><label class="fld">رقم التليفون / الواتساب (اختياري)</label><input id="sp-phone" class="input-field !py-2" dir="ltr" placeholder="05XXXXXXXX"></div>
-      <div>
-        <label class="fld">الدور / التخصص</label>
-        <select id="sp-role" class="input-field !py-2">
-          <option value="مختص سير ذاتية معتمد">مختص سير ذاتية معتمد</option>
-          <option value="مختص استشارات مهنية وسير">مختص استشارات مهنية وسير</option>
-          <option value="مختص صياغة ومراجعة سير ATS">مختص صياغة ومراجعة سير ATS</option>
-          <option value="مختص هندسي وتقني">مختص هندسي وتقني</option>
-        </select>
+    <h3 class="font-bold text-lg mb-4"><i class="fas fa-user-plus text-indigo-400 ml-2"></i>إضافة مصرح له / مختص جديد</h3>
+    <div class="space-y-3 mb-4">
+      <div><label class="fld">الاسم الكامل *</label><input id="sp-name" class="input-field" placeholder="مثال: يزن سمير"></div>
+      <div><label class="fld">الدور / المسمى الوظيفي</label><input id="sp-role" class="input-field" placeholder="مثال: مختص سير ذاتية معتمد"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="fld">البريد الإلكتروني</label><input id="sp-email" type="email" class="input-field" placeholder="email@example.com"></div>
+        <div><label class="fld">رقم الجوال</label><input id="sp-phone" class="input-field" placeholder="050..."></div>
       </div>
     </div>
-
-    <div class="flex justify-end gap-2 mt-5">
-      <button class="btn-primary" onclick="createSpecialist()"><i class="fas fa-check ml-1"></i>توليد الرابط المخصص</button>
+    <div class="flex gap-3 justify-end">
       <button class="btn-ghost" onclick="closeModal()">إلغاء</button>
+      <button class="btn-primary" onclick="saveSpecialist()"><i class="fas fa-save ml-1"></i>حفظ وتوليد المفتاح</button>
     </div>
-  `, true);
+  `);
+  setTimeout(() => el('sp-name') && el('sp-name').focus(), 100);
 }
 
-function editSpecialistModal(id) {
-  if (!isSuperAdmin()) return toast('صلاحية حصرية للآدمن', 'err');
-  const sps = getLocal(CLIENT_STORAGE_KEYS.specialists, DEFAULT_SPECIALISTS);
-  const sp = sps.find(x => x.id === id);
-  if (!sp) return toast('المختص غير موجود', 'err');
-
-  openModal(`
-    <h3 class="font-bold text-lg mb-3"><i class="fas fa-pen text-sky-400 ml-2"></i>تعديل بيانات المختص</h3>
-    <div class="space-y-3">
-      <div><label class="fld">الاسم *</label><input id="sp-edit-name" class="input-field !py-2" value="${esc(sp.name)}"></div>
-      <div><label class="fld">البريد الإلكتروني</label><input id="sp-edit-email" class="input-field !py-2" dir="ltr" value="${esc(sp.email || '')}"></div>
-      <div><label class="fld">رقم التليفون</label><input id="sp-edit-phone" class="input-field !py-2" dir="ltr" value="${esc(sp.phone || '')}"></div>
-      <div><label class="fld">المسمى / الدور</label><input id="sp-edit-role" class="input-field !py-2" value="${esc(sp.role || '')}"></div>
-    </div>
-    <div class="flex justify-between items-center mt-5">
-      <button class="btn-ghost text-rose-400 hover:!bg-rose-500/20 border border-rose-500/30" onclick="closeModal(); delSpecialist(${id})"><i class="fas fa-trash ml-1"></i>حذف المختص</button>
-      <div class="flex gap-2">
-        <button class="btn-primary" onclick="saveSpecialistEdit(${id})"><i class="fas fa-save ml-1"></i>حفظ التعديلات</button>
-        <button class="btn-ghost" onclick="closeModal()">إلغاء</button>
-      </div>
-    </div>
-  `, true);
+async function saveSpecialist() {
+  const name = (el('sp-name')?.value || '').trim();
+  if (!name) return toast('ادخل اسم المختص أولاً', 'err');
+  const body = {
+    name,
+    role: el('sp-role')?.value?.trim() || 'مختص سير ذاتية',
+    email: el('sp-email')?.value?.trim() || '',
+    phone: el('sp-phone')?.value?.trim() || ''
+  };
+  try {
+    await api.post('/specialists', body);
+    toast('تمت إضافة المختص وتوليد رابط دخوله المشفر بنجاح ✅');
+    closeModal();
+    viewTeam();
+  } catch (e) {
+    toast('حدث خطأ أثناء إضافة المختص', 'err');
+  }
 }
 
-function saveSpecialistEdit(id) {
-  const sps = getLocal(CLIENT_STORAGE_KEYS.specialists, DEFAULT_SPECIALISTS);
+async function editSpecialistModal(id) {
+  const sps = ensureSpecialistsList();
   const sp = sps.find(x => x.id === id);
   if (!sp) return;
-  const name = el('sp-edit-name').value.trim();
-  if (!name) return toast('يرجى كتابة الاسم', 'err');
-  sp.name = name;
-  sp.email = el('sp-edit-email').value.trim();
-  sp.phone = el('sp-edit-phone').value.trim();
-  sp.role = el('sp-edit-role').value.trim() || 'مختص سير ذاتية';
-  setLocal(CLIENT_STORAGE_KEYS.specialists, sps);
-  logLocalActivity('update', 'specialist', id, `تعديل بيانات المختص: ${name}`);
-  closeModal();
-  toast('تم حفظ التعديلات بنجاح ✅');
-  viewTeam();
+  openModal(`
+    <h3 class="font-bold text-lg mb-4"><i class="fas fa-user-pen text-sky-400 ml-2"></i>تعديل بيانات المختص</h3>
+    <div class="space-y-3 mb-4">
+      <div><label class="fld">الاسم الكامل *</label><input id="sp-edit-name" class="input-field" value="${esc(sp.name)}"></div>
+      <div><label class="fld">الدور / المسمى الوظيفي</label><input id="sp-edit-role" class="input-field" value="${esc(sp.role || '')}"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="fld">البريد الإلكتروني</label><input id="sp-edit-email" type="email" class="input-field" value="${esc(sp.email || '')}"></div>
+        <div><label class="fld">رقم الجوال</label><input id="sp-edit-phone" class="input-field" value="${esc(sp.phone || '')}"></div>
+      </div>
+    </div>
+    <div class="flex gap-3 justify-end">
+      <button class="btn-ghost" onclick="closeModal()">إلغاء</button>
+      <button class="btn-primary" onclick="updateSpecialist(${id})"><i class="fas fa-save ml-1"></i>حفظ التعديلات</button>
+    </div>
+  `);
 }
 
-async function createSpecialist() {
-  if (!isSuperAdmin()) {
-    return toast('⛔ إضافة مصرح له جديد هي صلاحية حصرية للمالك والمدير الرئيسي (إيهاب شحيطير) فقط', 'err');
+async function updateSpecialist(id) {
+  const name = (el('sp-edit-name')?.value || '').trim();
+  if (!name) return toast('ادخل الاسم', 'err');
+  const sps = getLocal(CLIENT_STORAGE_KEYS.specialists);
+  const idx = sps.findIndex(x => x.id === id);
+  if (idx !== -1) {
+    sps[idx].name = name;
+    sps[idx].role = el('sp-edit-role')?.value?.trim() || 'مختص سير ذاتية';
+    sps[idx].email = el('sp-edit-email')?.value?.trim() || '';
+    sps[idx].phone = el('sp-edit-phone')?.value?.trim() || '';
+    setLocal(CLIENT_STORAGE_KEYS.specialists, sps);
   }
-  const name = el('sp-name').value.trim();
-  if (!name) return toast('ادخل اسم المختص', 'err');
-  const email = el('sp-email').value.trim();
-  const phone = el('sp-phone').value.trim();
-  const role = el('sp-role').value;
-
-  try {
-    const { data } = await api.post('/specialists', { name, email, phone, role });
-    closeModal();
-    const directUrl = location.origin + '/?key=' + data.access_key;
-    const waText = encodeURIComponent(`مرحباً أستاذ ${name}،\nتم تجهيز حسابك المعتمد على منصة ATS Resume Builder:\n${directUrl}\nالمفتاح السري: ${data.access_key}`);
-    const waUrl = `https://api.whatsapp.com/send?text=${waText}`;
-    
-    openModal(`
-      <div class="text-center py-2">
-        <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center text-2xl mb-3">
-          <i class="fas fa-check-circle"></i>
-        </div>
-        <h3 class="font-bold text-lg mb-1">تمت إضافة المختص (${esc(name)}) بنجاح! 🎉</h3>
-        <p class="text-xs text-slate-400 mb-4">انسخ رابط الدخول المباشر المخصص أو أرسله عبر واتساب مباشرة:</p>
-
-        <div class="bg-slate-900/80 p-3 rounded-xl text-xs dir-ltr font-mono select-all break-all text-sky-300 mb-4 border border-slate-700">
-          ${esc(directUrl)}
-        </div>
-
-        <div class="flex justify-center gap-2 flex-wrap">
-          <button class="btn-primary" onclick="navigator.clipboard.writeText('${directUrl}'); toast('الرابط اتنسخ بنجاح ✅'); closeModal(); viewTeam()"><i class="fas fa-copy ml-1"></i>نسخ الرابط</button>
-          <a href="${waUrl}" target="_blank" class="btn-ghost text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 text-decoration-none flex items-center gap-1"><i class="fa-brands fa-whatsapp text-sm"></i>إرسال بالواتساب</a>
-        </div>
-      </div>
-    `, true);
-  } catch (e) { toast('فشل إضافة المختص', 'err'); }
+  toast('تم تحديث بيانات المختص ✅');
+  closeModal();
+  viewTeam();
 }
 
 async function toggleSpecialistStatus(id, newStatus) {
   try {
     await api.put('/specialists/' + id + '/status', { status: newStatus });
-    toast('تم تحديث حالة المختص ✅');
+    toast(newStatus === 'active' ? 'تم تفعيل حساب المختص ✅' : 'تم تجميد حساب المختص ⛔');
     viewTeam();
-  } catch (e) { toast('فشل تحديث الحالة', 'err'); }
+  } catch (e) {
+    toast('تعذر تغيير الحالة', 'err');
+  }
 }
 
 async function delSpecialist(id) {
-  if (id === 1) return toast('لا يمكن حذف المالك والمدير الرئيسي', 'err');
-  confirmDialog('هل أنت متأكد من حذف وإزالة حساب هذا المختص نهائياً من الموقع؟ لن يتمكن من الدخول بعد الآن.', async () => {
+  confirmDialog('هل أنت متأكد من حذف هذا المختص نهائياً من النظام؟', async () => {
     try {
       await api.delete('/specialists/' + id);
-      toast('تمت إزالة المختص نهائياً بنجاح ✅');
+      toast('تم حذف المختص بنجاح 🗑️');
       viewTeam();
-    } catch (e) { toast('فشل الحذف', 'err'); }
+    } catch (e) {
+      toast('تعذر الحذف', 'err');
+    }
   });
-}
-
-function quickShareResume(id) {
-  const rs = getLocal(CLIENT_STORAGE_KEYS.resumes, []);
-  const r = rs.find(x => x.id === id);
-  if (!r) return toast('السيرة غير موجودة', 'err');
-  const slug = r.public_slug || ('cv-' + r.id);
-  const publicUrl = location.origin + '/?cv=' + slug;
-  const name = r.client_name || r.title || 'المتقدم';
-  const waText = encodeURIComponent(`📄 رابط السيرة الذاتية (${r.title}) لـ ${name}:\n${publicUrl}\nتم إنشاؤها عبر ATS Resume Builder.`);
-  const waUrl = `https://api.whatsapp.com/send?text=${waText}`;
-
-  openModal(`
-    <div class="text-center mb-4">
-      <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center text-xl mb-2">
-        <i class="fa-brands fa-whatsapp text-2xl"></i>
-      </div>
-      <h3 class="font-bold text-lg">مشاركة السيرة الذاتية</h3>
-      <p class="text-xs text-slate-400 mt-1">${esc(r.title)}</p>
-    </div>
-    <div class="grid grid-cols-2 gap-3 mb-4">
-      <a href="${waUrl}" target="_blank" class="glass rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 transition-all text-decoration-none">
-        <i class="fa-brands fa-whatsapp text-2xl"></i>
-        <span class="text-xs font-bold text-slate-200">واتساب</span>
-      </a>
-      <button class="glass rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 hover:bg-sky-600/20 border border-sky-500/30 text-sky-400 transition-all" onclick="navigator.clipboard.writeText('${publicUrl}'); toast('تم نسخ الرابط ✅')">
-        <i class="fas fa-link text-2xl"></i>
-        <span class="text-xs font-bold text-slate-200">نسخ الرابط</span>
-      </button>
-    </div>
-    <div class="bg-slate-900/80 p-2.5 rounded-xl text-xs dir-ltr font-mono text-sky-300 truncate mb-4 border border-slate-700">
-      ${esc(publicUrl)}
-    </div>
-    <div class="flex justify-end"><button class="btn-ghost" onclick="closeModal()">إغلاق</button></div>
-  `, true);
 }
 
 /* ---------- boot & direct link auto-login & public view ---------- */
