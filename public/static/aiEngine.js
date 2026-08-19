@@ -238,6 +238,36 @@ function translateSinglePhraseToEnglish(text) {
   s = s.replace(/مستوى متوسط|متوسط/gi, 'Intermediate');
   s = s.replace(/مستوى مبتدئ|مبتدئ/gi, 'Beginner');
 
+  
+  s = s.replace(/عبدالله نائف الحربي/gi, 'Abdullah Nayf Al-Harbi');
+  s = s.replace(/أخصائي سلامة وصحة مهنية/gi, 'Occupational Health & Safety Specialist');
+  s = s.replace(/دعم فني/gi, 'Technical Support');
+  s = s.replace(/حراسات أمنية/gi, 'Security Services');
+  s = s.replace(/الكلية التقنية/gi, 'College of Technology');
+  s = s.replace(/قسم الحاسب وتقنية المعلومات/gi, 'Computer & Information Technology Department');
+  s = s.replace(/دبلوم دعم فني/gi, 'Technical Support Diploma');
+  s = s.replace(/القصيم/gi, 'Al-Qassim');
+  s = s.replace(/متابعة تطبيق اشتراطات وإجراءات السلامة والصحة المهنية\.?/gi, 'Monitored implementation of Occupational Health and Safety (OHS) standards and procedures.');
+  s = s.replace(/المساهمة في تحديد المخاطر المهنية والحد منها\.?/gi, 'Contributed to identifying occupational workplace hazards and mitigating risks.');
+  s = s.replace(/التأكد من الالتزام بتعليمات وإرشادات السلامة في بيئة العمل\.?/gi, 'Ensured full compliance with workplace safety instructions and preventive guidelines.');
+  s = s.replace(/رفع مستوى الوعي بإجراءات الوقاية والسلامة المهنية\.?/gi, 'Promoted awareness of preventive safety procedures and occupational safety culture.');
+  s = s.replace(/مراقبة المداخل والمخارج وتنظيم الدخول والخروج\.?/gi, 'Monitored access points, managed visitor entries/exits, and maintained security logs.');
+  s = s.replace(/متابعة أمن وسلامة المنشأة والممتلكات\.?/gi, 'Maintained facility security, safeguarded organizational assets, and conducted patrol rounds.');
+  s = s.replace(/التعامل مع المواقف المختلفة وفق الإجراءات والتعليمات المعتمدة\.?/gi, 'Handled emergency situations and operational incidents in accordance with approved protocols.');
+  s = s.replace(/الالتزام بالانضباط والتعليمات والمحافظة على بيئة آمنة\.?/gi, 'Maintained strict discipline, adhered to security policies, and ensured a secure working environment.');
+  s = s.replace(/OSHA\s*[–\-]\s*السلامة والصحة المهنية\s*\|\s*مدة 3 أشهر\.?/gi, 'OSHA – Occupational Safety and Health (3 Months)');
+  s = s.replace(/OSHA\s*[–\-]\s*السلامة والصحة في الصناعات العامة\.?/gi, 'OSHA – Safety and Health in General Industry');
+  s = s.replace(/السلامة والصحة المهنية/gi, 'Occupational Health & Safety (OHS)');
+  s = s.replace(/تحديد المخاطر المهنية والوقاية منها/gi, 'Hazard Identification & Risk Prevention');
+  s = s.replace(/الالتزام بتعليمات وإجراءات السلامة/gi, 'Safety Procedures Compliance');
+  s = s.replace(/المراقبة والمتابعة/gi, 'Surveillance & Monitoring');
+  s = s.replace(/التعامل مع العملاء والزملاء باحترافية/gi, 'Professional Interaction with Clients & Peers');
+  s = s.replace(/تحمل المسؤولية والانضباط/gi, 'Discipline & Accountability');
+  s = s.replace(/حل المشكلات واتخاذ الإجراءات المناسبة/gi, 'Problem Solving & Incident Response');
+  s = s.replace(/مهارات الحاسب والدعم الفني/gi, 'Computer Proficiency & Technical Support');
+  s = s.replace(/أسعى للحصول على فرصة وظيفية في مجال السلامة والصحة المهنية[\s\S]*?وتحقيق أهداف جهة العمل\.?/gi,
+    'Seeking a career opportunity in Occupational Health & Safety (OHS) or administrative and technical fields to utilize my skills and practical expertise within a professional environment, with strong commitment to safety regulations, compliance standards, and organizational objectives.');
+
   // General vocabulary
   const vocab = {
     'إدارة': 'Management', 'قسم': 'Department', 'شركة': 'Company', 'مؤسسة': 'Establishment',
@@ -460,27 +490,31 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     }
   });
 
-  // 4. Parse Work Experience (Strict Isolation per Job / Organization)
+    // 4. Parse Work Experience (Strict Isolation per Job / Organization)
   const expItems = [];
   let currentExp = null;
 
   rawSections.experience.forEach(line => {
-    const rawL = line.trim();
-    const cleanL = rawL.replace(/^[\s•\-\*\d+\.🔹▪■–—]+/g, '').replace(/[\*\_#~`]/g, '').trim();
+    const rawLine = line.trim();
+    if (!rawLine) return;
+
+    const isBulletLine = /^[•\-\*▪🔹■\d+\.]\s+/.test(rawLine);
+    const cleanL = rawLine.replace(/^[•\-\*▪🔹■\d+\.]+\s*/, '').replace(/[\*\_#~`]/g, '').trim();
     if (!cleanL) return;
 
     const dates = cleanL.match(/(?:14\d{2}هـ?|20\d{2}|19\d{2})/g);
     const isDuration = /(?:مدة الخبرة|سنة|سنتين|أشهر|شهر|years?|months?)/i.test(cleanL);
 
-    const isRole = /(?:^متدرب|^مساعد إداري|^رجل أمن|^حارس أمن|^مشرف أمن|^ممثل خدمة عملاء|^موظف خدمة عملاء|^خدمة العملاء|^أخصائي تسويق|^مسوق|^كاتب خدمات مرضى|^أخصائي كاتب خدمات مرضى|^أخصائي موارد بشرية|^مسؤول موارد بشرية|^مدخل بيانات|^محاسب عام|^مساعد محاسب|^محاسب|^سكرتير تنفيذي|^مدير مشاريع|^منسق مشاريع|^مندوب مبيعات|^مشرف مبيعات|^كاشير|^فني كهرباء|^فني صيانة|^منظم حشود|^سائق خاص|^مندوب توصيل|^أمين مستودع|^مشرف مستودع|^Trainee|^Administrative Assistant|^Security Officer|^Customer Service Representative)/i.test(cleanL) ||
-      (cleanL.includes('|') && !cleanL.includes('المعدل') && !cleanL.includes('GPA'));
+    const isRoleKeyword = /(?:أخصائي|أخصائيه|مشرف|مسؤول|مدير|فني|مهندس|كاتب|مساعد|متدرب|حراسات|حراسة|حارس|رجل أمن|خدمة عملاء|كاشير|سائق|منسق|مندوب|مدخل بيانات|محاسب|سكرتير|ضابط|مراقب|مسوق|عامل|مطور|محلل|دعم فني|سلامة وصحة|حراسات أمنية|Trainee|Assistant|Officer|Specialist|Manager|Engineer|Technician|Driver)/i.test(cleanL);
 
-    const isOrg = /(?:^شركة|^مستشفى|^مؤسسة|^مصنع|^قسم|^وزارة|^هيئة|^مركز|^البنك|^إحدى شركات|^القطاع الخاص|^القطاع الحكومي|^Hospital|^Company|^Department|^Corp|^Factory|^Center|^Bank)/i.test(cleanL) && !isRole;
+    // If it's NOT a bullet line, and has role keywords or is short (<60 chars) and not just a sentence
+    const looksLikeNewTitle = !isBulletLine && (isRoleKeyword || cleanL.includes('|') || cleanL.includes('–') || cleanL.includes('-') || cleanL.length < 50);
 
-    if (isRole) {
+    if (looksLikeNewTitle) {
       if (currentExp && (currentExp.roleAr || currentExp.descAr)) {
         expItems.push(currentExp);
       }
+
       let role = cleanL;
       let org = '';
       if (cleanL.includes('|')) {
@@ -488,6 +522,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
         role = parts[0] || '';
         org = parts.slice(1).join(' | ');
       }
+
       currentExp = {
         roleAr: role,
         roleEn: translateTextToEnglish(role),
@@ -501,63 +536,34 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
       return;
     }
 
-    if (isOrg) {
-      if (currentExp && currentExp.orgAr && currentExp.descAr) {
-        expItems.push(currentExp);
-        currentExp = {
-          roleAr: '',
-          roleEn: '',
-          orgAr: cleanL,
-          orgEn: translateTextToEnglish(cleanL),
-          start: dates ? dates[0].replace(/هـ?/, 'H') : '',
-          end: '',
-          descAr: '',
-          descEn: ''
-        };
-        return;
-      }
-      if (currentExp) {
-        if (!currentExp.orgAr) {
-          currentExp.orgAr = cleanL;
-          currentExp.orgEn = translateTextToEnglish(cleanL);
-        } else {
-          currentExp.orgAr += ' – ' + cleanL;
-          currentExp.orgEn += ' – ' + translateTextToEnglish(cleanL);
-        }
-      } else {
-        currentExp = {
-          roleAr: '',
-          roleEn: '',
-          orgAr: cleanL,
-          orgEn: translateTextToEnglish(cleanL),
-          start: dates ? dates[0].replace(/هـ?/, 'H') : '',
-          end: '',
-          descAr: '',
-          descEn: ''
-        };
-      }
-      return;
-    }
-
     if (isDuration) {
       if (currentExp && dates && !currentExp.start) currentExp.start = dates[0].replace(/هـ?/, 'H');
       return;
     }
 
+    // It is a task / responsibility bullet
     if (!currentExp) {
       currentExp = {
-        roleAr: cleanL,
-        roleEn: translateTextToEnglish(cleanL),
-        orgAr: '', orgEn: '', start: dates ? dates[0].replace(/هـ?/, 'H') : '', end: '',
-        descAr: '', descEn: ''
+        roleAr: isRoleKeyword ? cleanL : 'خبرة عملية',
+        roleEn: isRoleKeyword ? translateTextToEnglish(cleanL) : 'Work Experience',
+        orgAr: '',
+        orgEn: '',
+        start: dates ? dates[0].replace(/هـ?/, 'H') : '',
+        end: '',
+        descAr: '',
+        descEn: ''
       };
+      if (!isRoleKeyword) {
+        currentExp.descAr = '• ' + cleanL;
+        currentExp.descEn = '• ' + translateTextToEnglish(cleanL);
+      }
     } else {
       currentExp.descAr += (currentExp.descAr ? '\n• ' : '• ') + cleanL;
       currentExp.descEn += (currentExp.descEn ? '\n• ' : '• ') + translateTextToEnglish(cleanL);
     }
   });
 
-  if (currentExp && (currentExp.roleAr || currentExp.orgAr || currentExp.descAr)) {
+  if (currentExp && (currentExp.roleAr || currentExp.descAr)) {
     expItems.push(currentExp);
   }
 

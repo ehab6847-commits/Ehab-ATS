@@ -148,9 +148,11 @@ function renderSectionBody(sec, lang, tpl) {
       if (desc) {
         const lines = desc.split(/\r?\n/).map(l => l.replace(/^[•\-\*\d+\.\s]+/, '').trim()).filter(Boolean);
         if (lines.length > 0) {
-          descHtml = `<ul style="margin:4px 0 0 0;padding-inline-start:18px;list-style-type:disc;">` +
-            lines.map(l => `<li class="cv-item-desc" style="font-weight:400;margin-bottom:3px;list-style:disc;line-height:1.5">${tplEsc(l)}</li>`).join('') +
-            `</ul>`;
+          descHtml = lines.map(l => `
+            <div class="cv-item-desc" style="display:flex;align-items:flex-start;gap:7px;margin-top:3px;margin-bottom:3px;font-weight:400;line-height:1.6;">
+              <span style="display:inline-block;width:5px;height:5px;background:currentColor;border-radius:50%;margin-top:8px;flex-shrink:0;opacity:0.75;"></span>
+              <div style="flex:1;">${tplEsc(l)}</div>
+            </div>`).join('');
         }
       }
 
@@ -212,39 +214,45 @@ function renderSectionBody(sec, lang, tpl) {
   }
 
   if (kind === 'certs') {
-    return `<ul style="margin:0;padding-inline-start:18px;list-style-type:disc;">` +
-      items.map(it => {
-        const name = String(v(it, 'nameAr', 'nameEn') || '').replace(/[\*\_#~`]/g, '').trim();
-        const org = String(v(it, 'orgAr', 'orgEn') || v(it, 'issuerAr', 'issuerEn') || '').replace(/[\*\_#~`]/g, '').trim();
-        const yr = it.year ? ` (${tplEsc(it.year)})` : '';
-        return `<li class="cv-item-desc" style="font-weight:400;margin-bottom:4px;list-style:disc;line-height:1.5">
-          <span>${tplEsc(name)}</span>${org ? `<span style="color:#64748b"> — ${tplEsc(org)}</span>` : ''}${yr}
-        </li>`;
-      }).join('') +
-      `</ul>`;
+    return items.map(it => {
+      const name = String(v(it, 'nameAr', 'nameEn') || '').replace(/[\*\_#~`]/g, '').trim();
+      const org = String(v(it, 'orgAr', 'orgEn') || v(it, 'issuerAr', 'issuerEn') || '').replace(/[\*\_#~`]/g, '').trim();
+      const yr = it.year ? ` (${tplEsc(it.year)})` : '';
+      return `
+      <div class="cv-item-desc" style="display:flex;align-items:flex-start;gap:7px;margin-bottom:5px;font-weight:400;line-height:1.6;">
+        <span style="display:inline-block;width:5px;height:5px;background:currentColor;border-radius:50%;margin-top:8px;flex-shrink:0;opacity:0.75;"></span>
+        <div style="flex:1;">
+          <span style="font-weight:400;">${tplEsc(name)}</span>${org ? `<span style="color:#64748b"> — ${tplEsc(org)}</span>` : ''}${yr}
+        </div>
+      </div>`;
+    }).join('');
   }
 
   if (kind === 'list') {
-    return `<ul style="margin:0;padding-inline-start:18px">${items.map(it => `<li class="cv-item-desc" style="margin-bottom:4px">${v(it, 'textAr', 'textEn')}</li>`).join('')}</ul>`;
+    return items.map(it => `
+      <div class="cv-item-desc" style="display:flex;align-items:flex-start;gap:7px;margin-bottom:4px;font-weight:400;line-height:1.6;">
+        <span style="display:inline-block;width:5px;height:5px;background:currentColor;border-radius:50%;margin-top:8px;flex-shrink:0;opacity:0.75;"></span>
+        <div style="flex:1;">${tplEsc(String(v(it, 'textAr', 'textEn')).replace(/[\*\_#~`]/g, '').trim())}</div>
+      </div>`).join('');
   }
 
   if (kind === 'references') {
     if (sec.onRequest) {
-      return `<p class="cv-refs-note">${lang === 'en' ? 'Available upon request' : 'متاحة عند الطلب'}</p>`;
+      return `<p class="cv-refs-note" style="font-weight:400">${lang === 'en' ? 'Available upon request' : 'متاحة عند الطلب'}</p>`;
     }
     return items.map(it => `
       <div class="cv-item" style="margin-bottom:7px">
-        <span class="cv-item-role">${v(it, 'nameAr', 'nameEn')}</span>
-        ${(it.orgAr || it.orgEn) ? ` <span class="cv-item-org">— ${v(it, 'orgAr', 'orgEn')}</span>` : ''}
-        ${it.phone ? `<div class="cv-sub" dir="ltr" style="text-align:inherit">${tplEsc(it.phone)}${it.email ? ' • ' + tplEsc(it.email) : ''}</div>` : (it.email ? `<div class="cv-sub">${tplEsc(it.email)}</div>` : '')}
+        <span class="cv-item-role" style="font-weight:600">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
+        ${(it.orgAr || it.orgEn) ? ` <span class="cv-item-org" style="font-weight:400">— ${tplEsc(String(v(it, 'orgAr', 'orgEn')).replace(/[\*\_#~`]/g, '').trim())}</span>` : ''}
+        ${it.phone ? `<div class="cv-sub" dir="ltr" style="text-align:inherit;font-weight:400">${tplEsc(it.phone)}${it.email ? ' • ' + tplEsc(it.email) : ''}</div>` : (it.email ? `<div class="cv-sub" style="font-weight:400">${tplEsc(it.email)}</div>` : '')}
       </div>`).join('');
   }
 
   // custom
   if (sec.textAr || sec.textEn) {
-    return `<p class="cv-item-desc" style="margin:0">${v(sec, 'textAr', 'textEn')}</p>`;
+    return `<p class="cv-item-desc" style="margin:0;font-weight:400;line-height:1.6">${tplEsc(String(v(sec, 'textAr', 'textEn')).replace(/[\*\_#~`]/g, '').trim())}</p>`;
   }
-  return items.map(it => `<div class="cv-item"><span class="cv-item-role">${v(it, 'nameAr', 'nameEn') || v(it, 'textAr', 'textEn')}</span>${(it.descAr || it.descEn) ? `<div class="cv-item-desc">${v(it, 'descAr', 'descEn')}</div>` : ''}</div>`).join('');
+  return items.map(it => `<div class="cv-item" style="font-weight:400"><span class="cv-item-role" style="font-weight:600">${tplEsc(String(v(it, 'nameAr', 'nameEn') || v(it, 'textAr', 'textEn')).replace(/[\*\_#~`]/g, '').trim())}</span>${(it.descAr || it.descEn) ? `<div class="cv-item-desc" style="font-weight:400">${tplEsc(String(v(it, 'descAr', 'descEn')).replace(/[\*\_#~`]/g, '').trim())}</div>` : ''}</div>`).join('');
 }
 
 function renderContact(p, lang, allowContactIcons) {
