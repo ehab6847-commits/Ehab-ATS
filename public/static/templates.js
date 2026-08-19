@@ -149,9 +149,8 @@ function renderSectionBody(sec, lang, tpl) {
         const lines = desc.split(/\r?\n/).map(l => l.replace(/^[•\-\*\d+\.\s]+/, '').trim()).filter(Boolean);
         if (lines.length > 0) {
           descHtml = lines.map(l => `
-            <div class="cv-item-desc" style="display:flex;align-items:flex-start;gap:7px;margin-top:3px;margin-bottom:3px;font-weight:400;line-height:1.6;">
-              <span style="display:inline-block;width:5px;height:5px;background:currentColor;border-radius:50%;margin-top:8px;flex-shrink:0;opacity:0.75;"></span>
-              <div style="flex:1;">${tplEsc(l)}</div>
+            <div class="cv-item-desc" style="font-weight:400;margin-top:3px;margin-bottom:3px;line-height:1.6;">
+              <span style="font-weight:700;margin-inline-end:6px;">•</span><span>${tplEsc(l)}</span>
             </div>`).join('');
         }
       }
@@ -219,20 +218,16 @@ function renderSectionBody(sec, lang, tpl) {
       const org = String(v(it, 'orgAr', 'orgEn') || v(it, 'issuerAr', 'issuerEn') || '').replace(/[\*\_#~`]/g, '').trim();
       const yr = it.year ? ` (${tplEsc(it.year)})` : '';
       return `
-      <div class="cv-item-desc" style="display:flex;align-items:flex-start;gap:7px;margin-bottom:5px;font-weight:400;line-height:1.6;">
-        <span style="display:inline-block;width:5px;height:5px;background:currentColor;border-radius:50%;margin-top:8px;flex-shrink:0;opacity:0.75;"></span>
-        <div style="flex:1;">
-          <span style="font-weight:400;">${tplEsc(name)}</span>${org ? `<span style="color:#64748b"> — ${tplEsc(org)}</span>` : ''}${yr}
-        </div>
+      <div class="cv-item-desc" style="font-weight:400;margin-bottom:4px;line-height:1.6;">
+        <span style="font-weight:700;margin-inline-end:6px;">•</span><span>${tplEsc(name)}</span>${org ? `<span style="color:#64748b"> — ${tplEsc(org)}</span>` : ''}${yr}
       </div>`;
     }).join('');
   }
 
   if (kind === 'list') {
     return items.map(it => `
-      <div class="cv-item-desc" style="display:flex;align-items:flex-start;gap:7px;margin-bottom:4px;font-weight:400;line-height:1.6;">
-        <span style="display:inline-block;width:5px;height:5px;background:currentColor;border-radius:50%;margin-top:8px;flex-shrink:0;opacity:0.75;"></span>
-        <div style="flex:1;">${tplEsc(String(v(it, 'textAr', 'textEn')).replace(/[\*\_#~`]/g, '').trim())}</div>
+      <div class="cv-item-desc" style="font-weight:400;margin-bottom:4px;line-height:1.6;">
+        <span style="font-weight:700;margin-inline-end:6px;">•</span><span>${tplEsc(String(v(it, 'textAr', 'textEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
       </div>`).join('');
   }
 
