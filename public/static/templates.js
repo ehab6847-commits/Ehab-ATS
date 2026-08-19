@@ -149,6 +149,18 @@ function renderSectionBody(sec, lang, tpl) {
       const org = String(orgRaw || '').replace(/[\*\_#~`]/g, '').trim();
       const desc = String(descRaw || '').replace(/[\*\_#~`]/g, '').trim();
 
+      let descHtml = '';
+      if (desc) {
+        const lines = desc.split(/\r?\n/).map(l => l.replace(/^[•\-\*\d+\.\s]+/, '').trim()).filter(Boolean);
+        if (lines.length > 0) {
+          descHtml = lines.map(l => `
+            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;margin-top:2px;margin-bottom:2px;font-weight:400;line-height:1.45;">
+              <span style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
+              <span style="flex:1;color:inherit;">${tplEsc(l)}</span>
+            </div>`).join('');
+        }
+      }
+
       return `
       <div class="cv-item" style="margin-bottom:8px">
         <div class="cv-item-head">
@@ -158,7 +170,7 @@ function renderSectionBody(sec, lang, tpl) {
           </div>
           ${dateRange(it, lang)}
         </div>
-        ${desc ? `<div class="cv-item-desc" style="margin:2px 0 0;line-height:1.45;white-space:pre-line;">${tplEsc(desc)}</div>` : ''}
+        ${descHtml}
       </div>`;
     }).join('');
   }
@@ -174,9 +186,9 @@ function renderSectionBody(sec, lang, tpl) {
       <div class="cv-item" style="margin-bottom:8px">
         <div class="cv-item-head">
           <div>
-            ${school ? `<span class="cv-item-role" style="font-weight:700">${tplEsc(school)}</span>` : ''}
-            ${(school && degree) ? `<span style="font-weight:400;color:#64748b"> — </span>` : ''}
-            ${degree ? `<span class="cv-item-desc" style="font-weight:400;display:inline;color:inherit">${tplEsc(degree)}</span>` : ''}
+            ${degree ? `<span class="cv-item-role" style="font-weight:700;color:inherit;">${tplEsc(degree)}</span>` : ''}
+            ${(degree && school) ? `<span style="font-weight:400;color:#64748b"> — </span>` : ''}
+            ${school ? `<span class="cv-item-desc" style="font-weight:400;display:inline;color:inherit;">${tplEsc(school)}</span>` : ''}
           </div>
           <span class="cv-item-date" style="font-weight:400">${tplEsc(it.year || '')}</span>
         </div>
@@ -211,13 +223,20 @@ function renderSectionBody(sec, lang, tpl) {
       const name = String(v(it, 'nameAr', 'nameEn') || '').replace(/[\*\_#~`]/g, '').trim();
       const org = String(v(it, 'orgAr', 'orgEn') || v(it, 'issuerAr', 'issuerEn') || '').replace(/[\*\_#~`]/g, '').trim();
       const yr = it.year ? ` (${tplEsc(it.year)})` : '';
-      return `<div class="cv-item-desc" style="font-weight:400;margin:1px 0;line-height:1.4;"><span style="font-weight:700;margin-inline-end:5px;">•</span><span>${tplEsc(name)}</span>${org ? `<span style="color:#64748b"> — ${tplEsc(org)}</span>` : ''}${yr}</div>`;
+      return `
+      <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;font-weight:400;line-height:1.45;">
+        <span style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
+        <span style="flex:1;color:inherit;"><span style="font-weight:400;">${tplEsc(name)}</span>${org ? `<span style="color:#64748b"> — ${tplEsc(org)}</span>` : ''}${yr}</span>
+      </div>`;
     }).join('');
   }
 
   if (kind === 'list') {
     return items.map(it => `
-      <div class="cv-item-desc" style="font-weight:400;margin:1px 0;line-height:1.4;"><span style="font-weight:700;margin-inline-end:5px;">•</span><span>${tplEsc(String(v(it, 'textAr', 'textEn')).replace(/[\*\_#~`]/g, '').trim())}</span></div>
+      <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;font-weight:400;line-height:1.45;">
+        <span style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
+        <span style="flex:1;color:inherit;">${tplEsc(String(v(it, 'textAr', 'textEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
+      </div>
     `).join('');
   }
 
