@@ -1,6 +1,7 @@
 /* ===== Ehab ATS — Template Engine (16 templates) ===== */
 
 const TEMPLATE_DEFS = {
+  formal_pro:    { name: 'رسمي احترافي ⭐', nameEn: 'Professional Formal', group: 'bw', layout: 'formal_pro', header: 'formal_center', color: '#000000', accent: '#1e293b', line: '1.5px solid #000000', ats: true },
   ats1:          { name: 'ATS كلاسيكي', nameEn: 'ATS Classic', group: 'bw', layout: 'single', header: 'center', color: '#111827', accent: '#374151', line: '2px solid #111827', ats: true },
   ats2:          { name: 'ATS بسيط', nameEn: 'ATS Simple', group: 'bw', layout: 'single', header: 'right', color: '#111827', accent: '#4b5563', line: '1px solid #9ca3af', ats: true },
   ats3:          { name: 'ATS مضغوط', nameEn: 'ATS Compact', group: 'bw', layout: 'single', header: 'split', color: '#000000', accent: '#374151', line: '1.5px solid #000', ats: true },
@@ -125,6 +126,7 @@ function renderSectionBody(sec, lang, tpl) {
   const v = mkPick(lang);
   const items = sec.items || [];
   const kind = (SECTION_TYPES[sec.type] || {}).kind || sec.kind || 'custom';
+  const isFormal = (tpl && (tpl.layout === 'formal_pro' || tpl.nameEn === 'Professional Formal'));
 
   if (kind === 'text') {
     let txt;
@@ -136,7 +138,8 @@ function renderSectionBody(sec, lang, tpl) {
       txt = sec.textAr || sec.textEn || '';
     }
     const cleanTxt = String(txt || '').replace(/[\*\_#~`]/g, '').trim();
-    return `<p class="cv-item-desc" style="margin:0;line-height:1.6;font-weight:400">${tplEsc(cleanTxt)}</p>`;
+    const alignStyle = isFormal ? 'text-align:justify;' : '';
+    return `<p class="cv-item-desc cv-summary-text" style="margin:0;line-height:1.6;font-weight:400;${alignStyle}">${tplEsc(cleanTxt)}</p>`;
   }
 
   if (kind === 'timeline') {
@@ -155,7 +158,7 @@ function renderSectionBody(sec, lang, tpl) {
         if (lines.length > 0) {
           descHtml = lines.map(l => `
             <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;margin-top:2px;margin-bottom:2px;font-weight:400;line-height:1.45;">
-              <span style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
+              <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
               <span style="flex:1;color:inherit;">${tplEsc(l)}</span>
             </div>`).join('');
         }
@@ -165,7 +168,7 @@ function renderSectionBody(sec, lang, tpl) {
       <div class="cv-item" style="margin-bottom:8px">
         <div class="cv-item-head">
           <div>
-            <span class="cv-item-role" style="font-weight:700">${tplEsc(role)}</span>
+            <span class="cv-item-role" style="font-weight:700;${isFormal ? 'color:#000;' : ''}">${tplEsc(role)}</span>
             ${org ? `<span class="cv-item-org" style="font-weight:600;color:#334155"> | ${tplEsc(org)}</span>` : ''}
           </div>
           ${dateRange(it, lang)}
@@ -186,11 +189,11 @@ function renderSectionBody(sec, lang, tpl) {
       <div class="cv-item" style="margin-bottom:8px">
         <div class="cv-item-head">
           <div>
-            ${degree ? `<span class="cv-item-role" style="font-weight:700;color:inherit;">${tplEsc(degree)}</span>` : ''}
+            ${degree ? `<span class="cv-item-role" style="font-weight:700;color:${isFormal ? '#000' : 'inherit'};">${tplEsc(degree)}</span>` : ''}
             ${(degree && school) ? `<span style="font-weight:400;color:#64748b"> — </span>` : ''}
             ${school ? `<span class="cv-item-desc" style="font-weight:400;display:inline;color:inherit;">${tplEsc(school)}</span>` : ''}
           </div>
-          <span class="cv-item-date" style="font-weight:400">${tplEsc(it.year || '')}</span>
+          <span class="cv-item-date" style="font-weight:600;color:#475569;">${tplEsc(it.year || '')}</span>
         </div>
         ${it.gpa ? `<div class="cv-item-desc" style="font-weight:400;margin-top:1px">${lang === 'en' ? 'GPA' : 'المعدل'}: ${tplEsc(it.gpa)}</div>` : ''}
         ${(it.descAr || it.descEn) ? `<div class="cv-item-desc" style="font-weight:400;margin-top:1px">${tplEsc(String(v(it, 'descAr', 'descEn')).replace(/[\*\_#~`]/g, '').trim())}</div>` : ''}
@@ -199,6 +202,16 @@ function renderSectionBody(sec, lang, tpl) {
   }
 
   if (kind === 'skills') {
+    if (isFormal) {
+      return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">` +
+        items.map(it => `
+        <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;font-weight:400;line-height:1.45;">
+          <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
+          <span style="flex:1;color:inherit;">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
+        </div>`).join('') +
+      `</div>`;
+    }
+
     const useBars = !tpl.ats && sec.showBars;
     if (useBars) {
       return items.map(it => `
@@ -211,6 +224,19 @@ function renderSectionBody(sec, lang, tpl) {
   }
 
   if (kind === 'languages') {
+    if (isFormal) {
+      return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">` +
+        items.map(it => `
+        <div class="cv-bullet-item" style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:3px;font-size:0.93em;">
+          <div style="display:flex;align-items:baseline;gap:6px;">
+            <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
+            <span style="font-weight:700;color:#000;">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
+          </div>
+          <span class="cv-lang-level" style="font-weight:400;color:#475569;">${tplEsc(String(v(it, 'levelAr', 'levelEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
+        </div>`).join('') +
+      `</div>`;
+    }
+
     return items.map(it => `
       <div class="cv-lang-row">
         <span style="font-weight:600">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
@@ -219,25 +245,34 @@ function renderSectionBody(sec, lang, tpl) {
   }
 
   if (kind === 'certs') {
-    return items.map(it => {
+    const rendered = items.map(it => {
       const name = String(v(it, 'nameAr', 'nameEn') || '').replace(/[\*\_#~`]/g, '').trim();
       const org = String(v(it, 'orgAr', 'orgEn') || v(it, 'issuerAr', 'issuerEn') || '').replace(/[\*\_#~`]/g, '').trim();
       const yr = it.year ? ` (${tplEsc(it.year)})` : '';
       return `
       <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;font-weight:400;line-height:1.45;">
-        <span style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
+        <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
         <span style="flex:1;color:inherit;"><span style="font-weight:400;">${tplEsc(name)}</span>${org ? `<span style="color:#64748b"> — ${tplEsc(org)}</span>` : ''}${yr}</span>
       </div>`;
     }).join('');
+
+    if (isFormal) {
+      return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">${rendered}</div>`;
+    }
+    return rendered;
   }
 
   if (kind === 'list') {
-    return items.map(it => `
+    const rendered = items.map(it => `
       <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;font-weight:400;line-height:1.45;">
-        <span style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
+        <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
         <span style="flex:1;color:inherit;">${tplEsc(String(v(it, 'textAr', 'textEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
       </div>
     `).join('');
+    if (isFormal) {
+      return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">${rendered}</div>`;
+    }
+    return rendered;
   }
 
   if (kind === 'references') {
@@ -314,6 +349,20 @@ function renderHeader(tpl, data, cust, lang) {
 
   const photo = (cust.showPhoto !== false && p.photo && !tpl.ats) ? `<img class="cv-photo" src="${p.photo}" alt="">` : '';
   const logo = p.logo ? `<img class="cv-logo" src="${p.logo}" alt="">` : '';
+
+  if (tpl.layout === 'formal_pro' || tpl.header === 'formal_center') {
+    const nameAr = nr.ar || nr.main || '';
+    const nameEn = nr.en || '';
+    const jtFormal = jt ? `<div class="cv-job-title-formal" style="font-size:1.05em;font-weight:600;color:#334155;margin-top:4px;text-align:center;">${tplEsc(jt)}</div>` : '';
+    return `
+    <header class="cv-header-formal" style="text-align:center;margin-bottom:18px;">
+      <h1 class="cv-name-ar" style="font-size:2.05em;font-weight:800;margin:0;color:#000;line-height:1.2;">${tplEsc(nameAr)}</h1>
+      ${nameEn ? `<div class="cv-name-en" style="font-size:0.9em;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:2px;margin-top:4px;">${tplEsc(nameEn)}</div>` : ''}
+      ${jtFormal}
+      ${renderContact(p, lang, cust.showIcons !== false)}
+    </header>`;
+  }
+
   const core = `<h1 class="cv-name">${tplEsc(name || '')}</h1>${nameSub}${jtHtml}${renderContact(p, lang, cust.showIcons !== false)}`;
 
   if (tpl.header === 'center') return `<header class="cv-header-center">${photo ? `<div style="margin-bottom:10px">${photo}</div>` : ''}${core}${logo ? `<div style="margin-top:8px">${logo}</div>` : ''}</header>`;
@@ -401,7 +450,7 @@ function renderTemplate(templateId, data, cust, language) {
   const qr = cust.qrDataUrl ? `<div class="cv-qr-wrap"><img class="cv-qr" src="${cust.qrDataUrl}" alt="QR"><div class="cv-qr-label">${lang === 'en' ? 'Online CV' : 'نسخة أونلاين'}</div></div>` : '';
   const sig = (data.personal && data.personal.signature) ? `<div class="cv-signature-wrap"><img class="cv-signature" src="${data.personal.signature}" alt=""></div>` : '';
 
-  const cls = `cv-page${tpl.serif ? ' cv-serif' : ''}${tpl.ats ? ' cv-ats' : ''}`;
+  const cls = `cv-page${tpl.layout === 'formal_pro' ? ' cv-formal-pro' : ''}${tpl.serif ? ' cv-serif' : ''}${tpl.ats ? ' cv-ats' : ''}`;
   const styleAttr = `style="${vars.join(';')}"`;
 
   // 2-Column Split Bilingual Layout: Activated whenever language is bilingual OR bilingual template is selected

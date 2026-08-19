@@ -293,3 +293,90 @@
   line-height: 1.35;
 }
 
+
+
+/* ===== Template: رسمي احترافي (Professional Formal) ===== */
+.cv-formal-pro {
+  font-family: var(--cv-font-ar, 'Cairo'), 'Tajawal', sans-serif;
+  color: #0f172a;
+}
+.cv-formal-pro .cv-header-formal {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.cv-formal-pro .cv-name-ar {
+  font-size: 2.1em;
+  font-weight: 800;
+  margin: 0;
+  color: #000;
+  line-height: 1.2;
+}
+.cv-formal-pro .cv-name-en {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 4px;
+}
+.cv-formal-pro .cv-job-title-formal {
+  font-size: 1.05em;
+  font-weight: 600;
+  color: #334155;
+  margin-top: 4px;
+}
+.cv-formal-pro .cv-contact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px 0;
+  margin-top: 10px;
+  font-size: 0.88em;
+  color: #334155;
+}
+.cv-formal-pro .cv-sec-title {
+  font-size: 1.05em;
+  font-weight: 800;
+  color: #000;
+  padding-bottom: 4px;
+  margin: 0 0 10px;
+  border-bottom: 1.5px solid #000;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.cv-formal-pro .cv-grid-2col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 20px;
+}
+.cv-formal-pro .cv-bullet-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1.45;
+  font-size: 0.92em;
+}
+.cv-formal-pro .cv-bullet-dot {
+  color: #000;
+  font-weight: 900;
+  font-size: 1.15em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.cv-formal-pro .cv-summary-text {
+  text-align: justify;
+  line-height: 1.6;
+  font-size: 0.93em;
+  color: #1e293b;
+}
+@media print {
+  .cv-formal-pro {
+    page-break-inside: avoid;
+  }
+  .cv-formal-pro .cv-section,
+  .cv-formal-pro .cv-item {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
