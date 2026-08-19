@@ -144,19 +144,8 @@ function renderSectionBody(sec, lang, tpl) {
       const org = String(orgRaw || '').replace(/[\*\_#~`]/g, '').trim();
       const desc = String(descRaw || '').replace(/[\*\_#~`]/g, '').trim();
 
-      let descHtml = '';
-      if (desc) {
-        const lines = desc.split(/\r?\n/).map(l => l.replace(/^[•\-\*\d+\.\s]+/, '').trim()).filter(Boolean);
-        if (lines.length > 0) {
-          descHtml = lines.map(l => `
-            <div class="cv-item-desc" style="font-weight:400;margin-top:3px;margin-bottom:3px;line-height:1.6;">
-              <span style="font-weight:700;margin-inline-end:6px;">•</span><span>${tplEsc(l)}</span>
-            </div>`).join('');
-        }
-      }
-
       return `
-      <div class="cv-item" style="margin-bottom:12px">
+      <div class="cv-item" style="margin-bottom:8px">
         <div class="cv-item-head">
           <div>
             <span class="cv-item-role" style="font-weight:700">${tplEsc(role)}</span>
@@ -164,7 +153,7 @@ function renderSectionBody(sec, lang, tpl) {
           </div>
           ${dateRange(it, lang)}
         </div>
-        ${descHtml}
+        ${desc ? `<div class="cv-item-desc" style="margin:2px 0 0;line-height:1.45;white-space:pre-line;">${tplEsc(desc)}</div>` : ''}
       </div>`;
     }).join('');
   }
@@ -177,7 +166,7 @@ function renderSectionBody(sec, lang, tpl) {
       const school = String(schRaw || '').replace(/[\*\_#~`]/g, '').trim();
 
       return `
-      <div class="cv-item" style="margin-bottom:10px">
+      <div class="cv-item" style="margin-bottom:8px">
         <div class="cv-item-head">
           <div>
             ${school ? `<span class="cv-item-role" style="font-weight:700">${tplEsc(school)}</span>` : ''}
@@ -186,8 +175,8 @@ function renderSectionBody(sec, lang, tpl) {
           </div>
           <span class="cv-item-date" style="font-weight:400">${tplEsc(it.year || '')}</span>
         </div>
-        ${it.gpa ? `<div class="cv-item-desc" style="font-weight:400;margin-top:2px">${lang === 'en' ? 'GPA' : 'المعدل'}: ${tplEsc(it.gpa)}</div>` : ''}
-        ${(it.descAr || it.descEn) ? `<div class="cv-item-desc" style="font-weight:400;margin-top:2px">${tplEsc(String(v(it, 'descAr', 'descEn')).replace(/[\*\_#~`]/g, '').trim())}</div>` : ''}
+        ${it.gpa ? `<div class="cv-item-desc" style="font-weight:400;margin-top:1px">${lang === 'en' ? 'GPA' : 'المعدل'}: ${tplEsc(it.gpa)}</div>` : ''}
+        ${(it.descAr || it.descEn) ? `<div class="cv-item-desc" style="font-weight:400;margin-top:1px">${tplEsc(String(v(it, 'descAr', 'descEn')).replace(/[\*\_#~`]/g, '').trim())}</div>` : ''}
       </div>`;
     }).join('');
   }
@@ -217,18 +206,14 @@ function renderSectionBody(sec, lang, tpl) {
       const name = String(v(it, 'nameAr', 'nameEn') || '').replace(/[\*\_#~`]/g, '').trim();
       const org = String(v(it, 'orgAr', 'orgEn') || v(it, 'issuerAr', 'issuerEn') || '').replace(/[\*\_#~`]/g, '').trim();
       const yr = it.year ? ` (${tplEsc(it.year)})` : '';
-      return `
-      <div class="cv-item-desc" style="font-weight:400;margin-bottom:4px;line-height:1.6;">
-        <span style="font-weight:700;margin-inline-end:6px;">•</span><span>${tplEsc(name)}</span>${org ? `<span style="color:#64748b"> — ${tplEsc(org)}</span>` : ''}${yr}
-      </div>`;
+      return `<div class="cv-item-desc" style="font-weight:400;margin:1px 0;line-height:1.4;"><span style="font-weight:700;margin-inline-end:5px;">•</span><span>${tplEsc(name)}</span>${org ? `<span style="color:#64748b"> — ${tplEsc(org)}</span>` : ''}${yr}</div>`;
     }).join('');
   }
 
   if (kind === 'list') {
     return items.map(it => `
-      <div class="cv-item-desc" style="font-weight:400;margin-bottom:4px;line-height:1.6;">
-        <span style="font-weight:700;margin-inline-end:6px;">•</span><span>${tplEsc(String(v(it, 'textAr', 'textEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
-      </div>`).join('');
+      <div class="cv-item-desc" style="font-weight:400;margin:1px 0;line-height:1.4;"><span style="font-weight:700;margin-inline-end:5px;">•</span><span>${tplEsc(String(v(it, 'textAr', 'textEn')).replace(/[\*\_#~`]/g, '').trim())}</span></div>
+    `).join('');
   }
 
   if (kind === 'references') {
