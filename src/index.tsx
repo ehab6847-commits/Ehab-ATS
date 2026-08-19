@@ -189,6 +189,8 @@ async function ensureTables(db: D1Database) {
         data TEXT DEFAULT '{}', customization TEXT DEFAULT '{}',
         status TEXT DEFAULT 'draft', is_favorite INTEGER DEFAULT 0, ats_score INTEGER DEFAULT 0,
         public_slug TEXT UNIQUE,
+        created_by TEXT DEFAULT 'إيهاب شحيطير (Super Admin)',
+        created_by_role TEXT DEFAULT 'super_admin',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );`,
       `CREATE TABLE IF NOT EXISTS resume_versions (
@@ -202,6 +204,9 @@ async function ensureTables(db: D1Database) {
       );`,
       `CREATE TABLE IF NOT EXISTS activity_log (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        user_name TEXT,
+        user_role TEXT,
         action TEXT, entity TEXT, entity_id INTEGER, details TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );`,
@@ -274,8 +279,16 @@ app.use('/api/*', async (c, next) => {
 })
 
 // ---------- helpers ----------
-async function logActivity(db: D1Database, action: string, entity: string, entityId: number | null, details: string) {
-  try { await db.prepare('INSERT INTO activity_log (action, entity, entity_id, details) VALUES (?,?,?,?)').bind(action, entity, entityId, details).run() } catch {}
+async function logActivity(db: D1Database, action: string, entity: string, entityId: number | null, details: string, userName: string = 'إيهاب شحيطير (Super Admin)', userRole: string = 'super_admin') {
+  try {
+    await db.prepare('INSERT INTO activity_log (action, entity, entity_id, details, user_name, user_role) VALUES (?,?,?,?,?,?)')
+      .bind(action, entity, entityId, details, userName, userRole).run()
+  } catch {
+    try {
+      await db.prepare('INSERT INTO activity_log (action, entity, entity_id, details) VALUES (?,?,?,?)')
+        .bind(action, entity, entityId, details).run()
+    } catch {}
+  }
 }
 function slug(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'

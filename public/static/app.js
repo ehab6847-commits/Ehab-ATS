@@ -1,6 +1,8 @@
 /* ============ Ehab ATS - SPA Core (app.js) ============ */
 const S = {
   token: localStorage.getItem('ehab_token') || '',
+  role: localStorage.getItem('ehab_user_role') || (localStorage.getItem('ehab_token')?.includes('admin') ? 'super_admin' : 'specialist'),
+  name: localStorage.getItem('ehab_user_name') || 'إيهاب شحيطير (Super Admin)',
   view: 'dashboard',
   viewParam: null,
   dark: localStorage.getItem('ehab_dark') === '1'
@@ -30,9 +32,31 @@ function setLocal(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
 }
 
-function logLocalActivity(action, entity, entityId, details) {
+function logLocalActivity(action, entity, entityId, details, userCustom) {
   const act = getLocal(CLIENT_STORAGE_KEYS.activity);
-  act.unshift({ id: Date.now(), action, entity, entity_id: entityId, details, created_at: new Date().toISOString() });
+  const userName = (userCustom && userCustom.name) || S.name || localStorage.getItem('ehab_user_name') || 'إيهاب شحيطير (Super Admin)';
+  const userRole = (userCustom && userCustom.role) || S.role || localStorage.getItem('ehab_user_role') || 'super_admin';
+  const sps = getLocal(CLIENT_STORAGE_KEYS.specialists, DEFAULT_SPECIALISTS);
+  const sp = sps.find(x => x.name === userName || (userName.includes('إيهاب') && x.id === 1));
+  const userId = (userCustom && userCustom.id) || (sp ? sp.id : (userRole === 'super_admin' ? 1 : 2));
+
+  // Update specialist's last_active timestamp
+  if (sp) {
+    sp.last_active = new Date().toISOString();
+    setLocal(CLIENT_STORAGE_KEYS.specialists, sps);
+  }
+
+  act.unshift({
+    id: Date.now(),
+    user_id: userId,
+    user_name: userName,
+    user_role: userRole,
+    action,
+    entity,
+    entity_id: entityId,
+    details,
+    created_at: new Date().toISOString()
+  });
   setLocal(CLIENT_STORAGE_KEYS.activity, act);
 }
 
@@ -197,6 +221,8 @@ api.defaults.adapter = async function (config) {
         language: body.language || 'ar', template: body.template || 'ats1',
         data: body.data || JSON.stringify({ personal: { nameAr: client.name || 'الاسم الكامل', titleAr: client.job_target || 'المسمى الوظيفي', email: client.email || '', phone: client.phone || '', cityAr: client.city || '' }, sections: [{ id: 's1', type: 'summary', titleAr: 'الملخص المهني', textAr: 'نبذة عن الخبرة والمهارات.', visible: true }] }),
         customization: body.customization || '{}', status: 'draft', is_favorite: 0, ats_score: 85, public_slug: 'cv-' + Math.random().toString(36).slice(2, 9),
+        created_by: S.name || localStorage.getItem('ehab_user_name') || 'إيهاب شحيطير (Super Admin)',
+        created_by_role: S.role || localStorage.getItem('ehab_user_role') || 'super_admin',
         created_at: new Date().toISOString(), updated_at: new Date().toISOString()
       };
       rs.unshift(newR);
@@ -214,7 +240,7 @@ api.defaults.adapter = async function (config) {
     }
     if (rParts[3] === 'duplicate' && method === 'post') {
       if (rObj) {
-        const dup = { ...rObj, id: Date.now(), title: rObj.title + ' (نسخة)', public_slug: 'cv-' + Math.random().toString(36).slice(2, 9), created_at: new Date().toISOString() };
+        const dup = { ...rObj, id: Date.now(), title: rObj.title + ' (نسخة)', public_slug: 'cv-' + Math.random().toString(36).slice(2, 9), created_by: S.name || localStorage.getItem('ehab_user_name') || rObj.created_by || 'إيهاب شحيطير', created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
         rs.unshift(dup);
         setLocal(CLIENT_STORAGE_KEYS.resumes, rs);
       }
@@ -405,6 +431,7 @@ async function doLogin() {
     S.name = 'إيهاب شحيطير (Super Admin)';
     localStorage.setItem('ehab_token', token);
     localStorage.setItem('ehab_user_role', 'super_admin');
+    localStorage.setItem('ehab_user_name', 'إيهاب شحيطير (Super Admin)');
     S.view = 'dashboard';
     renderApp();
     toast('أهلاً بك يا إيهاب شحيطير (Super Admin — المالك والمدير الرئيسي) 👋');
@@ -421,6 +448,7 @@ async function doLogin() {
     S.name = matched ? matched.name : 'مختص مصرح له';
     localStorage.setItem('ehab_token', token);
     localStorage.setItem('ehab_user_role', 'specialist');
+    localStorage.setItem('ehab_user_name', S.name);
     S.view = 'dashboard';
     renderApp();
     toast(`مرحباً بك يا ${S.name}! تم تسجيل الدخول بنجاح 👋`);
@@ -668,13 +696,19 @@ async function viewClientDetail() {
 /* ---------- resumes ---------- */
 function resumeCard(r) {
   const sc = r.ats_score || 0;
+  const authorName = r.created_by || r.specialist_name || (r.id === 1 ? 'إيهاب شحيطير (Super Admin)' : 'إيهاب شحيطير');
+  const isSuper = authorName.includes('Super') || authorName.includes('إيهاب');
   return `
   <div class="glass rounded-2xl p-4 card-hover">
     <div class="flex items-start gap-3">
       <div class="flex-1 min-w-0 cursor-pointer" onclick="openBuilder(${r.id})">
         <div class="font-bold truncate mb-1">${esc(r.title)}</div>
-        <div class="flex flex-wrap gap-1.5 mb-2">${langBadge(r.language)} ${statusBadge(r.status)}
+        <div class="flex flex-wrap items-center gap-1.5 mb-2">
+          ${langBadge(r.language)} ${statusBadge(r.status)}
           ${r.client_name ? `<span class="tag bg-sky-500/15 text-sky-400"><i class="fas fa-user ml-1"></i>${esc(r.client_name)}</span>` : ''}
+          <span class="tag ${isSuper ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30' : 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30'}" title="المختص الذي أنشأ هذه السيرة">
+            <i class="fas ${isSuper ? 'fa-crown text-[10px]' : 'fa-user-tie text-[10px]'} ml-1"></i>بواسطة: ${esc(authorName)}
+          </span>
         </div>
         <div class="text-xs text-slate-400">${fmtDate(r.updated_at)} · قالب ${esc(r.template)}</div>
       </div>
@@ -1199,118 +1233,117 @@ async function exportDocx(id) {
 }
 
 /* ---------- activity log ---------- */
+function renderActivityRow(a) {
+  const isSuper = !a.user_name || a.user_name.includes('Super') || a.user_name.includes('إيهاب');
+  const uName = a.user_name || (a.details?.includes('إيهاب') ? 'إيهاب شحيطير (Super Admin)' : (a.details?.includes('يزن') ? 'يزن سمير' : 'إيهاب شحيطير (Super Admin)'));
+  const uRole = a.user_role || (isSuper ? 'المالك والمدير الرئيسي' : 'مختص سير ذاتية معتمد');
+  
+  let actionIcon = 'fa-bolt text-amber-400';
+  let actionBg = 'bg-amber-500/10 border-amber-500/20';
+  if (a.action?.includes('create')) { actionIcon = 'fa-circle-plus text-emerald-400'; actionBg = 'bg-emerald-500/10 border-emerald-500/20'; }
+  else if (a.action?.includes('ai') || a.action === 'ai_generate') { actionIcon = 'fa-wand-magic-sparkles text-purple-400'; actionBg = 'bg-purple-500/10 border-purple-500/20'; }
+  else if (a.action?.includes('login')) { actionIcon = 'fa-right-to-bracket text-sky-400'; actionBg = 'bg-sky-500/10 border-sky-500/20'; }
+  else if (a.action?.includes('delete')) { actionIcon = 'fa-trash text-rose-400'; actionBg = 'bg-rose-500/10 border-rose-500/20'; }
+  else if (a.action?.includes('update')) { actionIcon = 'fa-pen text-indigo-400'; actionBg = 'bg-indigo-500/10 border-indigo-500/20'; }
+  else if (a.action?.includes('duplicate')) { actionIcon = 'fa-copy text-teal-400'; actionBg = 'bg-teal-500/10 border-teal-500/20'; }
+
+  return `
+    <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-700/50 bg-slate-900/60 hover:bg-slate-800/70 transition text-xs">
+      <div class="flex items-center gap-3 min-w-0 flex-1">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center border ${actionBg} shrink-0 text-sm shadow-inner">
+          <i class="fas ${actionIcon}"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2 flex-wrap mb-1">
+            <span class="font-bold px-2 py-0.5 rounded-lg text-[11px] ${isSuper ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30' : 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30'}">
+              <i class="fas ${isSuper ? 'fa-crown text-[10px]' : 'fa-user-tie text-[10px]'} ml-1"></i>${esc(uName)}
+            </span>
+            <span class="text-slate-200 font-semibold">${esc(a.details || a.action)}</span>
+          </div>
+          <div class="text-[11px] text-slate-400 flex items-center gap-2">
+            <span class="text-slate-300">${esc(uRole)}</span>
+            ${a.entity ? `<span>• الكيان: ${esc(a.entity)} ${a.entity_id ? '#' + a.entity_id : ''}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      <div class="text-right shrink-0">
+        <span class="text-slate-300 font-mono text-[11px] block">${fmtDate(a.created_at)}</span>
+      </div>
+    </div>
+  `;
+}
+
 async function viewActivity() {
   el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
   let acts = [];
+  const specialists = ensureSpecialistsList();
   try { acts = (await api.get('/activity')).data; } catch (e) {}
-  const icons = { create: 'fa-plus text-emerald-400', update: 'fa-pen text-sky-400', delete: 'fa-trash text-rose-400', restore: 'fa-clock-rotate-left text-amber-400', duplicate: 'fa-copy text-violet-400', login: 'fa-right-to-bracket text-indigo-400', ai: 'fa-robot text-pink-400' };
-  const rows = acts.map(a => `
-    <div class="flex items-center gap-3 py-2.5 border-b border-slate-500/10 last:border-0">
-      <i class="fas ${icons[a.action] || 'fa-circle-info text-slate-400'} w-5 text-center"></i>
-      <div class="flex-1 min-w-0"><div class="text-sm">${esc(a.details || a.action)}</div>
-        <div class="text-xs text-slate-400">${esc(a.entity || '')} ${a.entity_id ? '#' + a.entity_id : ''}</div></div>
-      <div class="text-xs text-slate-400 shrink-0">${fmtDate(a.created_at)}</div>
-    </div>`).join('');
-  el('main').innerHTML = `
-    <h2 class="text-xl font-bold mb-4"><i class="fas fa-clock-rotate-left text-slate-400 ml-2"></i>سجل النشاط</h2>
-    <div class="glass rounded-2xl p-4">${rows || '<p class="text-slate-400 text-sm py-6 text-center">مفيش نشاط لسه</p>'}</div>`;
-}
 
-/* ---------- AI history ---------- */
-async function viewAIHistory() {
-  el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
-  let hist = [];
-  try { hist = (await api.get('/ai-history')).data; } catch (e) {}
-  const rows = hist.map(x => `
+  window._allActivityList = acts;
+  window.filterActivityPage = function(spName, actType) {
+    let filtered = window._allActivityList || [];
+    if (spName && spName !== 'all') {
+      filtered = filtered.filter(a => {
+        const u = a.user_name || (a.details?.includes('إيهاب') ? 'إيهاب شحيطير (Super Admin)' : (a.details?.includes('يزن') ? 'يزن سمير' : 'إيهاب شحيطير (Super Admin)'));
+        return u === spName || (spName.includes('إيهاب') && u.includes('إيهاب'));
+      });
+    }
+    if (actType && actType !== 'all') {
+      filtered = filtered.filter(a => a.action?.includes(actType));
+    }
+    const container = el('activity-items-wrap');
+    if (container) {
+      container.innerHTML = filtered.length ? filtered.map(renderActivityRow).join('') : '<p class="text-slate-400 text-sm py-8 text-center">لا توجد أنشطة مطابقة لهذا الفلتر</p>';
+    }
+  };
+
+  const spOptions = specialists.map(sp => {
+    const cnt = acts.filter(a => {
+      const u = a.user_name || (a.details?.includes('إيهاب') ? 'إيهاب شحيطير (Super Admin)' : (a.details?.includes('يزن') ? 'يزن سمير' : 'إيهاب شحيطير (Super Admin)'));
+      return u === sp.name || (sp.id === 1 && u.includes('إيهاب'));
+    }).length;
+    return `<option value="${esc(sp.name)}">${esc(sp.name)} (${cnt})</option>`;
+  }).join('');
+
+  el('main').innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <div>
+        <h2 class="text-xl font-bold"><i class="fas fa-clock-rotate-left text-sky-400 ml-2"></i>سجل نشاط وتفاعل المختصين والأمان <span class="text-sm text-slate-400">(${acts.length})</span></h2>
+        <p class="text-xs text-slate-400 mt-1">مراقبة دقيقة لكل عملية إنشاء سيرة ذاتية، تعديل، أو توليد بالذكاء الاصطناعي مع اسم المختص والوقت.</p>
+      </div>
+    </div>
+
+    <div class="glass rounded-2xl p-4 mb-4 border border-slate-700/60 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs text-slate-400"><i class="fas fa-user-tie text-indigo-400 ml-1"></i>المختص:</span>
+          <select id="act-sp-sel" class="input-field !py-1.5 !px-3 text-xs w-auto" onchange="filterActivityPage(this.value, el('act-type-sel').value)">
+            <option value="all">جميع المختصين (${acts.length})</option>
+            ${spOptions}
+          </select>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs text-slate-400"><i class="fas fa-filter text-amber-400 ml-1"></i>نوع النشاط:</span>
+          <select id="act-type-sel" class="input-field !py-1.5 !px-3 text-xs w-auto" onchange="filterActivityPage(el('act-sp-sel').value, this.value)">
+            <option value="all">جميع العمليات</option>
+            <option value="create">إنشاء سيرة / عميل</option>
+            <option value="ai">توليد الذكاء الاصطناعي</option>
+            <option value="update">تعديل وحفظ</option>
+            <option value="login">تسجيل الدخول</option>
+            <option value="delete">حذف</option>
+          </select>
+        </div>
+      </div>
+      <div class="text-xs text-slate-400">
+        إجمالي الأنشطة: <b class="text-amber-300">${acts.length}</b> سجل
+      </div>
+    </div>
+
     <div class="glass rounded-2xl p-4">
-      <div class="flex items-center gap-2 mb-2">
-        <span class="tag bg-violet-500/15 text-violet-400"><i class="fas fa-robot ml-1"></i>${esc(x.provider)}</span>
-        <span class="tag bg-slate-500/10 text-slate-400">${esc(x.task || 'general')}</span>
-        <span class="text-xs text-slate-400 mr-auto">${fmtDate(x.created_at)}</span>
-      </div>
-      <div class="text-xs text-slate-400 mb-1">الطلب:</div>
-      <p class="text-sm mb-2 line-clamp-2">${esc((x.prompt || '').slice(0, 200))}</p>
-      <div class="text-xs text-slate-400 mb-1">الرد:</div>
-      <p class="text-sm text-slate-400 line-clamp-3">${esc((x.response || '').slice(0, 300))}</p>
-    </div>`).join('');
-  el('main').innerHTML = `
-    <h2 class="text-xl font-bold mb-4"><i class="fas fa-robot text-violet-400 ml-2"></i>سجل استدعاءات الذكاء الاصطناعي <span class="text-sm text-slate-400">(${hist.length})</span></h2>
-    ${hist.length ? `<div class="grid md:grid-cols-2 gap-3">${rows}</div>` : '<div class="glass rounded-2xl p-10 text-center text-slate-400"><i class="fas fa-robot text-3xl mb-3 block"></i>مفيش استدعاءات لسه</div>'}`;
-}
-
-/* ---------- settings ---------- */
-async function viewSettings() {
-  el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
-  let st = {};
-  try { st = (await api.get('/settings')).data; } catch (e) {}
-  el('main').innerHTML = `
-    <h2 class="text-xl font-bold mb-4"><i class="fas fa-gear text-slate-400 ml-2"></i>الإعدادات</h2>
-    <div class="grid lg:grid-cols-2 gap-4">
-      <div class="glass rounded-2xl p-5">
-        <h3 class="font-bold mb-3"><i class="fas fa-robot text-violet-400 ml-1"></i> مفاتيح ومزوّد الذكاء الاصطناعي</h3>
-        <p class="text-xs text-slate-400 mb-4">المفاتيح تتخزن بأمان. يمكنك اختيار المحرك الذكي الداخلي كـ مجاني ومستقر 100%، أو إدخال مفتاح API خارجي (DeepSeek / Gemini).</p>
-        <div class="space-y-3">
-          <div><label class="fld">المزوّد الافتراضي</label>
-            <select id="set-provider" class="input-field">
-              <option value="smart" ${st.ai_provider === 'smart' || !st.ai_provider ? 'selected' : ''}>المحرك الذكي الداخلي ⚡ (تلقائي بدون أخطاء API)</option>
-              <option value="deepseek" ${st.ai_provider === 'deepseek' ? 'selected' : ''}>DeepSeek API (السحابي)</option>
-              <option value="gemini" ${st.ai_provider === 'gemini' ? 'selected' : ''}>Gemini API (السحابي)</option>
-            </select>
-            <p class="text-xs text-emerald-400 mt-1"><i class="fas fa-shield-check ml-1"></i> إذا حدث أي انقطاع أو انتهت حصة الـ API الخارجي، يتحول النظام فوراً للمحرك الذكي التلقائي.</p></div>
-          <div><label class="fld"><i class="fas fa-key ml-1"></i> DeepSeek API Key (اختياري)</label>
-            <input id="set-deepseek" type="text" class="input-field" dir="ltr" placeholder="sk-..." value="${esc(st.deepseek_api_key || '')}"></div>
-          <div><label class="fld"><i class="fas fa-key ml-1"></i> Gemini API Key (اختياري)</label>
-            <input id="set-gemini" type="text" class="input-field" dir="ltr" placeholder="AIza..." value="${esc(st.gemini_api_key || '')}"></div>
-        </div>
-        <div class="flex gap-2 mt-4">
-          <button class="btn-primary flex-1" onclick="saveSettings()"><i class="fas fa-save ml-1"></i>حفظ الإعدادات</button>
-          <button class="btn-ghost" onclick="testAIApi()"><i class="fas fa-vial text-sky-400 ml-1"></i>فحص الاتصال</button>
-        </div>
-        <div id="ai-test-result" class="text-xs text-slate-400 mt-3"></div>
-      </div>
-      <div class="glass rounded-2xl p-5">
-        <h3 class="font-bold mb-3"><i class="fas fa-circle-info text-sky-400 ml-1"></i> عن منصة Ehab ATS</h3>
-        <div class="space-y-2 text-sm text-slate-400">
-          <p><i class="fas fa-check text-emerald-400 ml-1"></i> Ehab ATS — منصة توليد السير الذاتية الاحترافية</p>
-          <p><i class="fas fa-check text-emerald-400 ml-1"></i> نظام المحرك الذكي المزدوج (Cloud + Local Smart AI Engine)</p>
-          <p><i class="fas fa-check text-emerald-400 ml-1"></i> 15 قالب ATS متوافق مع أنظمة الفرز الآلي</p>
-          <p><i class="fas fa-check text-emerald-400 ml-1"></i> دعم كامل باللغة العربية والإنجليزية وثنائي اللغة</p>
-          <p><i class="fas fa-check text-emerald-400 ml-1"></i> فاحص وتحليل مؤشرات ATS بدقة من 100</p>
-          <p><i class="fas fa-check text-emerald-400 ml-1"></i> تصدير متعدد: PDF (A4), DOCX (Word), JSON, TXT</p>
-          <p><i class="fas fa-check text-emerald-400 ml-1"></i> حفظ وتوليد كود QR للسير الذاتية والصفحات العامة</p>
-        </div>
-        <div class="mt-4 pt-4 border-t border-slate-500/10">
-          <h4 class="font-bold text-sm mb-2">تعليمات المفاتيح الخارجيّة (اختياري)</h4>
-          <p class="text-xs text-slate-400 mb-1">• DeepSeek: <span dir="ltr">platform.deepseek.com</span> → API Keys</p>
-          <p class="text-xs text-slate-400">• Gemini: <span dir="ltr">aistudio.google.com</span> → Get API Key</p>
-        </div>
+      <div id="activity-items-wrap" class="space-y-2.5">
+        ${acts.length ? acts.map(renderActivityRow).join('') : '<p class="text-slate-400 text-sm py-6 text-center">مفيش نشاط لسه</p>'}
       </div>
     </div>`;
-}
-async function saveSettings() {
-  const body = {
-    deepseek_api_key: el('set-deepseek').value.trim(),
-    gemini_api_key: el('set-gemini').value.trim(),
-    ai_provider: el('set-provider').value
-  };
-  try { await api.put('/settings', body); toast('الإعدادات اتحفظت ✅'); viewSettings(); }
-  catch (e) { toast('مشكلة في الحفظ', 'err'); }
-}
-async function testAIApi() {
-  const res = el('ai-test-result');
-  if (!res) return;
-  res.innerHTML = '<div class="spinner !w-4 !h-4 !border-2 inline-block ml-1"></div> جاري فحص الاتصال والتوليد...';
-  try {
-    const { data } = await api.post('/ai/generate', { prompt: 'اختبار الاتصال لوظيفة: "مطور برمجيات"', task: 'full_resume' });
-    res.innerHTML = '<span class="text-emerald-400"><i class="fas fa-circle-check ml-1"></i> الاتصال والتوليد شغال 100%! (' + esc(data.provider) + ')</span>';
-  } catch (e) {
-    res.innerHTML = '<span class="text-rose-400"><i class="fas fa-circle-xmark ml-1"></i> ' + esc(e.message || 'فشل الفحص') + '</span>';
-  }
-}
-
-function isSuperAdmin() {
-  const tok = S.token || localStorage.getItem('ehab_token') || '';
-  return tok.startsWith('ehab_admin_token_') || tok.startsWith('token_admin_') || S.role === 'super_admin';
 }
 
 /* ---------- Team & Specialists Management (Admin Control Center) ---------- */
@@ -1318,9 +1351,10 @@ async function viewTeam() {
   el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
   
   const spsLocal = ensureSpecialistsList();
-
   let specialists = [];
   let activity = [];
+  const resumes = getLocal(CLIENT_STORAGE_KEYS.resumes, []);
+
   try { specialists = (await api.get('/specialists')).data; } catch (e) {}
   try { activity = (await api.get('/activity')).data; } catch (e) {}
 
@@ -1328,7 +1362,28 @@ async function viewTeam() {
     specialists = spsLocal;
   }
 
+  // Calculate live dynamic metrics for each specialist
+  specialists.forEach(sp => {
+    sp.resumesCount = resumes.filter(r => {
+      const creator = r.created_by || (r.id === 1 ? 'إيهاب شحيطير (Super Admin)' : 'إيهاب شحيطير');
+      return creator === sp.name || (sp.id === 1 && creator.includes('إيهاب'));
+    }).length;
+
+    sp.aiCallsCount = activity.filter(a => {
+      const u = a.user_name || (a.details?.includes('إيهاب') ? 'إيهاب شحيطير (Super Admin)' : (a.details?.includes('يزن') ? 'يزن سمير' : 'إيهاب شحيطير (Super Admin)'));
+      return (a.action?.includes('ai') || a.action === 'ai_generate') && (u === sp.name || (sp.id === 1 && u.includes('إيهاب')));
+    }).length;
+
+    sp.totalActions = activity.filter(a => {
+      const u = a.user_name || (a.details?.includes('إيهاب') ? 'إيهاب شحيطير (Super Admin)' : (a.details?.includes('يزن') ? 'يزن سمير' : 'إيهاب شحيطير (Super Admin)'));
+      return u === sp.name || (sp.id === 1 && u.includes('إيهاب'));
+    }).length;
+  });
+
   const canManage = isSuperAdmin();
+
+  const totalTeamResumes = resumes.length;
+  const totalTeamAICalls = activity.filter(a => a.action?.includes('ai') || a.action === 'ai_generate').length;
 
   const rows = specialists.map((sp, idx) => {
     const directUrl = location.origin + '/?key=' + sp.access_key;
@@ -1350,6 +1405,22 @@ async function viewTeam() {
                 <span class="tag ${isAct ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400'}">${isAct ? 'نشط' : 'مجمد'}</span>
               </div>
               <div class="text-xs text-slate-300 font-semibold mt-0.5">${esc(sp.role || 'مختص سير ذاتية')} ${sp.email ? `• <span class="text-slate-400">${esc(sp.email)}</span>` : ''}</div>
+            </div>
+          </div>
+
+          <!-- Live Specialist Stats -->
+          <div class="grid grid-cols-3 gap-1.5 my-3 p-2 rounded-xl bg-slate-950/70 border border-slate-700/60 text-center">
+            <div>
+              <div class="text-[10px] text-slate-400 font-semibold">السير الذاتية</div>
+              <div class="text-sm font-black text-sky-400 mt-0.5"><i class="fas fa-file-lines text-[11px] ml-1"></i>${sp.resumesCount}</div>
+            </div>
+            <div class="border-x border-slate-800">
+              <div class="text-[10px] text-slate-400 font-semibold">توليد AI</div>
+              <div class="text-sm font-black text-purple-400 mt-0.5"><i class="fas fa-wand-magic-sparkles text-[11px] ml-1"></i>${sp.aiCallsCount}</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400 font-semibold">إجمالي النشاط</div>
+              <div class="text-sm font-black text-amber-400 mt-0.5"><i class="fas fa-bolt text-[11px] ml-1"></i>${sp.totalActions}</div>
             </div>
           </div>
 
@@ -1384,19 +1455,32 @@ async function viewTeam() {
     `;
   }).join('');
 
-  const actRows = activity.slice(0, 20).map(a => `
-    <div class="flex items-center gap-3 py-2 border-b border-slate-500/10 last:border-0 text-xs">
-      <i class="fas fa-bolt text-amber-400"></i>
-      <div class="flex-1"><span class="font-semibold text-slate-200">${esc(a.details || a.action)}</span></div>
-      <span class="text-slate-400 font-mono">${fmtDate(a.created_at)}</span>
-    </div>
-  `).join('') || '<p class="text-slate-400 text-xs py-4 text-center">مفيش نشاط مسجل لسه</p>';
+  window._teamActivityList = activity;
+  window.filterTeamActivityList = function(spName) {
+    let filtered = window._teamActivityList || [];
+    if (spName && spName !== 'all') {
+      filtered = filtered.filter(a => {
+        const u = a.user_name || (a.details?.includes('إيهاب') ? 'إيهاب شحيطير (Super Admin)' : (a.details?.includes('يزن') ? 'يزن سمير' : 'إيهاب شحيطير (Super Admin)'));
+        return u === spName || (spName.includes('إيهاب') && u.includes('إيهاب'));
+      });
+    }
+    const container = el('team-act-rows-wrap');
+    if (container) {
+      container.innerHTML = filtered.length ? filtered.slice(0, 30).map(renderActivityRow).join('') : '<p class="text-slate-400 text-xs py-6 text-center">لا توجد نشاطات لهذا المختص حتى الآن</p>';
+    }
+  };
+
+  const spFilterButtons = [
+    `<button class="tag cursor-pointer bg-indigo-500 text-white font-bold" onclick="filterTeamActivityList('all'); document.querySelectorAll('.sp-flt-btn').forEach(b=>b.classList.replace('bg-indigo-500','bg-slate-500/10')); this.classList.add('bg-indigo-500');">الكل (${activity.length})</button>`
+  ].concat(specialists.map(sp => {
+    return `<button class="tag sp-flt-btn cursor-pointer bg-slate-500/10 text-slate-300 hover:bg-slate-500/20" onclick="filterTeamActivityList('${esc(sp.name)}'); document.querySelectorAll('.sp-flt-btn').forEach(b=>b.classList.replace('bg-indigo-500','bg-slate-500/10')); this.classList.replace('bg-slate-500/10','bg-indigo-500');">${esc(sp.name)} (${sp.totalActions})</button>`;
+  })).join('');
 
   el('main').innerHTML = `
     <div class="flex flex-wrap items-center gap-3 mb-6">
       <div>
-        <h2 class="text-xl font-bold"><i class="fas fa-user-shield text-indigo-400 ml-2"></i>إدارة المستخدمين والمصرح لهم <span class="text-sm text-slate-400">(${specialists.length})</span></h2>
-        <p class="text-xs text-slate-400 mt-1">بصفتك المالك والمدير الرئيسي (إيهاب شحيطير)، تملك التحكم الكامل لإضافة وتعديل وحذف أي مختص ومشاركة روابط الدخول المشفرة.</p>
+        <h2 class="text-xl font-bold"><i class="fas fa-user-shield text-indigo-400 ml-2"></i>إدارة ومراقبة أداء المختصين <span class="text-sm text-slate-400">(${specialists.length})</span></h2>
+        <p class="text-xs text-slate-400 mt-1">لوحة مراقبة شاملة تمكنك من تتبع نشاط كل مختص، عدد السير الذاتية التي أنشأها، وعدد عمليات الذكاء الاصطناعي بالتفصيل.</p>
       </div>
       ${canManage ? `
       <div class="mr-auto flex gap-2">
@@ -1407,13 +1491,48 @@ async function viewTeam() {
       </div>`}
     </div>
 
+    <!-- Overview Counters -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div class="glass rounded-2xl p-4 border border-slate-700/50 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center text-xl font-bold"><i class="fas fa-users-gear"></i></div>
+        <div><div class="text-2xl font-black text-white">${specialists.length}</div><div class="text-xs text-slate-400">عدد المختصين</div></div>
+      </div>
+      <div class="glass rounded-2xl p-4 border border-slate-700/50 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xl font-bold"><i class="fas fa-file-circle-check"></i></div>
+        <div><div class="text-2xl font-black text-white">${totalTeamResumes}</div><div class="text-xs text-slate-400">إجمالي السير المولدة</div></div>
+      </div>
+      <div class="glass rounded-2xl p-4 border border-slate-700/50 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center text-xl font-bold"><i class="fas fa-wand-magic-sparkles"></i></div>
+        <div><div class="text-2xl font-black text-white">${totalTeamAICalls}</div><div class="text-xs text-slate-400">توليد الذكاء الاصطناعي</div></div>
+      </div>
+      <div class="glass rounded-2xl p-4 border border-slate-700/50 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-xl font-bold"><i class="fas fa-bolt"></i></div>
+        <div><div class="text-2xl font-black text-white">${activity.length}</div><div class="text-xs text-slate-400">إجمالي العمليات المسجلة</div></div>
+      </div>
+    </div>
+
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
       ${rows}
     </div>
 
-    <div class="glass rounded-2xl p-5">
-      <h3 class="font-bold text-base mb-3 flex items-center gap-2"><i class="fas fa-clock-rotate-left text-sky-400"></i>سجل نشاطات وتفاعل المستخدمين والأمان</h3>
-      <div class="space-y-1">${actRows}</div>
+    <div class="glass rounded-2xl p-5 border border-slate-700/60">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-700/50">
+        <div>
+          <h3 class="font-bold text-base flex items-center gap-2"><i class="fas fa-clock-rotate-left text-sky-400"></i>سجل نشاطات وتفاعل المختصين المباشر</h3>
+          <p class="text-xs text-slate-400 mt-0.5">انقر على اسم أي مختص لتصفية ورؤية سجل العمليات والتوليد الخاص به فقط.</p>
+        </div>
+        <div class="text-xs text-slate-400 font-mono">
+          Live Tracking Enabled <i class="fas fa-circle text-emerald-400 text-[9px] animate-pulse mr-1"></i>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-2 mb-4">
+        ${spFilterButtons}
+      </div>
+
+      <div id="team-act-rows-wrap" class="space-y-2">
+        ${activity.length ? activity.slice(0, 30).map(renderActivityRow).join('') : '<p class="text-slate-400 text-xs py-6 text-center">مفيش نشاط مسجل لسه</p>'}
+      </div>
     </div>
   `;
 }
