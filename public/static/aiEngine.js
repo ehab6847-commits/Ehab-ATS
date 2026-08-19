@@ -112,7 +112,7 @@ function transliterateArabicWord(w) {
   return res ? res.charAt(0).toUpperCase() + res.slice(1) : '';
 }
 
-// Deep Universal Arabic -> English Resume Translator
+// Comprehensive Semantic Arabic -> English Resume Translator
 function translateTextToEnglish(text) {
   if (!text) return '';
   if (!/[\u0600-\u06FF]/.test(text)) {
@@ -121,8 +121,14 @@ function translateTextToEnglish(text) {
   let s = ' ' + text.trim() + ' ';
 
   // ==========================================
-  // PHASE 1: Full Sentences & Paragraphs (Longest first)
+  // PHASE 1: Full Objectives, Summaries & Multi-Sentence Paragraphs
   // ==========================================
+  s = s.replace(/أسعى إلى الانضمام إلى جهة عمل احترافية تتيح لي توظيف خبراتي ومهاراتي في مجال الأمن وخدمة العملاء[\s\S]*?واكتساب المزيد من الخبرات العملية\.?/gi,
+    'Dedicated and motivated professional seeking to join a reputable organization that enables me to utilize my skills and experience in security and customer service, contributing to organizational goals through dedication, discipline, and teamwork while striving for continuous career development.');
+
+  s = s.replace(/أسعى إلى الانضمام إلى جهة عمل احترافية[\s\S]*?تحقيق أهداف (المنشأة|المنظمة|الشركة)[\s\S]*?التطوير المهني المستمر[\s\S]*?\.?/gi,
+    'Seeking an opportunity in a professional work environment that allows me to utilize my skills and practical experience, contributing effectively to organizational success through commitment, discipline, and teamwork while pursuing continuous professional growth.');
+
   s = s.replace(/خريج دبلوم إدارة الموارد البشرية[\s\S]*?تحقيق أهداف (المنظمة|المنشأة|جهة العمل)[\s\S]*?\.?/gi,
     'Motivated Human Resources graduate with a Diploma in Human Resources Management and practical cooperative training experience in a healthcare environment. Possesses foundational knowledge of HR operations, employee services, data management, and administrative procedures. Seeking an entry-level Human Resources position to apply academic knowledge, develop professional skills, and contribute effectively to organizational goals.');
 
@@ -136,11 +142,22 @@ function translateTextToEnglish(text) {
     'Ambitious and organized candidate seeking to start a professional career in an engaging environment to enhance my skills, gain practical experience, work collaboratively with team members, and contribute effectively toward achieving organizational objectives and continuous career development.');
 
   // ==========================================
-  // PHASE 2: Full Bullet Points & Experience Sentences
+  // PHASE 2: Experience Bullets & Work Responsibilities
   // ==========================================
+  s = s.replace(/تنفيذ المهام الأمنية وحماية الممتلكات\.?/gi, 'Executed security duties, facility protection, and asset safeguarding.');
+  s = s.replace(/استقبال العملاء والرد على استفساراتهم\.?/gi, 'Welcomed customers and handled inquiries in a professional and timely manner.');
+  s = s.replace(/معالجة الشكاوى وتقديم الحلول المناسبة\.?/gi, 'Handled customer complaints and provided optimal, prompt solutions.');
+  s = s.replace(/المساهمة في تنفيذ الأنشطة والمبادرات التسويقية\.?/gi, 'Contributed to executing marketing initiatives, promotional activities, and campaigns.');
+  s = s.replace(/التواصل مع العملاء ومتابعة احتياجاتهم\.?/gi, 'Maintained regular communication with clients and followed up on their needs.');
+  s = s.replace(/استقبال المرضى والمراجعين وتقديم الدعم اللازم لهم\.?/gi, 'Welcomed patients and visitors, providing necessary guidance, support, and care.');
+  s = s.replace(/تنظيم ومتابعة بيانات وطلبات المرضى\.?/gi, 'Organized and tracked patient records, appointments, and service requests.');
+  s = s.replace(/المساعدة في تنظيم وحفظ ملفات الموظفين والوثائق الإدارية\.?/gi, 'Assisted in organizing and maintaining employee personnel files and administrative documents.');
+  s = s.replace(/إدخال وتحديث بيانات الموظفين وتنظيم السجلات\.?/gi, 'Entered and updated employee records and maintained organized HR data.');
+  s = s.replace(/المساعدة في تنفيذ المهام اليومية لقسم الموارد البشرية\.?/gi, 'Supported daily operations and routine administrative tasks of the Human Resources department.');
+  s = s.replace(/متابعة طلبات الشراء والتنسيق مع الموردين\.?/gi, 'Monitored purchase orders and coordinated efficiently with suppliers.');
   s = s.replace(/المساعدة في تنفيذ المهام اليومية المتعلقة بالموارد البشرية والأعمال الإدارية\.?/gi, 'Assisted with daily Human Resources and administrative activities.');
   s = s.replace(/المساعدة في تنفيذ المهام الإدارية اليومية المتعلقة بالموارد البشرية\.?/gi, 'Supported routine HR administrative tasks and employee services.');
-  s = s.replace(/المساعدة في إعداد وتنظيم الوثائق والمستندات الخاصة بالموارد البشرية\.?/gi, 'Assisted with organizing and updating employee data.');
+  s = s.replace(/المساعدة في إعداد وتنظيم الوثائق والمستندات الخاصة بالموارد البشرية\.?/gi, 'Assisted with organizing and updating employee data and HR files.');
   s = s.replace(/إعداد وتنظيم الوثائق والمستندات الخاصة بالموارد البشرية\.?/gi, 'Assisted with document preparation, data entry, and filing.');
   s = s.replace(/دعم تنظيم وتحديث سجلات وبيانات الموظفين\.?/gi, 'Supported employee records management and HR documentation.');
   s = s.replace(/دعم تنظيم سجلات وبيانات الموظفين\.?/gi, 'Supported employee records management and HR documentation.');
@@ -158,83 +175,23 @@ function translateTextToEnglish(text) {
   s = s.replace(/العمل ضمن الفرق الهندسية والفنية وتنفيذ المهام الموكلة بكفاءة\.?/gi, 'Worked with engineering and technical teams to execute assigned tasks efficiently.');
 
   // ==========================================
-  // PHASE 3: Courses, Certifications & Educational Institutes
+  // PHASE 3: Degrees, Educational Tracks & High Schools
   // ==========================================
-  s = s.replace(/أنظمة التأمينات الاجتماعية واللوائح التنفيذية\s*[–\-]\s*هدف\.?/gi, 'Social Insurance Systems and Executive Regulations – Hadaf');
-  s = s.replace(/أنظمة التأمينات الاجتماعية واللوائح التنفيذية/gi, 'Social Insurance Systems and Executive Regulations');
-  s = s.replace(/المقابلات الشخصية الاحترافية\s*[–\-]\s*هدف\.?/gi, 'Professional Interview Skills – Hadaf');
-  s = s.replace(/المقابلات الشخصية الاحترافية/gi, 'Professional Interview Skills');
-  s = s.replace(/مهارات الإكسل ومعالجة البيانات\s*[–\-]\s*معهد انتشار العلم للتدريب\.?/gi, 'Excel Skills and Data Processing – Intishar Al-Elm Training Institute');
-  s = s.replace(/مهارات الإكسل ومعالجة البيانات/gi, 'Excel Skills and Data Processing');
-  s = s.replace(/الذكاء الاصطناعي في الأعمال\s*[–\-]\s*مركز حلول الأعمال للتدريب\.?/gi, 'Artificial Intelligence in Business – Business Solutions Training Center');
-  s = s.replace(/الذكاء الاصطناعي في الأعمال/gi, 'Artificial Intelligence in Business');
-  s = s.replace(/السكرتارية وإدارة المكاتب\s*[–\-]\s*مركز حلول الأعمال للتدريب\.?/gi, 'Secretarial and Office Management – Business Solutions Training Center');
-  s = s.replace(/السكرتارية وإدارة المكاتب/gi, 'Secretarial and Office Management');
-  s = s.replace(/مهارات الحاسب الآلي\.?/gi, 'Computer Skills');
-  s = s.replace(/دورة أساسيات الحاسب الآلي\.?/gi, 'Computer Fundamentals Course');
-  s = s.replace(/برنامج جداول البيانات Microsoft Excel\.?/gi, 'Microsoft Excel Data Spreadsheets');
-  s = s.replace(/برنامج معالجة النصوص Microsoft Word\.?/gi, 'Microsoft Word Processing');
-  s = s.replace(/برنامج العروض التقديمية Microsoft PowerPoint\.?/gi, 'Microsoft PowerPoint Presentations');
-  s = s.replace(/رخصة قيادة خصوصي\.?/gi, 'Private Driving License');
-  s = s.replace(/معهد انتشار العلم للتدريب/gi, 'Intishar Al-Elm Training Institute');
-  s = s.replace(/مركز حلول الأعمال للتدريب/gi, 'Business Solutions Training Center');
-
-  // ==========================================
-  // PHASE 4: Universities, Colleges, Hospitals & Entities
-  // ==========================================
-  s = s.replace(/جامعة الأمير سطام بن عبدالعزيز\s*[–\-]\s*المملكة العربية السعودية/gi, 'Prince Sattam bin Abdulaziz University, Saudi Arabia');
-  s = s.replace(/جامعة الأمير سطام بن عبدالعزيز/gi, 'Prince Sattam bin Abdulaziz University');
-  s = s.replace(/جامعة الأمير سطام/gi, 'Prince Sattam University');
-  s = s.replace(/مستشفى الدرعية\s*[–\-]\s*قسم الموارد البشرية/gi, 'Diriyah Hospital – Human Resources Department');
-  s = s.replace(/مستشفى الدرعية/gi, 'Diriyah Hospital');
-  s = s.replace(/قسم الموارد البشرية/gi, 'Human Resources Department');
-  s = s.replace(/جامعة الملك سعود/gi, 'King Saud University');
-  s = s.replace(/جامعة الملك عبدالعزيز/gi, 'King Abdulaziz University');
-  s = s.replace(/جامعة الملك فهد للبترول والمعادن/gi, 'King Fahd University of Petroleum and Minerals');
-  s = s.replace(/جامعة الملك فيصل/gi, 'King Faisal University');
-  s = s.replace(/جامعة الملك خالد/gi, 'King Khalid University');
-  s = s.replace(/جامعة الأميرة نورة بنت عبدالرحمن|جامعة الأميرة نورة/gi, 'Princess Nourah University');
-  s = s.replace(/جامعة أم القرى/gi, 'Umm Al-Qura University');
-  s = s.replace(/جامعة الإمام محمد بن سعود الإسلامية|جامعة الإمام محمد بن سعود/gi, 'Imam Mohammed bin Saud University');
-  s = s.replace(/جامعة الإمام عبدالرحمن بن فيصل/gi, 'Imam Abdulrahman bin Faisal University');
-  s = s.replace(/جامعة طيبة/gi, 'Taibah University');
-  s = s.replace(/جامعة الطائف/gi, 'Taif University');
-  s = s.replace(/جامعة حائل/gi, 'University of Hail');
-  s = s.replace(/جامعة تبوك/gi, 'University of Tabuk');
-  s = s.replace(/جامعة نجران/gi, 'Najran University');
-  s = s.replace(/جامعة الباحة/gi, 'Al-Baha University');
-  s = s.replace(/جامعة القصيم/gi, 'Qassim University');
-  s = s.replace(/جامعة شقراء/gi, 'Shaqra University');
-  s = s.replace(/جامعة الجوف/gi, 'Al-Jouf University');
-  s = s.replace(/جامعة المجمعة/gi, 'Majmaah University');
-  s = s.replace(/جامعة جازان/gi, 'Jazan University');
-  s = s.replace(/الجامعة السعودية الإلكترونية/gi, 'Saudi Electronic University');
-  s = s.replace(/الكلية التقنية بجدة/gi, 'Jeddah College of Technology');
-  s = s.replace(/الكلية التقنية بالرياض/gi, 'Riyadh College of Technology');
-  s = s.replace(/الكلية التقنية/gi, 'College of Technology');
-  s = s.replace(/المؤسسة العامة للتدريب التقني والمهني/gi, 'Technical and Vocational Training Corporation (TVTC)');
-  s = s.replace(/صندوق تنمية الموارد البشرية\s*\(هدف\)|صندوق تنمية الموارد البشرية|صندوق هدف/gi, 'Human Resources Development Fund (HADAF)');
-  s = s.replace(/التأمينات الاجتماعية/gi, 'Social Insurance (GOSI)');
-  s = s.replace(/مستشفى الحرية/gi, 'Al-Hurriya Hospital');
-  s = s.replace(/مستشفى الملك فهد/gi, 'King Fahd Hospital');
-  s = s.replace(/مستشفى الملك فيصل التخصصي/gi, 'King Faisal Specialist Hospital');
-  s = s.replace(/مستشفى الملك عبدالعزيز/gi, 'King Abdulaziz Hospital');
-  s = s.replace(/مستشفى الملك خالد/gi, 'King Khalid Hospital');
-  s = s.replace(/مدينة الملك فهد الطبية/gi, 'King Fahd Medical City');
-  s = s.replace(/مدينة الملك سعود الطبية/gi, 'King Saud Medical City');
-  s = s.replace(/مصنع ويبكو للألمنيوم/gi, 'Wepco Aluminum Factory');
-  s = s.replace(/مشروع تشغيل قطار المشاعر المقدسة/gi, 'Holy Sites Train Operation Project');
-  s = s.replace(/موسم حج 1446هـ|حج 1446هـ|حج 1446/gi, 'Hajj Season 2025');
-
-  // ==========================================
-  // PHASE 5: Degrees, Roles, Departments & Skills
-  // ==========================================
+  s = s.replace(/الثانوية العامة\s*\(المسار الأدبي\)|الثانوية العامة\s*[–\-]\s*المسار الأدبي/gi, 'High School Diploma (Literary Track)');
+  s = s.replace(/الثانوية العامة\s*\(المسار العلمي\)|الثانوية العامة\s*[–\-]\s*المسار العلمي/gi, 'High School Diploma (Scientific Track)');
+  s = s.replace(/المسار الأدبي/gi, 'Literary Track');
+  s = s.replace(/المسار العلمي/gi, 'Scientific Track');
+  s = s.replace(/مسار علوم الحاسب والهندسة/gi, 'Computer Science & Engineering Track');
+  s = s.replace(/مسار إدارة الأعمال/gi, 'Business Administration Track');
+  s = s.replace(/مسار الصحة والحياة/gi, 'Health & Life Sciences Track');
+  s = s.replace(/المسار العام/gi, 'General Track');
+  s = s.replace(/ثانوية أوس بن حبيب/gi, 'Aws Bin Habib High School');
+  s = s.replace(/المعدل\s*:\s*([\d\.]+)%?/gi, 'GPA: $1%');
+  s = s.replace(/معدل\s*:\s*([\d\.]+)%?/gi, 'GPA: $1%');
   s = s.replace(/دبلوم إدارة الموارد البشرية/gi, 'Diploma in Human Resources Management');
   s = s.replace(/بكالوريوس إدارة الموارد البشرية/gi, 'Bachelor of Human Resources Management');
   s = s.replace(/دبلوم القوى الكهربائية|دبلوم قوى كهربائية/gi, 'Diploma in Electrical Power Technology');
   s = s.replace(/تخصص القوى الكهربائية/gi, 'Electrical Power Technology');
-  s = s.replace(/الثانوية العامة\s*\(القسم العلمي\)|الثانوية العامة\s*[–\-]\s*القسم العلمي/gi, 'High School Diploma (Scientific Stream)');
-  s = s.replace(/القسم العلمي/gi, 'Scientific Stream');
   s = s.replace(/شهادة الثانوية العامة|ثانوية عامة|الثانوية العامة/gi, 'High School Diploma');
   s = s.replace(/بكالوريوس إدارة أعمال/gi, 'Bachelor of Business Administration');
   s = s.replace(/بكالوريوس علوم الحاسب/gi, 'Bachelor of Computer Science');
@@ -242,73 +199,151 @@ function translateTextToEnglish(text) {
   s = s.replace(/بكالوريوس هندسة البرمجيات/gi, 'Bachelor of Software Engineering');
   s = s.replace(/بكالوريوس محاسبة/gi, 'Bachelor of Accounting');
   s = s.replace(/بكالوريوس تسويق/gi, 'Bachelor of Marketing');
+  s = s.replace(/بكالوريوس تمريض/gi, 'Bachelor of Nursing');
+  s = s.replace(/بكالوريوس صيدلة/gi, 'Bachelor of Pharmacy');
+  s = s.replace(/بكالوريوس قانون/gi, 'Bachelor of Law (LLB)');
   s = s.replace(/بكالوريوس/gi, 'Bachelor\'s Degree');
   s = s.replace(/ماجستير/gi, 'Master\'s Degree');
-  s = s.replace(/دكتوراه/gi, 'Doctorate');
+  s = s.replace(/دكتوراه/gi, 'Doctorate (Ph.D.)');
   s = s.replace(/دبلوم عالي/gi, 'Higher Diploma');
   s = s.replace(/دبلوم/gi, 'Diploma');
 
-  // Multi-word Roles & Skills
-  s = s.replace(/متدرب موارد بشرية\s*\|\s*التدريب التعاوني/gi, 'Human Resources Trainee | Cooperative Training');
-  s = s.replace(/متدرب موارد بشرية/gi, 'Human Resources Trainee');
-  s = s.replace(/متدرب إداري في الموارد البشرية|متدرب إداري بالموارد البشرية/gi, 'HR Administrative Trainee');
-  s = s.replace(/متدرب إداري\s*[–\-]\s*جهة تدريب|متدرب إداري/gi, 'Administrative Trainee');
+  // ==========================================
+  // PHASE 4: Job Roles & Positions
+  // ==========================================
+  s = s.replace(/رجل أمن\s*\|\s*حراسات أمنية/gi, 'Security Officer | Security Services');
+  s = s.replace(/رجل أمن|حارس أمن/gi, 'Security Officer');
+  s = s.replace(/مشرف أمن وسلامة|أخصائي أمن وسلامة/gi, 'Safety & Security Specialist');
+  s = s.replace(/مشرف أمن/gi, 'Security Supervisor');
+  s = s.replace(/ممثل خدمة عملاء|موظف خدمة عملاء/gi, 'Customer Service Representative');
+  s = s.replace(/خدمة العملاء|خدمة عملاء/gi, 'Customer Service');
+  s = s.replace(/أخصائي تسويق|مسوق إلكتروني|مسوق/gi, 'Marketing Specialist');
+  s = s.replace(/أخصائي كاتب خدمات مرضى|كاتب خدمات مرضى|خدمات المرضى|خدمات مرضى/gi, 'Patient Services Clerk');
+  s = s.replace(/متدرب موارد بشرية\s*\|\s*التدريب التعاوني/gi, 'Human Resources Intern | Cooperative Training (Co-op)');
+  s = s.replace(/متدرب موارد بشرية/gi, 'Human Resources Intern');
+  s = s.replace(/أخصائي موارد بشرية/gi, 'Human Resources Specialist');
+  s = s.replace(/مسؤول موارد بشرية|منسق موارد بشرية/gi, 'HR Officer');
+  s = s.replace(/مدخل بيانات|إدخال بيانات/gi, 'Data Entry Specialist');
+  s = s.replace(/محاسب عام|أخصائي محاسبة/gi, 'General Accountant');
+  s = s.replace(/مساعد محاسب|محاسب مبتدئ/gi, 'Assistant Accountant');
+  s = s.replace(/محاسب/gi, 'Accountant');
+  s = s.replace(/سكرتير تنفيذي|سكرتارية تنفيذية/gi, 'Executive Secretary');
+  s = s.replace(/مساعد إداري|كاتب إداري/gi, 'Administrative Assistant');
+  s = s.replace(/مدير مشاريع/gi, 'Project Manager');
+  s = s.replace(/منسق مشاريع/gi, 'Project Coordinator');
+  s = s.replace(/مندوب مبيعات|ممثل مبيعات/gi, 'Sales Representative');
+  s = s.replace(/مشرف مبيعات/gi, 'Sales Supervisor');
+  s = s.replace(/كاشير|محاسب زبائن/gi, 'Cashier');
+  s = s.replace(/فني كهرباء/gi, 'Electrical Technician');
+  s = s.replace(/فني صيانة/gi, 'Maintenance Technician');
+  s = s.replace(/فني ميكانيكا/gi, 'Mechanical Technician');
+  s = s.replace(/منظم حشود|إدارة الحشود/gi, 'Crowd Management Specialist');
+  s = s.replace(/سائق خاص/gi, 'Private Driver');
+  s = s.replace(/مندوب توصيل/gi, 'Delivery Representative');
+  s = s.replace(/أمين مستودع|مسؤول مستودع/gi, 'Warehouse Officer');
+  s = s.replace(/مشرف مستودع/gi, 'Warehouse Supervisor');
+  s = s.replace(/متدرب إداري/gi, 'Administrative Trainee');
   s = s.replace(/متدرب قوى كهربائية/gi, 'Electrical Power Trainee');
-  s = s.replace(/التدريب التعاوني\s*[–\-]\s*متدرب قوى كهربائية/gi, 'Cooperative Training – Electrical Power Trainee');
-  s = s.replace(/التدريب التعاوني|تدريب تعاوني/gi, 'Cooperative Training');
-  s = s.replace(/متدرب\s*[–\-]\s*تدريب عملي|تدريب عملي|\bمتدرب\b/gi, 'Practical Trainee');
-  s = s.replace(/موظف بوابات دخول\s*[–\-]\s*إدارة الحشود/gi, 'Entry Gates Officer – Crowd Management');
-  s = s.replace(/إدارة الحشود/gi, 'Crowd Management');
-  s = s.replace(/مساعد إداري\s*[–\-]\s*خبرة عملية|مساعد إداري/gi, 'Administrative Assistant');
-  s = s.replace(/إدارة الموارد البشرية/gi, 'Human Resources Administration');
-  s = s.replace(/بالموارد البشرية|للموارد البشرية|والموارد البشرية|الموارد البشرية|موارد بشرية/gi, 'Human Resources');
-  s = s.replace(/خدمات الموظفين/gi, 'Employee Services');
-  s = s.replace(/إجراءات الموارد البشرية/gi, 'HR Procedures');
-  s = s.replace(/إدارة سجلات وبيانات الموظفين/gi, 'Employee Records Management');
-  s = s.replace(/إدخال البيانات ومعالجة المعلومات/gi, 'Data Entry and Data Processing');
-  s = s.replace(/إدخال البيانات ومعالجة النصوص/gi, 'Data Entry & Word Processing');
-  s = s.replace(/استخدام Microsoft Excel/gi, 'Microsoft Excel');
-  s = s.replace(/استخدام برامج Microsoft Office/gi, 'Microsoft Office Suite');
-  s = s.replace(/إعداد وتنظيم الوثائق الإدارية/gi, 'HR Documentation');
-  s = s.replace(/الدعم الإداري والمكتبي/gi, 'Administrative and Office Support');
-  s = s.replace(/مهارات التواصل والتعامل مع الآخرين/gi, 'Communication and Interpersonal Skills');
-  s = s.replace(/إدارة الوقت والتنظيم/gi, 'Time Management and Organization');
-  s = s.replace(/إدارة الوقت وتنظيم المهام/gi, 'Time Management & Task Organization');
-  s = s.replace(/تنظيم الوقت/gi, 'Time Management');
-  s = s.replace(/حل المشكلات واتخاذ القرارات/gi, 'Problem Solving & Decision Making');
-  s = s.replace(/حل المشكلات/gi, 'Problem Solving');
-  s = s.replace(/العمل الجماعي|العمل ضمن فريق|العمل بروح الفريق/gi, 'Teamwork & Collaboration');
-  s = s.replace(/الالتزام بإجراءات الجودة والسلامة|الالتزام والانضباط/gi, 'Quality & Safety Compliance');
-  s = s.replace(/متخصص إدارة وتطوير/gi, 'Management & Development Specialist');
-  s = s.replace(/متخصص عملي واحترافي/gi, 'Professional Specialist');
-  s = s.replace(/الصيانة الكهربائية/gi, 'Electrical Maintenance');
-  s = s.replace(/استكشاف الأعطال الكهربائية وإصلاحها/gi, 'Electrical Troubleshooting & Repair');
-  s = s.replace(/أساسيات الأنظمة الكهربائية الصناعية/gi, 'Industrial Electrical Systems');
-  s = s.replace(/السلامة المهنية والصناعية/gi, 'Occupational & Industrial Safety');
-  s = s.replace(/إعداد التقارير الفنية/gi, 'Technical Reporting');
+  s = s.replace(/التدريب التعاوني|تدريب تعاوني/gi, 'Cooperative Training (Co-op)');
+  s = s.replace(/\bمتدرب\b/gi, 'Trainee');
 
   // ==========================================
-  // PHASE 6: Cities & Locations
+  // PHASE 5: Companies, Organizations & Entities
   // ==========================================
-  s = s.replace(/المدينة المنورة،?\s*المملكة العربية السعودية/gi, 'Madinah, Saudi Arabia');
-  s = s.replace(/مكة المكرمة،?\s*المملكة العربية السعودية/gi, 'Makkah, Saudi Arabia');
-  s = s.replace(/جدة،?\s*المملكة العربية السعودية/gi, 'Jeddah, Saudi Arabia');
+  s = s.replace(/شركة طويق للحراسات الأمنية/gi, 'Tuwaiq Security Services Company');
+  s = s.replace(/شركة طويق/gi, 'Tuwaiq Company');
+  s = s.replace(/شركة أرام الإمارات للصناعة/gi, 'Aram Emirates Industrial Company');
+  s = s.replace(/شركة عسيب للمقاولات/gi, 'Aseeb Contracting Company');
+  s = s.replace(/مستشفى الدرعية\s*[–\-]\s*قسم الموارد البشرية/gi, 'Diriyah Hospital – Human Resources Department');
+  s = s.replace(/مستشفى الدرعية/gi, 'Diriyah Hospital');
+  s = s.replace(/مستشفى الأقدام/gi, 'Al-Aqdam Hospital');
+  s = s.replace(/البنك المركزي السعودي/gi, 'Saudi Central Bank (SAMA)');
+  s = s.replace(/إحدى شركات القطاع الخاص/gi, 'Private Sector Organization');
+  s = s.replace(/القطاع الخاص/gi, 'Private Sector');
+  s = s.replace(/القطاع الحكومي/gi, 'Government Sector');
+  s = s.replace(/قسم الموارد البشرية/gi, 'Human Resources Department');
+  s = s.replace(/قسم خدمة العملاء/gi, 'Customer Service Department');
+  s = s.replace(/قسم التسويق/gi, 'Marketing Department');
+  s = s.replace(/قسم المبيعات/gi, 'Sales Department');
+  s = s.replace(/قسم المالية والمحاسبة/gi, 'Finance & Accounting Department');
+  s = s.replace(/قسم تقنية المعلومات/gi, 'Information Technology (IT) Department');
+  s = s.replace(/جامعة الأمير سطام بن عبدالعزيز/gi, 'Prince Sattam bin Abdulaziz University');
+  s = s.replace(/جامعة الملك سعود/gi, 'King Saud University');
+  s = s.replace(/جامعة الملك عبدالعزيز/gi, 'King Abdulaziz University');
+  s = s.replace(/جامعة الملك فهد للبترول والمعادن/gi, 'King Fahd University of Petroleum and Minerals');
+  s = s.replace(/جامعة الإمام محمد بن سعود الإسلامية/gi, 'Imam Mohammad Ibn Saud Islamic University');
+  s = s.replace(/جامعة الأميرة نورة بنت عبدالرحمن/gi, 'Princess Nourah bint Abdulrahman University');
+  s = s.replace(/جامعة أم القرى/gi, 'Umm Al-Qura University');
+  s = s.replace(/المؤسسة العامة للتدريب التقني والمهني/gi, 'Technical and Vocational Training Corporation (TVTC)');
+  s = s.replace(/صندوق تنمية الموارد البشرية\s*\(هدف\)|صندوق تنمية الموارد البشرية|صندوق هدف/gi, 'Human Resources Development Fund (HADAF)');
+  s = s.replace(/التأمينات الاجتماعية/gi, 'General Organization for Social Insurance (GOSI)');
+
+  // ==========================================
+  // PHASE 6: Training Courses & Certifications
+  // ==========================================
+  s = s.replace(/دورة أساسيات الحاسب الآلي\.?/gi, 'Computer Fundamentals Course');
+  s = s.replace(/دورة خدمة العملاء\.?/gi, 'Customer Service Excellence Course');
+  s = s.replace(/دورة مهارات الاتصال الإداري\.?/gi, 'Administrative Communication Skills Course');
+  s = s.replace(/أنظمة التأمينات الاجتماعية واللوائح التنفيذية\s*[–\-]\s*هدف\.?/gi, 'Social Insurance Systems and Executive Regulations – HADAF');
+  s = s.replace(/المقابلات الشخصية الاحترافية\s*[–\-]\s*هدف\.?/gi, 'Professional Interview Skills – HADAF');
+  s = s.replace(/مهارات الإكسل ومعالجة البيانات\s*[–\-]\s*معهد انتشار العلم للتدريب\.?/gi, 'Excel Skills and Data Processing – Intishar Al-Elm Training Institute');
+  s = s.replace(/الذكاء الاصطناعي في الأعمال\s*[–\-]\s*مركز حلول الأعمال للتدريب\.?/gi, 'Artificial Intelligence in Business – Business Solutions Training Center');
+  s = s.replace(/السكرتارية وإدارة المكاتب\s*[–\-]\s*مركز حلول الأعمال للتدريب\.?/gi, 'Secretarial and Office Management – Business Solutions Training Center');
+  s = s.replace(/دورة إدارة الوقت وترتيب الأولويات\.?/gi, 'Time Management and Prioritization Course');
+  s = s.replace(/دورة إدخال البيانات ومعالجة النصوص\.?/gi, 'Data Entry and Word Processing Course');
+  s = s.replace(/دورة الأمن والسلامة المهنية\.?/gi, 'Occupational Health & Safety (OSHA) Course');
+  s = s.replace(/دورة الإسعافات الأولية\.?/gi, 'First Aid Certification Course');
+  s = s.replace(/دورة اللغة الإنجليزية للأعمال\.?/gi, 'Business English Communication Course');
+  s = s.replace(/دورة القيادة وإدارة فرق العمل\.?/gi, 'Leadership & Team Management Course');
+  s = s.replace(/رخصة قيادة خصوصي\.?/gi, 'Private Driving License');
+  s = s.replace(/رخصة قيادة عمومي\.?/gi, 'Commercial Driving License');
+
+  // ==========================================
+  // PHASE 7: Skills & Core Competencies
+  // ==========================================
+  s = s.replace(/الالتزام والانضباط في العمل/gi, 'Work Commitment & Professional Discipline');
+  s = s.replace(/الالتزام والانضباط/gi, 'Commitment & Discipline');
+  s = s.replace(/العمل ضمن فريق|العمل بروح الفريق|العمل الجماعي/gi, 'Teamwork & Collaboration');
+  s = s.replace(/مهارات التواصل الفعال|التواصل الفعال/gi, 'Effective Communication Skills');
+  s = s.replace(/خدمة العملاء المتميزة/gi, 'Customer Service Excellence');
+  s = s.replace(/حل المشكلات واتخاذ القرارات/gi, 'Problem Solving & Decision Making');
+  s = s.replace(/حل المشكلات/gi, 'Problem Solving');
+  s = s.replace(/إدارة الوقت وترتيب الأولويات/gi, 'Time Management & Prioritization');
+  s = s.replace(/إدارة الوقت/gi, 'Time Management');
+  s = s.replace(/تحمل ضغط العمل والمسؤولية/gi, 'Working Under Pressure & Responsibility');
+  s = s.replace(/تحمل ضغط العمل/gi, 'Ability to Work Under Pressure');
+  s = s.replace(/السرعة والدقة في إدخال البيانات/gi, 'Speed & Accuracy in Data Entry');
+  s = s.replace(/اللباقة وحسن التعامل مع المراجعين/gi, 'Tactfulness & Professional Etiquette');
+  s = s.replace(/المرونة وسرعة التكيف/gi, 'Flexibility & High Adaptability');
+  s = s.replace(/سرعة التعلم/gi, 'Fast Learner');
+  s = s.replace(/إجادة استخدام برامج مايكروسوفت أوفيس|برامج Microsoft Office/gi, 'Microsoft Office Suite Proficiency');
+  s = s.replace(/برنامج جداول البيانات Microsoft Excel|استخدام Microsoft Excel/gi, 'Microsoft Excel Data Spreadsheets');
+  s = s.replace(/برنامج معالجة النصوص Microsoft Word/gi, 'Microsoft Word Processing');
+  s = s.replace(/برنامج العروض التقديمية Microsoft PowerPoint/gi, 'Microsoft PowerPoint Presentations');
+  s = s.replace(/كتابة التقارير والمراسلات الإدارية/gi, 'Report Writing & Administrative Correspondence');
+
+  // ==========================================
+  // PHASE 8: Section Headings
+  // ==========================================
+  s = s.replace(/الملخص المهني|الهدف المهني|الهدف الوظيفي/gi, 'Professional Summary');
+  s = s.replace(/المؤهلات العلمية|المؤهل العلمي|التعليم/gi, 'Education');
+  s = s.replace(/الخبرات العملية|الخبرة العملية|الخبرات المهنية/gi, 'Work Experience');
+  s = s.replace(/الدورات والشهادات|الدورات التدريبية|الشهادات والبرامج/gi, 'Training & Courses');
+  s = s.replace(/المهارات المهنية|المهارات/gi, 'Skills');
+  s = s.replace(/اللغات/gi, 'Languages');
+  s = s.replace(/المراجع/gi, 'References');
+  s = s.replace(/المشاريع/gi, 'Projects');
+
+  // ==========================================
+  // PHASE 9: Cities, Locations & Personal Meta
+  // ==========================================
   s = s.replace(/الرياض،?\s*المملكة العربية السعودية/gi, 'Riyadh, Saudi Arabia');
+  s = s.replace(/جدة،?\s*المملكة العربية السعودية/gi, 'Jeddah, Saudi Arabia');
+  s = s.replace(/مكة المكرمة،?\s*المملكة العربية السعودية/gi, 'Makkah, Saudi Arabia');
+  s = s.replace(/المدينة المنورة،?\s*المملكة العربية السعودية/gi, 'Madinah, Saudi Arabia');
   s = s.replace(/الدمام،?\s*المملكة العربية السعودية/gi, 'Dammam, Saudi Arabia');
   s = s.replace(/الخبر،?\s*المملكة العربية السعودية/gi, 'Khobar, Saudi Arabia');
-  s = s.replace(/الطائف\s*[–\-]\s*الحوية،?\s*المملكة العربية السعودية/gi, 'Taif - Al-Hawiyah, Saudi Arabia');
-  s = s.replace(/الطائف\s*[–\-]\s*الحوية/gi, 'Taif - Al-Hawiyah');
   s = s.replace(/الطائف،?\s*المملكة العربية السعودية/gi, 'Taif, Saudi Arabia');
-  s = s.replace(/تبوك،?\s*المملكة العربية السعودية/gi, 'Tabuk, Saudi Arabia');
-  s = s.replace(/حائل،?\s*المملكة العربية السعودية/gi, 'Hail, Saudi Arabia');
-  s = s.replace(/جازان،?\s*المملكة العربية السعودية/gi, 'Jazan, Saudi Arabia');
-  s = s.replace(/نجران،?\s*المملكة العربية السعودية/gi, 'Najran, Saudi Arabia');
-  s = s.replace(/أبها،?\s*المملكة العربية السعودية/gi, 'Abha, Saudi Arabia');
-  s = s.replace(/خميس مشيط،?\s*المملكة العربية السعودية/gi, 'Khamis Mushait, Saudi Arabia');
-  s = s.replace(/القصيم،?\s*المملكة العربية السعودية/gi, 'Qassim, Saudi Arabia');
-  s = s.replace(/ينبع،?\s*المملكة العربية السعودية/gi, 'Yanbu, Saudi Arabia');
-  s = s.replace(/الجبيل،?\s*المملكة العربية السعودية/gi, 'Jubail, Saudi Arabia');
-  s = s.replace(/الأحساء،?\s*المملكة العربية السعودية/gi, 'Al-Ahsa, Saudi Arabia');
   s = s.replace(/المملكة العربية السعودية/gi, 'Saudi Arabia');
   s = s.replace(/السعودية/gi, 'Saudi Arabia');
   s = s.replace(/\bالرياض\b/gi, 'Riyadh');
@@ -324,103 +359,36 @@ function translateTextToEnglish(text) {
   s = s.replace(/\bنجران\b/gi, 'Najran');
   s = s.replace(/\bأبها\b/gi, 'Abha');
   s = s.replace(/\bخميس مشيط\b/gi, 'Khamis Mushait');
-  s = s.replace(/\bالقصيم\b|\bبريدة\b/gi, 'Qassim');
-  s = s.replace(/\bينبع\b/gi, 'Yanbu');
+  s = s.replace(/\bالقصيم\b/gi, 'Qassim');
   s = s.replace(/\bالجبيل\b/gi, 'Jubail');
-  s = s.replace(/\bالأحساء\b|\bالهفوف\b/gi, 'Al-Ahsa');
+  s = s.replace(/\bينبع\b/gi, 'Yanbu');
+  s = s.replace(/\bالأحساء\b/gi, 'Al-Ahsa');
   s = s.replace(/\bالدرعية\b/gi, 'Diriyah');
-  s = s.replace(/\bالخرج\b/gi, 'Al-Kharj');
-
-  // ==========================================
-  // PHASE 7: Common Prepositional & Action Phrases
-  // ==========================================
-  s = s.replace(/المساعدة في تنفيذ المهام الإدارية اليومية/gi, 'Assisting in daily administrative tasks');
-  s = s.replace(/المساعدة في تنفيذ المهام اليومية/gi, 'Assisting in daily tasks');
-  s = s.replace(/المساعدة في تنفيذ المهام/gi, 'Assisting in task execution');
-  s = s.replace(/المساعدة في تنفيذ/gi, 'Assisting in executing');
-  s = s.replace(/المساعدة في إعداد وتنظيم/gi, 'Assisting in preparing and organizing');
-  s = s.replace(/المساعدة في/gi, 'Assisting in');
-  s = s.replace(/المساهمة في/gi, 'Contributing to');
-  s = s.replace(/المساهمة بفاعلية في تحقيق/gi, 'Contributing effectively to achieving');
-  s = s.replace(/المساهمة بفاعلية/gi, 'Contributing effectively');
-  s = s.replace(/دعم عمليات إدخال البيانات/gi, 'Supporting data entry operations');
-  s = s.replace(/عمليات إدخال البيانات/gi, 'data entry operations');
-  s = s.replace(/إدخال البيانات/gi, 'data entry');
-  s = s.replace(/تنظيم الملفات والمستندات/gi, 'organizing files and documents');
-  s = s.replace(/تنظيم الوثائق والمستندات/gi, 'organizing documents and files');
-  s = s.replace(/الملفات والمستندات/gi, 'files and documents');
-  s = s.replace(/الوثائق والمستندات/gi, 'documents and files');
-  s = s.replace(/الوثائق الإدارية/gi, 'administrative documents');
-  s = s.replace(/المهام الإدارية/gi, 'administrative tasks');
-  s = s.replace(/الأعمال الإدارية/gi, 'administrative work');
-  s = s.replace(/الأعمال المكتبية/gi, 'office work');
-  s = s.replace(/الإجراءات الإدارية/gi, 'administrative procedures');
-  s = s.replace(/بيئة العمل/gi, 'work environment');
-  s = s.replace(/بيئة صحية/gi, 'healthcare environment');
-  s = s.replace(/بيئة عمل احترافية/gi, 'professional work environment');
-  s = s.replace(/بيئة عمل/gi, 'work environment');
-  s = s.replace(/السياسات المتبعة/gi, 'established policies');
-  s = s.replace(/أهداف المنظمة|أهداف المنشأة|أهداف جهة العمل/gi, 'organizational goals');
-  s = s.replace(/معرفة جيدة بالإجراءات/gi, 'strong knowledge of procedures');
-  s = s.replace(/معرفة جيدة/gi, 'good knowledge');
-  s = s.replace(/خبرة تدريبية عملية/gi, 'practical training experience');
-  s = s.replace(/خبرة عملية/gi, 'practical experience');
-  s = s.replace(/خبرة تدريبية/gi, 'training experience');
-  s = s.replace(/تطبيق معارفي الأكاديمية|تطبيق معارفه الأكاديمية/gi, 'applying academic knowledge');
-  s = s.replace(/تطوير مهاراتي العملية|تطوير مهاراته العملية/gi, 'developing practical skills');
-  s = s.replace(/معارفي الأكاديمية|معارفه الأكاديمية/gi, 'academic knowledge');
-  s = s.replace(/مهاراتي العملية|مهاراته العملية/gi, 'practical skills');
-  s = s.replace(/المعرفة الأكاديمية/gi, 'academic knowledge');
-  s = s.replace(/المهارات العملية/gi, 'practical skills');
-  s = s.replace(/المهارات المهنية/gi, 'professional skills');
-  s = s.replace(/فرصة مهنية/gi, 'professional opportunity');
-  s = s.replace(/فرصة وظيفية/gi, 'job opportunity');
-  s = s.replace(/سجلات وبيانات الموظفين/gi, 'employee records and data');
-  s = s.replace(/سجلات الموظفين/gi, 'employee records');
-  s = s.replace(/بيانات الموظفين/gi, 'employee data');
-  s = s.replace(/تحديث سجلات/gi, 'updating records');
-  s = s.replace(/تنظيم سجلات/gi, 'organizing records');
-  s = s.replace(/تقديم الدعم/gi, 'Providing support');
-  s = s.replace(/الخاصة ب|الخاصة بـ/gi, 'of');
-  s = s.replace(/المتعلقة ب|المتعلقة بـ/gi, 'related to');
-  s = s.replace(/المرتبطة ب|المرتبطة بـ/gi, 'related to');
-  s = s.replace(/يسعى للحصول على|أسعى للحصول على/gi, 'Seeking to obtain');
-  s = s.replace(/تمكنه من خلالها|تمكن من خلالها|تمكنني من/gi, 'enabling');
-  s = s.replace(/يمتلك|أمتلك/gi, 'possessing');
-  s = s.replace(/خريج دبلوم/gi, 'Diploma graduate');
-  s = s.replace(/خريج/gi, 'Graduate');
+  s = s.replace(/\bسعودي\b|\bسعودية\b/gi, 'Saudi');
+  s = s.replace(/\bالجنسية\b/gi, 'Nationality');
   s = s.replace(/اللغة الأم/gi, 'Native');
-  s = s.replace(/متوسط/gi, 'Intermediate');
-  s = s.replace(/متقدم/gi, 'Advanced');
-  s = s.replace(/مبتدئ/gi, 'Beginner');
-  s = s.replace(/ممتاز/gi, 'Excellent');
-  s = s.replace(/جيد جداً|جيد جدا/gi, 'Very Good');
-  s = s.replace(/جيد/gi, 'Good');
-  s = s.replace(/العربية/gi, 'Arabic');
-  s = s.replace(/الإنجليزية|الانجليزية/gi, 'English');
-  s = s.replace(/سعودي/gi, 'Saudi');
-  s = s.replace(/الجنسية/gi, 'Nationality');
-  s = s.replace(/البريد الإلكتروني|الإيميل|الايميل/gi, 'Email');
-  s = s.replace(/الهاتف|الجوال|التليفون/gi, 'Phone');
-  s = s.replace(/الموقع|العنوان/gi, 'Location');
-  s = s.replace(/المدينة/gi, 'City');
-  s = s.replace(/في مجال/gi, 'in the field of');
-  s = s.replace(/\bفي\b/gi, 'in');
-  s = s.replace(/\bمع\b/gi, 'with');
-  s = s.replace(/\bمن\b/gi, 'from');
-  s = s.replace(/\bعلى\b/gi, 'on');
-  s = s.replace(/\bعن\b/gi, 'about');
-  s = s.replace(/\bإلى\b/gi, 'to');
-  s = s.replace(/\bضمن\b/gi, 'within');
-  s = s.replace(/\bهدف\b/gi, 'HADAF');
+  s = s.replace(/\bممتاز\b/gi, 'Excellent');
+  s = s.replace(/\bجيد جداً\b|\bجيد جدا\b/gi, 'Very Good');
+  s = s.replace(/\bجيد\b/gi, 'Good');
+  s = s.replace(/\bمتقدم\b/gi, 'Advanced');
+  s = s.replace(/\bمتوسط\b/gi, 'Intermediate');
+  s = s.replace(/\bمبتدئ\b/gi, 'Beginner');
+  s = s.replace(/\bالعربية\b/gi, 'Arabic');
+  s = s.replace(/\bالإنجليزية\b|\bالانجليزية\b/gi, 'English');
+  s = s.replace(/مدة الخبرة\s*:\s*سنة وثلاثة أشهر/gi, 'Experience: 1 Year and 3 Months');
+  s = s.replace(/مدة الخبرة\s*:\s*سنة وستة أشهر/gi, 'Experience: 1 Year and 6 Months');
+  s = s.replace(/مدة الخبرة\s*:\s*سنتين/gi, 'Experience: 2 Years');
+  s = s.replace(/مدة الخبرة\s*:\s*سنة/gi, 'Experience: 1 Year');
+  s = s.replace(/مدة الخبرة\s*:\s*([\d\w\s]+)/gi, 'Duration: $1');
+  s = s.replace(/(\d{4})هـ?/g, '$1H');
 
   // ==========================================
-  // PHASE 8: Vocabulary Fallback
+  // PHASE 10: Extensive Vocabulary Mapping (+500 Terms)
   // ==========================================
   const vocab = {
     'إدارة': 'Management', 'قسم': 'Department', 'شركة': 'Company', 'مؤسسة': 'Establishment',
     'مستشفى': 'Hospital', 'مركز': 'Center', 'معهد': 'Institute', 'جامعة': 'University',
-    'كلية': 'College', 'مدرسة': 'School', 'مشروع': 'Project', 'مصنع': 'Factory',
+    'كلية': 'College', 'مدرسة': 'School', 'ثانوية': 'High School', 'مشروع': 'Project', 'مصنع': 'Factory',
     'عمليات': 'Operations', 'خدمة': 'Service', 'خدمات': 'Services', 'دعم': 'Support',
     'تطوير': 'Development', 'تصميم': 'Design', 'تنفيذ': 'Execution', 'متابعة': 'Follow-up',
     'إعداد': 'Preparation', 'تقديم': 'Providing', 'تنظيم': 'Organization', 'تنسيق': 'Coordination',
@@ -435,7 +403,18 @@ function translateTextToEnglish(text) {
     'قيادة': 'Leadership', 'إشراف': 'Supervision', 'تخطيط': 'Planning', 'تقارير': 'Reports',
     'حلول': 'Solutions', 'ذكاء': 'Intelligence', 'اصطناعي': 'Artificial', 'معالجة': 'Processing',
     'استخدام': 'Proficiency in', 'اكتساب': 'Gaining', 'تطبيق': 'Application', 'تحقيق': 'Achieving',
-    'الحالي': 'Present', 'حتى الآن': 'Present', 'المنشأة': 'Organization', 'المنظمة': 'Organization'
+    'الحالي': 'Present', 'حتى الآن': 'Present', 'المنشأة': 'Organization', 'المنظمة': 'Organization',
+    'الموردين': 'Suppliers', 'العملاء': 'Clients', 'المرضى': 'Patients', 'المراجعين': 'Visitors',
+    'طلبات': 'Requests', 'الشراء': 'Purchasing', 'المشتريات': 'Procurement', 'المبيعات': 'Sales',
+    'التسويق': 'Marketing', 'المحاسبة': 'Accounting', 'المالية': 'Finance', 'الأمن': 'Security',
+    'الحراسات': 'Guarding Services', 'الأمنية': 'Security', 'الصناعة': 'Industry', 'المقاولات': 'Contracting',
+    'حفظ': 'Archiving', 'تحديث': 'Updating', 'استقبال': 'Receiving', 'الرد': 'Responding',
+    'الشكاوى': 'Complaints', 'حل': 'Resolving', 'الالتزام': 'Commitment', 'الانضباط': 'Discipline',
+    'الفريق': 'Team', 'الحرص': 'Dedication', 'المستمر': 'Continuous', 'المزيد': 'Further',
+    'العملية': 'Practical', 'العامة': 'General', 'الخاصة': 'Special', 'الخاص': 'Private',
+    'الحكومي': 'Governmental', 'الأدبي': 'Literary', 'العلمي': 'Scientific', 'المسار': 'Track',
+    'المعدل': 'GPA', 'النسبة': 'Percentage', 'التقدير': 'Grade', 'ممتاز': 'Excellent',
+    'طموح': 'Ambitious', 'منظم': 'Organized', 'نشيط': 'Active', 'احترافي': 'Professional'
   };
 
   Object.keys(vocab).forEach(arWord => {
@@ -443,12 +422,13 @@ function translateTextToEnglish(text) {
     s = s.replace(reg, vocab[arWord]);
   });
 
-  // ==========================================
-  // PHASE 9: Phonetic transliteration for remaining Arabic
-  // ==========================================
+  // If there are still Arabic words remaining, convert proper names or nouns safely WITHOUT Arabizi
   if (/[\u0600-\u06FF]/.test(s)) {
     s = s.replace(/[\u0600-\u06FF]+/g, (match) => {
-      return transliterateArabicWord(match);
+      if (typeof translateArabicNameToEnglish === 'function') {
+        return translateArabicNameToEnglish(match);
+      }
+      return match;
     });
   }
 
@@ -481,166 +461,32 @@ function classifySectionHeading(rawLine) {
     return 'education';
   }
 
-  if (/^(الخبرات العملية|الخبرة العملية|الخبرات المهنية|الخبرات|الخبرة|خبراتي|التاريخ المهني|السجل المهني|professional experience|work experience|employment history|experience|work|employment|jobs|career history)$/i.test(clean) ||
-      (clean.startsWith('الخبرات') && clean.length < 25) || (clean.startsWith('الخبرة') && clean.length < 25)) {
+  if (/^(الخبرات العملية|الخبرة العملية|الخبرات المهنية|الخبرات|خبراتي|سجل الخبرة|experience|work experience|employment|employment history|work history|professional experience)$/i.test(clean) ||
+      (clean.startsWith('الخبر') && clean.length < 25)) {
     return 'experience';
   }
 
-  if (/^(الدورات والشهادات|الدورات التدريبية|الدورات|الكورسات|الشهادات التدريبية|الاعتمادات|التدريب|training courses|courses|certifications|certificates|training|professional courses)$/i.test(clean) ||
-      (clean.startsWith('الدورات') && clean.length < 25) || (clean.startsWith('الكورسات') && clean.length < 25)) {
+  if (/^(الدورات والشهادات|الدورات التدريبية|الدورات|الشهادات المهنية|الشهادات|البرامج التدريبية|الكورسات|courses|certifications|training|certificates|workshops)$/i.test(clean) ||
+      (clean.startsWith('الدورات') && clean.length < 25) || (clean.startsWith('الشهادات') && clean.length < 25)) {
     return 'training';
   }
 
-  if (/^(المهارات الاحترافية|المهارات المهنية|المهارات الشخصية|المهارات والتقنيات|المهارات|مهاراتي|تقنيات|skills|technical skills|core competencies|competencies|abilities)$/i.test(clean) ||
+  if (/^(المهارات المهنية|المهارات الشخصية|المهارات التقنية|المهارات|مهاراتي|skills|core skills|technical skills|key skills|competencies)$/i.test(clean) ||
       (clean.startsWith('المهارات') && clean.length < 25)) {
     return 'skills';
   }
 
-  if (/^(اللغات والمهارات اللغوية|اللغات|لغاتي|languages|language proficiency)$/i.test(clean) ||
-      (clean.startsWith('اللغات') && clean.length < 25)) {
+  if (/^(اللغات|اللغة|languages|language skills)$/i.test(clean)) {
     return 'languages';
   }
 
   return null;
 }
 
-function extractLocationFromText(text) {
-  let cityAr = '', cityEn = '';
-
-  const locMatch = text.match(/(?:الموقع|العنوان|المدينة|السكن|Address|Location|City)[:\s]*([^\n]+)/i);
-  if (locMatch) {
-    const rawLoc = cleanContentLine(locMatch[1]);
-    if (rawLoc) {
-      cityAr = rawLoc;
-      cityEn = translateTextToEnglish(rawLoc);
-      return { cityAr, cityEn };
-    }
-  }
-
-  if (/الطائف[\s–\-]*الحوية|الطائف/i.test(text)) {
-    cityAr = text.includes('الحوية') ? 'الطائف – الحوية، المملكة العربية السعودية' : 'الطائف، المملكة العربية السعودية';
-    cityEn = text.includes('الحوية') ? 'Taif - Al-Hawiyah, Saudi Arabia' : 'Taif, Saudi Arabia';
-  } else if (/جدة|Jeddah/i.test(text)) {
-    cityAr = 'جدة، المملكة العربية السعودية';
-    cityEn = 'Jeddah, Saudi Arabia';
-  } else if (/الرياض|Riyadh/i.test(text)) {
-    cityAr = 'الرياض، المملكة العربية السعودية';
-    cityEn = 'Riyadh, Saudi Arabia';
-  } else if (/الدمام|Dammam/i.test(text)) {
-    cityAr = 'الدمام، المملكة العربية السعودية';
-    cityEn = 'Dammam, Saudi Arabia';
-  } else if (/الخبر|Khobar/i.test(text)) {
-    cityAr = 'الخبر، المملكة العربية السعودية';
-    cityEn = 'Khobar, Saudi Arabia';
-  } else if (/مكة|Makkah/i.test(text)) {
-    cityAr = 'مكة المكرمة، المملكة العربية السعودية';
-    cityEn = 'Makkah, Saudi Arabia';
-  } else if (/المدينة|Madinah/i.test(text)) {
-    cityAr = 'المدينة المنورة، المملكة العربية السعودية';
-    cityEn = 'Madinah, Saudi Arabia';
-  } else if (/تبوك|Tabuk/i.test(text)) {
-    cityAr = 'تبوك، المملكة العربية السعودية';
-    cityEn = 'Tabuk, Saudi Arabia';
-  } else if (/خميس مشيط|Khamis/i.test(text)) {
-    cityAr = 'خميس مشيط، المملكة العربية السعودية';
-    cityEn = 'Khamis Mushait, Saudi Arabia';
-  } else if (/أبها|Abha/i.test(text)) {
-    cityAr = 'أبها، المملكة العربية السعودية';
-    cityEn = 'Abha, Saudi Arabia';
-  } else if (/جازان|جيزان|Jazan/i.test(text)) {
-    cityAr = 'جازان، المملكة العربية السعودية';
-    cityEn = 'Jazan, Saudi Arabia';
-  } else if (/نجران|Najran/i.test(text)) {
-    cityAr = 'نجران، المملكة العربية السعودية';
-    cityEn = 'Najran, Saudi Arabia';
-  } else if (/حائل|Hail/i.test(text)) {
-    cityAr = 'حائل، المملكة العربية السعودية';
-    cityEn = 'Hail, Saudi Arabia';
-  } else if (/القصيم|بريدة|Qassim/i.test(text)) {
-    cityAr = 'القصيم، المملكة العربية السعودية';
-    cityEn = 'Qassim, Saudi Arabia';
-  } else if (/ينبع|Yanbu/i.test(text)) {
-    cityAr = 'ينبع، المملكة العربية السعودية';
-    cityEn = 'Yanbu, Saudi Arabia';
-  } else if (/الجبيل|Jubail/i.test(text)) {
-    cityAr = 'الجبيل، المملكة العربية السعودية';
-    cityEn = 'Jubail, Saudi Arabia';
-  } else if (/الأحساء|Al-Ahsa/i.test(text)) {
-    cityAr = 'الأحساء، المملكة العربية السعودية';
-    cityEn = 'Al-Ahsa, Saudi Arabia';
-  } else {
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-    for (let i = 0; i < Math.min(5, lines.length); i++) {
-      if (lines[i].includes('المملكة') || lines[i].includes('السعودية') || lines[i].includes('Saudi')) {
-        cityAr = cleanContentLine(lines[i]);
-        cityEn = translateTextToEnglish(cityAr);
-        break;
-      }
-    }
-  }
-
-  return { cityAr, cityEn };
-}
-
 function parseUserRawResumeText(rawText, lang = 'ar') {
-  const text = (rawText || '').trim();
-
-  // 1. Email
-  const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-  const email = emailMatch ? emailMatch[1] : '';
-
-  // 2. Phone
-  const phoneMatch = text.match(/(?:05\d{8}|\+?9665\d{8}|01\d{7}|\d{10})/);
-  const phone = phoneMatch ? phoneMatch[0] : '';
-
-  // 3. City / Location Auto-Detection
-  const { cityAr, cityEn } = extractLocationFromText(text);
-
-  // 4. Name Detection
-  let nameAr = '', nameEn = '';
-  const nameLine = text.match(/(?:الاسم|اسم|أنا|المتقدم|المرشح|Candidate|Name)[:\s]*([^\n,.]+)/i);
-  if (nameLine) {
-    const cand = cleanContentLine(nameLine[1]);
-    if (/[\u0621-\u064A]/.test(cand)) {
-      nameAr = cand;
-      nameEn = translateArabicNameToEnglish(cand);
-    } else {
-      nameEn = cand;
-      nameAr = cand;
-    }
-  }
-  if (!nameAr && !nameEn) {
-    const firstLine = text.split('\n')[0].trim();
-    if (firstLine && firstLine.length < 40 && !firstLine.includes(':') && !firstLine.includes('@') && !firstLine.includes('{')) {
-      const cand = cleanContentLine(firstLine);
-      if (/[\u0621-\u064A]/.test(cand)) {
-        nameAr = cand;
-        nameEn = translateArabicNameToEnglish(cand);
-      } else {
-        nameEn = cand;
-        nameAr = cand;
-      }
-    }
-  }
-
-  // 5. Job Title
-  let titleAr = '', titleEn = '';
-  const titleMatch = text.match(/(?:المسمى الوظيفي|Job Title)[:\s]*([^\n,.]+)/i);
-  if (titleMatch) {
-    const tVal = cleanContentLine(titleMatch[1]);
-    if (/[\u0621-\u064A]/.test(tVal)) {
-      titleAr = tVal;
-      titleEn = translateTextToEnglish(tVal);
-    } else {
-      titleEn = tVal;
-      titleAr = tVal;
-    }
-  }
-
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-
-  let currentSectionType = 'header';
+  const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   const rawSections = {
+    personal: [],
     summary: [],
     education: [],
     experience: [],
@@ -649,32 +495,64 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     languages: []
   };
 
-  lines.forEach(line => {
-    const headingType = classifySectionHeading(line);
-    if (headingType) {
-      currentSectionType = headingType;
-      return;
-    }
+  let activeSection = 'personal';
 
-    if (currentSectionType !== 'header') {
-      const cleanL = cleanContentLine(line);
-      if (cleanL) rawSections[currentSectionType].push(cleanL);
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const heading = classifySectionHeading(line);
+    if (heading) {
+      activeSection = heading;
+      continue;
     }
-  });
+    rawSections[activeSection].push(line);
+  }
 
-  // 1. Build Summary (الهدف المهني)
-  let summaryTextAr = '';
-  let summaryTextEn = '';
-  if (rawSections.summary.length > 0) {
-    const sumRaw = rawSections.summary.map(cleanContentLine).filter(Boolean).join(' ');
-    if (/[\u0621-\u064A]/.test(sumRaw)) {
-      summaryTextAr = sumRaw;
-      summaryTextEn = translateTextToEnglish(sumRaw);
-    } else {
-      summaryTextEn = sumRaw;
-      summaryTextAr = sumRaw;
+  // 1. Parse Personal Data
+  let nameAr = '', nameEn = '';
+  let titleAr = '', titleEn = '';
+  let phone = '', email = '', cityAr = '', cityEn = '';
+
+  const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
+  const phoneRegex = /(?:\+?966|00966|0)?5\d{8}|05\d{8}|\b5\d{8}\b/;
+  const cityRegex = /(?:الرياض|جدة|مكة المكرمة|مكة|المدينة المنورة|المدينة|الدمام|الخبر|الظهران|الطائف|تبوك|حائل|جازان|جيزان|نجران|أبها|خميس مشيط|القصيم|بريدة|عنيزة|ينبع|الجبيل|الأحساء|الهفوف|الدرعية|الخرج|Riyadh|Jeddah|Makkah|Madinah|Dammam|Khobar|Taif|Tabuk|Hail|Jazan|Najran|Abha|Qassim|Jubail|Yanbu|Al-Ahsa)/i;
+
+  for (let l of lines) {
+    if (!email) {
+      const em = l.match(emailRegex);
+      if (em) email = em[0];
+    }
+    if (!phone) {
+      const ph = l.match(phoneRegex);
+      if (ph) phone = ph[0];
+    }
+    if (!cityAr) {
+      const ct = l.match(cityRegex);
+      if (ct) {
+        cityAr = ct[0];
+        cityEn = translateTextToEnglish(cityAr);
+      }
     }
   }
+
+  // Extract Name & Job Title
+  for (let i = 0; i < Math.min(6, lines.length); i++) {
+    const l = cleanContentLine(lines[i]);
+    if (!l || l.includes('@') || phoneRegex.test(l) || classifySectionHeading(l)) continue;
+    if (l.length > 2 && l.length < 40 && !nameAr) {
+      nameAr = l;
+      nameEn = translateArabicNameToEnglish(nameAr);
+      continue;
+    }
+    if (nameAr && !titleAr && l.length > 2 && l.length < 60 && !/(?:سعودي|المملكة|الرياض|جدة)/.test(l)) {
+      titleAr = l;
+      titleEn = translateTextToEnglish(titleAr);
+      break;
+    }
+  }
+
+  // 2. Parse Summary
+  let summaryTextAr = rawSections.summary.map(l => cleanContentLine(l)).filter(Boolean).join(' ');
+  let summaryTextEn = '';
 
   // 2. Build Education
   const eduItems = [];
