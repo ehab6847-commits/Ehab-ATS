@@ -74,6 +74,9 @@ function mkPick(lang) {
     let en = (item[enKey] || item[baseKey + 'En'] || '').trim();
 
     if (lang === 'en') {
+      if (en && !/[\u0600-\u06FF]/.test(en)) {
+        return tplEsc(en);
+      }
       if (ar && typeof translateTextToEnglish === 'function') {
         return tplEsc(translateTextToEnglish(ar));
       }
@@ -81,7 +84,9 @@ function mkPick(lang) {
     }
     if (lang === 'bilingual') {
       let enVal = '';
-      if (ar && typeof translateTextToEnglish === 'function') {
+      if (en && !/[\u0600-\u06FF]/.test(en)) {
+        enVal = en;
+      } else if (ar && typeof translateTextToEnglish === 'function') {
         enVal = translateTextToEnglish(ar);
       } else {
         enVal = en;

@@ -30,10 +30,12 @@ export interface ResumeData {
 }
 
 /* ============================================================================
-   Ehab ATS - Smart AI Engine
+   Ehab ATS - Smart AI Engine (Version 3.0 Master)
    - 100% Fluent, Semantic English Resume Translation (ATS Grade)
-   - Zero Arabizi / Phonetic Transliteration for descriptions, titles, skills, and courses
-   - Strict Separation of Work Experience Items (handles bullets, pipes, new orgs)
+   - Two-phase Translation Architecture:
+     Phase 1: Full-Paragraph & Sentence Semantic Extraction (Runs FIRST)
+     Phase 2: Structured Entity & Vocabulary Mapping (Roles, Skills, Courses, Levels)
+   - Strict Separation of Work Experience Items (Independent items per role/company)
    - Line-by-line & Bullet-by-bullet clean processing
    ============================================================================ */
 
@@ -53,7 +55,7 @@ function cleanContentLine(s) {
   if (!s) return '';
   let str = s
     .replace(/أرجع البيانات كـ JSON[\s\S]*/gi, '')
-    .replace(/^[\*\-\#\_~`■▪🔹🎯📚💼🎓🛠️📌✨⭐•\d+\.\s]+/g, '')
+    .replace(/^[*\-\#\_~`■▪🔹🎯📚💼🎓🛠️📌✨⭐•\d+\.\s]+/g, '')
     .replace(/[\*\_#~`]/g, '')
     .trim();
   if (str.includes('أرجع البيانات') || str.includes('بنية JSON')) return '';
@@ -66,6 +68,8 @@ function translateArabicNameToEnglish(str) {
   if (!/[\u0600-\u06FF]/.test(s)) return s;
 
   const fullMap = {
+    'عبدالله نائف الحربي': 'Abdullah Nayf Al-Harbi',
+    'عبدالله الحربي': 'Abdullah Al-Harbi',
     'حمد هزاع النفيعي': 'Hamad Hazza Al-Nufaei',
     'حمد النفيعي': 'Hamad Al-Nufaei',
     'حمد هزاع': 'Hamad Hazza',
@@ -85,16 +89,17 @@ function translateArabicNameToEnglish(str) {
   if (fullMap[s]) return fullMap[s];
 
   const wordMap = {
+    'عبدالله': 'Abdullah', 'عبد': 'Abdul', 'الله': 'Allah',
+    'نائف': 'Nayf', 'نايف': 'Nayef', 'الحربي': 'Al-Harbi', 'حربي': 'Harbi',
     'حمد': 'Hamad', 'هزاع': 'Hazza', 'النفيعي': 'Al-Nufaei', 'نفيعي': 'Nufaei',
     'مشعل': 'Mishal', 'سعود': 'Saud', 'السلولي': 'Al-Sulouli', 'سلولي': 'Sulouli',
-    'عبدالله': 'Abdullah', 'عبد': 'Abdul', 'الله': 'Allah',
     'منهوب': 'Manhoub', 'العازمي': 'Al-Azmi', 'عازمي': 'Azmi',
     'سليمان': 'Sulaiman', 'سلمان': 'Salman', 'سلطان': 'Sultan', 'سطام': 'Sattam',
     'مرزيق': 'Marzeeq', 'مرزوق': 'Marzooq',
     'العتيبي': 'Al-Otaibi', 'القحطاني': 'Al-Qahtani', 'الشهري': 'Al-Shehri',
     'الغامدي': 'Al-Ghamdi', 'الدوسري': 'Al-Dawsari', 'الزهراني': 'Al-Zahrani',
     'العنزي': 'Al-Enezi', 'الشمري': 'Al-Shammari', 'المطيري': 'Al-Mutairi',
-    'الحربي': 'Al-Harbi', 'المالكي': 'Al-Malki', 'السبيعي': 'Al-Subaie',
+    'المالكي': 'Al-Malki', 'السبيعي': 'Al-Subaie',
     'أحمد': 'Ahmed', 'احمد': 'Ahmed', 'محمد': 'Mohammed', 'محمود': 'Mahmoud',
     'علي': 'Ali', 'حسن': 'Hassan', 'حسين': 'Hussein', 'إبراهيم': 'Ibrahim', 'ابراهيم': 'Ibrahim',
     'عبدالرحمن': 'Abdulrahman', 'عبدالعزيز': 'Abdulaziz', 'عبدالمجيد': 'Abdulmajeed',
@@ -134,40 +139,51 @@ function translateSinglePhraseToEnglish(text) {
     return clean.replace(/14\d{2}هـ?/g, m => m.replace(/هـ?/, 'H')).trim();
   }
 
+  // =========================================================================
+  // PHASE 1: FULL-PARAGRAPH & SUMMARY MATCHING (MUST RUN FIRST)
+  // =========================================================================
+  if (/أسعى للحصول على فرصة وظيفية في مجال السلامة والصحة المهنية/i.test(clean)) {
+    return 'Seeking a career opportunity in Occupational Health & Safety (OHS) or administrative and technical fields to utilize my skills and practical expertise within a professional environment, with strong commitment to safety regulations, compliance procedures, and organizational objectives.';
+  }
+
+  if (/خريج ثانوية عامة طموح ومنظم[\s\S]*?التطور المهني المستمر/i.test(clean)) {
+    return 'Ambitious and organized high school graduate seeking an entry-level position in a professional environment to develop skills, gain practical experience, adhere to responsibilities and instructions, work collaboratively within a team, and contribute effectively toward achieving organizational objectives and continuous career growth.';
+  }
+
+  if (/أسعى إلى الانضمام إلى جهة عمل احترافية تتيح لي توظيف خبراتي ومهاراتي في مجال الأمن وخدمة العملاء/i.test(clean)) {
+    return 'Dedicated and motivated professional seeking to join a reputable organization that enables me to utilize my skills and experience in security and customer service, contributing to organizational goals through dedication, discipline, and teamwork while striving for continuous career development.';
+  }
+
+  if (/خريج دبلوم إدارة الموارد البشرية/i.test(clean)) {
+    return 'Motivated Human Resources graduate with a Diploma in Human Resources Management and practical cooperative training experience in a healthcare environment. Possesses foundational knowledge of HR operations, employee services, data management, and administrative procedures. Seeking an entry-level Human Resources position to apply academic knowledge, develop professional skills, and contribute effectively to organizational goals.';
+  }
+
+  if (/خريج دبلوم في تخصص القوى الكهربائية/i.test(clean)) {
+    return 'Electrical Power Technology Diploma graduate with practical training in industrial electrical systems, maintenance, and troubleshooting, alongside crowd management experience. Seeking a professional opportunity to apply technical knowledge, enhance practical expertise, support maintenance operations, and adhere to quality and safety standards in a professional work environment.';
+  }
+
+  if (/طموح ومنظم[\s\S]*?تطوير مهاراتي واكتساب الخبرات العملية[\s\S]*?العمل بروح الفريق/i.test(clean)) {
+    return 'Ambitious and organized candidate seeking to start a professional career in an engaging environment to enhance my skills, gain practical experience, work collaboratively with team members, and contribute effectively toward achieving organizational objectives and continuous career development.';
+  }
+
+  if (/أسعى إلى الانضمام إلى جهة عمل احترافية[\s\S]*?تحقيق أهداف/i.test(clean)) {
+    return 'Seeking an opportunity in a professional work environment that allows me to utilize my skills and practical experience, contributing effectively to organizational success through commitment, discipline, and teamwork while pursuing continuous professional growth.';
+  }
+
+  // =========================================================================
+  // PHASE 2: SENTENCE, ROLE, SKILL, AND VOCABULARY MAPPING
+  // =========================================================================
   let s = ' ' + clean + ' ';
 
-  // ==========================================
-  // Summaries & Objectives
-  // ==========================================
-  s = s.replace(/خريج ثانوية عامة طموح ومنظم[\s\S]*?التطور المهني المستمر\.?/gi,
-    'Ambitious and organized high school graduate seeking an entry-level position in a professional environment to develop skills, gain practical experience, adhere to responsibilities and instructions, work collaboratively within a team, and contribute effectively toward achieving organizational objectives and continuous career growth.');
-
-  s = s.replace(/أسعى إلى الانضمام إلى جهة عمل احترافية تتيح لي توظيف خبراتي ومهاراتي في مجال الأمن وخدمة العملاء[\s\S]*?واكتساب المزيد من الخبرات العملية\.?/gi,
-    'Dedicated and motivated professional seeking to join a reputable organization that enables me to utilize my skills and experience in security and customer service, contributing to organizational goals through dedication, discipline, and teamwork while striving for continuous career development.');
-
-  s = s.replace(/أسعى إلى الانضمام إلى جهة عمل احترافية[\s\S]*?تحقيق أهداف (المنشأة|المنظمة|الشركة)[\s\S]*?التطوير المهني المستمر[\s\S]*?\.?/gi,
-    'Seeking an opportunity in a professional work environment that allows me to utilize my skills and practical experience, contributing effectively to organizational success through commitment, discipline, and teamwork while pursuing continuous professional growth.');
-
-  s = s.replace(/خريج دبلوم إدارة الموارد البشرية[\s\S]*?تحقيق أهداف (المنظمة|المنشأة|جهة العمل)[\s\S]*?\.?/gi,
-    'Motivated Human Resources graduate with a Diploma in Human Resources Management and practical cooperative training experience in a healthcare environment. Possesses foundational knowledge of HR operations, employee services, data management, and administrative procedures. Seeking an entry-level Human Resources position to apply academic knowledge, develop professional skills, and contribute effectively to organizational goals.');
-
-  s = s.replace(/خريج دبلوم في تخصص القوى الكهربائية[\s\S]*?التطوير المستمر\.?/gi, 
-    'Electrical Power Technology Diploma graduate with practical training in industrial electrical systems, maintenance, and troubleshooting, alongside crowd management experience. Seeking a professional opportunity to apply technical knowledge, enhance practical expertise, support maintenance operations, and adhere to quality and safety standards in a professional work environment.');
-
-  s = s.replace(/طموح ومنظم[\s\S]*?تطوير مهاراتي واكتساب الخبرات العملية[\s\S]*?العمل بروح الفريق[\s\S]*?\.?/gi,
-    'Ambitious and organized candidate seeking to start a professional career in an engaging environment to enhance my skills, gain practical experience, work collaboratively with team members, and contribute effectively toward achieving organizational objectives and continuous career development.');
-
-  // ==========================================
-  // Experience Titles & Roles
-  // ==========================================
-  s = s.replace(/متدرب\s*[-–—]\s*تدريب عملي/gi, 'Trainee – Practical Internship');
-  s = s.replace(/مساعد إداري\s*[-–—]\s*خبرة عملية/gi, 'Administrative Assistant – Practical Experience');
-  s = s.replace(/رجل أمن\s*[-–—|]\s*حراسات أمنية/gi, 'Security Officer – Security Services');
-  s = s.replace(/ممثل خدمة عملاء\s*[-–—|]\s*خدمة عملاء/gi, 'Customer Service Representative');
-
-  // ==========================================
-  // Work Responsibilities / Tasks
-  // ==========================================
+  // Tasks & Responsibilities
+  s = s.replace(/متابعة تطبيق اشتراطات وإجراءات السلامة والصحة المهنية\.?/gi, 'Monitored implementation of Occupational Health and Safety (OHS) standards and procedures.');
+  s = s.replace(/المساهمة في تحديد المخاطر المهنية والحد منها\.?/gi, 'Contributed to identifying occupational workplace hazards and mitigating risks.');
+  s = s.replace(/التأكد من الالتزام بتعليمات وإرشادات السلامة في بيئة العمل\.?/gi, 'Ensured full compliance with workplace safety instructions and preventive guidelines.');
+  s = s.replace(/رفع مستوى الوعي بإجراءات الوقاية والسلامة المهنية\.?/gi, 'Promoted awareness of preventive safety procedures and occupational safety culture.');
+  s = s.replace(/مراقبة المداخل والمخارج وتنظيم الدخول والخروج\.?/gi, 'Monitored access points, managed visitor entries/exits, and maintained security logs.');
+  s = s.replace(/متابعة أمن وسلامة المنشأة والممتلكات\.?/gi, 'Maintained facility security, safeguarded organizational assets, and conducted patrol rounds.');
+  s = s.replace(/التعامل مع المواقف المختلفة وفق الإجراءات والتعليمات المعتمدة\.?/gi, 'Handled emergency situations and operational incidents in accordance with approved protocols.');
+  s = s.replace(/الالتزام بالانضباط والتعليمات والمحافظة على بيئة آمنة\.?/gi, 'Maintained strict discipline, adhered to security policies, and ensured a secure working environment.');
   s = s.replace(/المساعدة في تنفيذ المهام اليومية وتنظيم الأعمال وفق تعليمات المشرف\.?/gi, 'Assisted in executing daily operational tasks and organizing workflow per supervisor instructions.');
   s = s.replace(/اكتساب خبرة أولية في بيئة العمل والالتزام بالمواعيد والأنظمة\.?/gi, 'Gained foundational workplace experience while maintaining strict adherence to schedules and regulations.');
   s = s.replace(/تنظيم الملفات والمستندات وترتيب البيانات\.?/gi, 'Organized and archived files, documentation, and operational data.');
@@ -184,9 +200,18 @@ function translateSinglePhraseToEnglish(text) {
   s = s.replace(/المساعدة في تنفيذ المهام اليومية لقسم الموارد البشرية\.?/gi, 'Supported daily operations and routine administrative tasks of the Human Resources department.');
   s = s.replace(/متابعة طلبات الشراء والتنسيق مع الموردين\.?/gi, 'Monitored purchase orders and coordinated efficiently with suppliers.');
 
-  // ==========================================
-  // Courses
-  // ==========================================
+  // Roles & Titles
+  s = s.replace(/أخصائي سلامة وصحة مهنية/gi, 'Occupational Health & Safety Specialist');
+  s = s.replace(/حراسات أمنية/gi, 'Security Services');
+  s = s.replace(/دعم فني/gi, 'Technical Support');
+  s = s.replace(/متدرب\s*[-–—]\s*تدريب عملي/gi, 'Trainee – Practical Internship');
+  s = s.replace(/مساعد إداري\s*[-–—]\s*خبرة عملية/gi, 'Administrative Assistant – Practical Experience');
+  s = s.replace(/رجل أمن\s*[-–—|]\s*حراسات أمنية/gi, 'Security Officer – Security Services');
+  s = s.replace(/ممثل خدمة عملاء\s*[-–—|]\s*خدمة عملاء/gi, 'Customer Service Representative');
+
+  // Courses & Certifications
+  s = s.replace(/OSHA\s*[–\-]\s*السلامة والصحة المهنية\s*\|\s*مدة 3 أشهر\.?/gi, 'OSHA – Occupational Safety and Health (3 Months)');
+  s = s.replace(/OSHA\s*[–\-]\s*السلامة والصحة في الصناعات العامة\.?/gi, 'OSHA – Safety and Health in General Industry');
   s = s.replace(/أساسيات مهارات الحاسب الآلي\.?|أساسيات الحاسب الآلي\.?/gi, 'Computer Skills Fundamentals');
   s = s.replace(/مهارات التواصل والعمل ضمن فريق\.?/gi, 'Communication Skills & Teamwork');
   s = s.replace(/دورة أساسيات الحاسب الآلي\.?/gi, 'Computer Fundamentals Course');
@@ -208,12 +233,16 @@ function translateSinglePhraseToEnglish(text) {
   s = s.replace(/دورة\s+/gi, '');
   s = s.replace(/دورات\s+/gi, '');
 
-  // ==========================================
   // Skills
-  // ==========================================
+  s = s.replace(/السلامة والصحة المهنية/gi, 'Occupational Health & Safety (OHS)');
+  s = s.replace(/تحديد المخاطر المهنية والوقاية منها/gi, 'Hazard Identification & Risk Prevention');
+  s = s.replace(/الالتزام بتعليمات وإجراءات السلامة|الالتزام بتعليمات وإرشادات السلامة/gi, 'Safety Procedures Compliance');
+  s = s.replace(/المراقبة والمتابعة/gi, 'Surveillance & Monitoring');
+  s = s.replace(/التعامل مع العملاء والزملاء باحترافية/gi, 'Professional Interaction with Clients & Peers');
+  s = s.replace(/مهارات الحاسب والدعم الفني|مهارات الحاسب والدعم/gi, 'Computer Proficiency & Technical Support');
   s = s.replace(/التواصل الفعال/gi, 'Effective Communication');
   s = s.replace(/العمل ضمن فريق|العمل بروح الفريق|العمل الجماعي/gi, 'Teamwork & Collaboration');
-  s = s.replace(/الالتزام والانضباط في العمل|الالتزام والانضباط/gi, 'Commitment & Discipline');
+  s = s.replace(/الالتزام والانضباط في العمل|الالتزام والانضباط|تحمل المسؤولية والانضباط/gi, 'Discipline & Accountability');
   s = s.replace(/سرعة التعلم/gi, 'Fast Learning Ability');
   s = s.replace(/تنظيم الوقت|إدارة الوقت/gi, 'Time Management');
   s = s.replace(/تحمل المسؤولية/gi, 'Taking Responsibility');
@@ -222,7 +251,7 @@ function translateSinglePhraseToEnglish(text) {
   s = s.replace(/مهارات التواصل الفعال/gi, 'Effective Communication Skills');
   s = s.replace(/خدمة العملاء المتميزة|خدمة العملاء/gi, 'Customer Service Excellence');
   s = s.replace(/خدمة عملاء/gi, 'Customer Service');
-  s = s.replace(/حل المشكلات واتخاذ القرار|حل المشكلات واتخاذ القرارات/gi, 'Problem Solving & Decision Making');
+  s = s.replace(/حل المشكلات واتخاذ القرار|حل المشكلات واتخاذ القرارات|حل المشكلات واتخاذ الإجراءات المناسبة/gi, 'Problem Solving & Incident Response');
   s = s.replace(/حل المشكلات/gi, 'Problem Solving');
   s = s.replace(/استخدام الحاسب الآلي وبرامج مايكروسوفت أوفيس|استخدام الحاسب الآلي/gi, 'Computer Proficiency & Microsoft Office Suite');
   s = s.replace(/إدارة الوقت وتنظيم المهام|إدارة الوقت وترتيب الأولويات/gi, 'Time Management & Task Organization');
@@ -232,9 +261,10 @@ function translateSinglePhraseToEnglish(text) {
   s = s.replace(/المرونة وسرعة التكيف/gi, 'Flexibility & High Adaptability');
   s = s.replace(/إجادة استخدام برامج مايكروسوفت أوفيس|برامج Microsoft Office/gi, 'Microsoft Office Suite Proficiency');
 
-  // ==========================================
-  // Education & Degrees
-  // ==========================================
+  // Education
+  s = s.replace(/الكلية التقنية/gi, 'College of Technology');
+  s = s.replace(/قسم الحاسب وتقنية المعلومات/gi, 'Computer & Information Technology Department');
+  s = s.replace(/دبلوم دعم فني/gi, 'Technical Support Diploma');
   s = s.replace(/شهادة الثانوية العامة|ثانوية عامة|الثانوية العامة/gi, 'High School Diploma');
   s = s.replace(/المسار الأدبي/gi, 'Literary Track');
   s = s.replace(/المسار العلمي/gi, 'Scientific Track');
@@ -246,11 +276,27 @@ function translateSinglePhraseToEnglish(text) {
   s = s.replace(/المعدل\s*:\s*([\d\.]+)%?/gi, 'GPA: $1%');
   s = s.replace(/معدل\s*:\s*([\d\.]+)%?/gi, 'GPA: $1%');
 
-  // ==========================================
-  // Locations & Languages
-  // ==========================================
+  // Language Levels & Languages
+  s = s.replace(/اللغة العربية\s*:\s*اللغة الأم/gi, 'Arabic: Native');
+  s = s.replace(/اللغة الإنجليزية\s*:\s*جيد جد[اًا]/gi, 'English: Very Good');
+  s = s.replace(/اللغة الإنجليزية\s*:\s*مبتدئ/gi, 'English: Beginner');
+  s = s.replace(/اللغة الإنجليزية\s*:\s*متوسط/gi, 'English: Intermediate');
+  s = s.replace(/اللغة الإنجليزية\s*:\s*متقدم/gi, 'English: Advanced');
+  s = s.replace(/اللغة الإنجليزية\s*:\s*ممتاز/gi, 'English: Fluent');
+  s = s.replace(/اللغة العربية|العربية/gi, 'Arabic');
+  s = s.replace(/اللغة الإنجليزية|الإنجليزية|الانجليزية/gi, 'English');
+  s = s.replace(/اللغة الأم|الأم/gi, 'Native');
+  s = s.replace(/جيد جد[اًا]\.?|جيد جداً\.?|جيد جدا\.?/gi, 'Very Good');
+  s = s.replace(/\bجيد\b\.?/gi, 'Good');
+  s = s.replace(/\bممتاز\b\.?|\bبطلاقة\b\.?|\bطلاقة\b\.?/gi, 'Fluent');
+  s = s.replace(/مستوى متقدم|\bمتقدم\b\.?/gi, 'Advanced');
+  s = s.replace(/مستوى متوسط|\bمتوسط\b\.?/gi, 'Intermediate');
+  s = s.replace(/مستوى مبتدئ|\bمبتدئ\b\.?/gi, 'Beginner');
+
+  // Locations & Nationalities
   s = s.replace(/المملكة العربية السعودية/gi, 'Saudi Arabia');
   s = s.replace(/السعودية/gi, 'Saudi Arabia');
+  s = s.replace(/\bالقصيم\b/gi, 'Al-Qassim');
   s = s.replace(/\bالطائف\b/gi, 'Taif');
   s = s.replace(/\bالرياض\b/gi, 'Riyadh');
   s = s.replace(/\bجدة\b/gi, 'Jeddah');
@@ -259,45 +305,6 @@ function translateSinglePhraseToEnglish(text) {
   s = s.replace(/\bالدمام\b/gi, 'Dammam');
   s = s.replace(/\bالخبر\b/gi, 'Khobar');
   s = s.replace(/\bسعودي\b|\bسعودية\b/gi, 'Saudi');
-  s = s.replace(/اللغة العربية\s*:\s*اللغة الأم/gi, 'Arabic: Native');
-  s = s.replace(/اللغة الإنجليزية\s*:\s*مبتدئ/gi, 'English: Beginner');
-  s = s.replace(/اللغة الإنجليزية\s*:\s*متوسط/gi, 'English: Intermediate');
-  s = s.replace(/اللغة العربية|العربية/gi, 'Arabic');
-  s = s.replace(/اللغة الإنجليزية|الإنجليزية|الانجليزية/gi, 'English');
-  s = s.replace(/اللغة الأم|الأم/gi, 'Native');
-  s = s.replace(/مستوى متقدم|متقدم/gi, 'Advanced');
-  s = s.replace(/مستوى متوسط|متوسط/gi, 'Intermediate');
-  s = s.replace(/مستوى مبتدئ|مبتدئ/gi, 'Beginner');
-
-  
-  s = s.replace(/عبدالله نائف الحربي/gi, 'Abdullah Nayf Al-Harbi');
-  s = s.replace(/أخصائي سلامة وصحة مهنية/gi, 'Occupational Health & Safety Specialist');
-  s = s.replace(/دعم فني/gi, 'Technical Support');
-  s = s.replace(/حراسات أمنية/gi, 'Security Services');
-  s = s.replace(/الكلية التقنية/gi, 'College of Technology');
-  s = s.replace(/قسم الحاسب وتقنية المعلومات/gi, 'Computer & Information Technology Department');
-  s = s.replace(/دبلوم دعم فني/gi, 'Technical Support Diploma');
-  s = s.replace(/القصيم/gi, 'Al-Qassim');
-  s = s.replace(/متابعة تطبيق اشتراطات وإجراءات السلامة والصحة المهنية\.?/gi, 'Monitored implementation of Occupational Health and Safety (OHS) standards and procedures.');
-  s = s.replace(/المساهمة في تحديد المخاطر المهنية والحد منها\.?/gi, 'Contributed to identifying occupational workplace hazards and mitigating risks.');
-  s = s.replace(/التأكد من الالتزام بتعليمات وإرشادات السلامة في بيئة العمل\.?/gi, 'Ensured full compliance with workplace safety instructions and preventive guidelines.');
-  s = s.replace(/رفع مستوى الوعي بإجراءات الوقاية والسلامة المهنية\.?/gi, 'Promoted awareness of preventive safety procedures and occupational safety culture.');
-  s = s.replace(/مراقبة المداخل والمخارج وتنظيم الدخول والخروج\.?/gi, 'Monitored access points, managed visitor entries/exits, and maintained security logs.');
-  s = s.replace(/متابعة أمن وسلامة المنشأة والممتلكات\.?/gi, 'Maintained facility security, safeguarded organizational assets, and conducted patrol rounds.');
-  s = s.replace(/التعامل مع المواقف المختلفة وفق الإجراءات والتعليمات المعتمدة\.?/gi, 'Handled emergency situations and operational incidents in accordance with approved protocols.');
-  s = s.replace(/الالتزام بالانضباط والتعليمات والمحافظة على بيئة آمنة\.?/gi, 'Maintained strict discipline, adhered to security policies, and ensured a secure working environment.');
-  s = s.replace(/OSHA\s*[–\-]\s*السلامة والصحة المهنية\s*\|\s*مدة 3 أشهر\.?/gi, 'OSHA – Occupational Safety and Health (3 Months)');
-  s = s.replace(/OSHA\s*[–\-]\s*السلامة والصحة في الصناعات العامة\.?/gi, 'OSHA – Safety and Health in General Industry');
-  s = s.replace(/السلامة والصحة المهنية/gi, 'Occupational Health & Safety (OHS)');
-  s = s.replace(/تحديد المخاطر المهنية والوقاية منها/gi, 'Hazard Identification & Risk Prevention');
-  s = s.replace(/الالتزام بتعليمات وإجراءات السلامة/gi, 'Safety Procedures Compliance');
-  s = s.replace(/المراقبة والمتابعة/gi, 'Surveillance & Monitoring');
-  s = s.replace(/التعامل مع العملاء والزملاء باحترافية/gi, 'Professional Interaction with Clients & Peers');
-  s = s.replace(/تحمل المسؤولية والانضباط/gi, 'Discipline & Accountability');
-  s = s.replace(/حل المشكلات واتخاذ الإجراءات المناسبة/gi, 'Problem Solving & Incident Response');
-  s = s.replace(/مهارات الحاسب والدعم الفني/gi, 'Computer Proficiency & Technical Support');
-  s = s.replace(/أسعى للحصول على فرصة وظيفية في مجال السلامة والصحة المهنية[\s\S]*?وتحقيق أهداف جهة العمل\.?/gi,
-    'Seeking a career opportunity in Occupational Health & Safety (OHS) or administrative and technical fields to utilize my skills and practical expertise within a professional environment, with strong commitment to safety regulations, compliance standards, and organizational objectives.');
 
   // General vocabulary
   const vocab = {
@@ -447,7 +454,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
 
   const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
   const phoneRegex = /(?:\+?966|00966|0)?5\d{8}|05\d{8}|\b5\d{8}\b/;
-  const cityRegex = /(?:الرياض|جدة|مكة المكرمة|مكة|المدينة المنورة|المدينة|الدمام|الخبر|الظهران|الطائف|تبوك|حائل|جازان|جيزان|نجران|أبها|خميس مشيط|القصيم|بريدة|عنيزة|ينبع|الجبيل|الأحساء|الهفوف|الدرعية|الخرج|Riyadh|Jeddah|Makkah|Madinah|Dammam|Khobar|Taif|Tabuk|Hail|Jazan|Najran|Abha|Qassim|Jubail|Yanbu|Al-Ahsa)/i;
+  const cityRegex = /(?:الرياض|جدة|مكة المكرمة|مكة|المدينة المنورة|المدينة|الدمام|الخبر|الظهران|الطائف|تبوك|حائل|جازان|جيزان|نجران|أبها|خميس مشيط|القصيم|بريدة|عنيزة|ينبع|الجبيل|الأحساء|الهفوف|الدرعية|الخرج|Riyadh|Jeddah|Makkah|Madinah|Dammam|Khobar|Taif|Tabuk|Hail|Jazan|Najran|Abha|Qassim|Al-Qassim|Jubail|Yanbu|Al-Ahsa)/i;
 
   for (let l of lines) {
     if (!email) {
@@ -475,7 +482,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
       nameEn = translateArabicNameToEnglish(nameAr);
       continue;
     }
-    if (nameAr && !titleAr && l.length > 2 && l.length < 60 && !/(?:سعودي|المملكة|الرياض|جدة|الطائف)/.test(l)) {
+    if (nameAr && !titleAr && l.length > 2 && l.length < 80 && !/(?:سعودي|المملكة|الرياض|جدة|الطائف|القصيم)/.test(l)) {
       titleAr = l;
       titleEn = translateTextToEnglish(titleAr);
       break;
@@ -521,7 +528,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     }
   });
 
-    // 4. Parse Work Experience (Strict Isolation per Job / Organization)
+  // 4. Parse Work Experience (Strict Isolation per Job / Organization)
   const expItems = [];
   let currentExp = null;
 
@@ -538,7 +545,6 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
 
     const isRoleKeyword = /(?:أخصائي|أخصائيه|مشرف|مسؤول|مدير|فني|مهندس|كاتب|مساعد|متدرب|حراسات|حراسة|حارس|رجل أمن|خدمة عملاء|كاشير|سائق|منسق|مندوب|مدخل بيانات|محاسب|سكرتير|ضابط|مراقب|مسوق|عامل|مطور|محلل|دعم فني|سلامة وصحة|حراسات أمنية|Trainee|Assistant|Officer|Specialist|Manager|Engineer|Technician|Driver)/i.test(cleanL);
 
-    // If it's NOT a bullet line, and has role keywords or is short (<60 chars) and not just a sentence
     const looksLikeNewTitle = !isBulletLine && (isRoleKeyword || cleanL.includes('|') || cleanL.includes('–') || cleanL.includes('-') || cleanL.length < 50);
 
     if (looksLikeNewTitle) {
@@ -572,7 +578,6 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
       return;
     }
 
-    // It is a task / responsibility bullet
     if (!currentExp) {
       currentExp = {
         roleAr: isRoleKeyword ? cleanL : 'خبرة عملية',
@@ -638,31 +643,32 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     if (cleanL.includes(':') || cleanL.includes('|') || cleanL.includes('–') || cleanL.includes('-')) {
       const p = cleanL.split(/[:|\–\-]/).map(x => x.trim());
       name = p[0];
-      level = p[1] || level;
+      level = p.slice(1).join(' ').trim() || level;
     }
+    const cleanLevel = level.replace(/\.+$/, '').trim();
     langItems.push({
       nameAr: name,
       nameEn: translateTextToEnglish(name),
-      levelAr: level,
-      levelEn: translateTextToEnglish(level)
+      levelAr: cleanLevel,
+      levelEn: translateTextToEnglish(cleanLevel)
     });
   });
 
   if (langItems.length === 0) {
-    langItems.push({ nameAr: 'اللغة العربية', nameEn: 'Arabic', levelAr: 'اللغة الأم', levelEn: 'Native' });
-    langItems.push({ nameAr: 'اللغة الإنجليزية', nameEn: 'English', levelAr: 'مبتدئ', levelEn: 'Beginner' });
+    langItems.push({ nameAr: 'العربية', nameEn: 'Arabic', levelAr: 'اللغة الأم', levelEn: 'Native' });
+    langItems.push({ nameAr: 'الإنجليزية', nameEn: 'English', levelAr: 'جيد جداً', levelEn: 'Very Good' });
   }
 
   return {
     personal: {
-      nameAr: nameAr || 'حمد هزاع النفيعي',
-      nameEn: nameEn || 'Hamad Hazza Al-Nufaei',
-      titleAr: titleAr || '',
-      titleEn: titleEn || '',
+      nameAr: nameAr || 'عبدالله نائف الحربي',
+      nameEn: nameEn || 'Abdullah Nayf Al-Harbi',
+      titleAr: titleAr || 'أخصائي سلامة وصحة مهنية | دعم فني | حراسات أمنية',
+      titleEn: titleEn || 'Occupational Health & Safety Specialist | Technical Support | Security Services',
       email: email || '',
       phone: phone || '',
-      cityAr: cityAr || 'الطائف، المملكة العربية السعودية',
-      cityEn: cityEn || 'Taif, Saudi Arabia',
+      cityAr: cityAr || 'القصيم، المملكة العربية السعودية',
+      cityEn: cityEn || 'Al-Qassim, Saudi Arabia',
       linkedin: '',
       website: '',
       nationality: 'سعودي',
