@@ -173,8 +173,8 @@ api.defaults.adapter = async function (config) {
   }
 
   // AI History
-  if (url === '/ai/history' && method === 'get') {
-    return { data: getLocal(CLIENT_STORAGE_KEYS.aiHistory), status: 200, headers: {}, config };
+  if ((url === '/ai/history' || url === '/ai-history') && method === 'get') {
+    return { data: getLocal(CLIENT_STORAGE_KEYS.aiHistory, []), status: 200, headers: {}, config };
   }
 
   // Clients
@@ -1445,62 +1445,84 @@ async function testAIApi() {
 async function viewTeam() {
   el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
   
-  const spsLocal = ensureSpecialistsList();
-  let specialists = [];
-  let activity = [];
-  let resumes = [];
-  let aiHistory = [];
+  try {
+    const spsLocal = ensureSpecialistsList();
+    let specialists = [];
+    let activity = [];
+    let resumes = [];
+    let aiHistory = [];
 
-  try { specialists = (await api.get('/specialists')).data; } catch (e) {}
-  try { activity = (await api.get('/activity')).data; } catch (e) {}
-  try { resumes = (await api.get('/resumes')).data; } catch (e) {}
-  try { aiHistory = (await api.get('/ai-history')).data; } catch (e) {}
+    try {
+      const r = await api.get('/specialists');
+      specialists = Array.isArray(r.data) ? r.data : (r.data?.results || []);
+    } catch (e) {}
 
-  if (!resumes || resumes.length === 0) {
-    resumes = getLocal(CLIENT_STORAGE_KEYS.resumes, []);
-  }
-  if (!specialists || specialists.length < 3) {
-    specialists = spsLocal;
-  }
+    try {
+      const r = await api.get('/activity');
+      activity = Array.isArray(r.data) ? r.data : (r.data?.results || []);
+    } catch (e) {}
 
-  // Calculate live dynamic metrics for each specialist accurately
-  specialists.forEach(sp => {
-    const spKeywords = [sp.name, sp.access_key, sp.email].filter(Boolean);
-    const isSpMatch = (str) => {
-      if (!str) return false;
-      return spKeywords.some(k => str === k || str.includes(k));
-    };
+    try {
+      const r = await api.get('/resumes');
+      resumes = Array.isArray(r.data) ? r.data : (r.data?.results || []);
+    } catch (e) {}
 
-    sp.resumesCount = resumes.filter(r => {
-      const creator = r.created_by || r.specialist_name || '';
-      if (isSpMatch(creator)) return true;
-      if (sp.id === 1 && (!creator || creator.includes('إيهاب'))) return true;
-      return false;
-    }).length;
+    try {
+      const r = await api.get('/ai-history');
+      aiHistory = Array.isArray(r.data) ? r.data : (r.data?.results || []);
+    } catch (e) {}
 
-    sp.aiCallsCount = activity.filter(a => {
-      const isAI = a.action?.includes('ai') || a.action === 'ai_generate' || a.entity === 'ai';
-      if (!isAI) return false;
-      const user = a.user_name || '';
-      const details = a.details || '';
-      if (isSpMatch(user) || isSpMatch(details)) return true;
-      if (sp.id === 1 && (!user || user.includes('إيهاب')) && !details.includes('يزن') && !details.includes('شهاب') && !details.includes('غانم') && !details.includes('نصر')) return true;
-      return false;
-    }).length + (aiHistory || []).filter(h => isSpMatch(h.user_name) || isSpMatch(h.prompt)).length;
+    if (!Array.isArray(specialists) || specialists.length < 3) {
+      specialists = Array.isArray(specialists) && specialists.length > 0 ? specialists : spsLocal;
+    }
+    if (!Array.isArray(activity) || activity.length === 0) {
+      activity = getLocal(CLIENT_STORAGE_KEYS.activity, []);
+    }
+    if (!Array.isArray(resumes) || resumes.length === 0) {
+      resumes = getLocal(CLIENT_STORAGE_KEYS.resumes, []);
+    }
+    if (!Array.isArray(aiHistory)) {
+      aiHistory = getLocal(CLIENT_STORAGE_KEYS.aiHistory, []);
+    }
 
-    sp.totalActions = activity.filter(a => {
-      const user = a.user_name || '';
-      const details = a.details || '';
-      if (isSpMatch(user) || isSpMatch(details)) return true;
-      if (sp.id === 1 && (!user || user.includes('إيهاب')) && !details.includes('يزن') && !details.includes('شهاب') && !details.includes('غانم') && !details.includes('نصر')) return true;
-      return false;
-    }).length;
-  });
+    // Calculate live dynamic metrics for each specialist accurately
+    specialists.forEach(sp => {
+      const spKeywords = [sp.name, sp.access_key, sp.email].filter(Boolean);
+      const isSpMatch = (str) => {
+        if (!str) return false;
+        return spKeywords.some(k => str === k || str.includes(k));
+      };
 
-  const canManage = isSuperAdmin();
+      sp.resumesCount = resumes.filter(r => {
+        const creator = r.created_by || r.specialist_name || '';
+        if (isSpMatch(creator)) return true;
+        if (sp.id === 1 && (!creator || creator.includes('إيهاب'))) return true;
+        return false;
+      }).length;
 
-  const totalTeamResumes = resumes.length;
-  const totalTeamAICalls = activity.filter(a => a.action?.includes('ai') || a.action === 'ai_generate').length + (aiHistory || []).length;
+      sp.aiCallsCount = activity.filter(a => {
+        const isAI = a.action?.includes('ai') || a.action === 'ai_generate' || a.entity === 'ai';
+        if (!isAI) return false;
+        const user = a.user_name || '';
+        const details = a.details || '';
+        if (isSpMatch(user) || isSpMatch(details)) return true;
+        if (sp.id === 1 && (!user || user.includes('إيهاب')) && !details.includes('يزن') && !details.includes('شهاب') && !details.includes('غانم') && !details.includes('نصر')) return true;
+        return false;
+      }).length + (Array.isArray(aiHistory) ? aiHistory.filter(h => isSpMatch(h.user_name) || isSpMatch(h.prompt)).length : 0);
+
+      sp.totalActions = activity.filter(a => {
+        const user = a.user_name || '';
+        const details = a.details || '';
+        if (isSpMatch(user) || isSpMatch(details)) return true;
+        if (sp.id === 1 && (!user || user.includes('إيهاب')) && !details.includes('يزن') && !details.includes('شهاب') && !details.includes('غانم') && !details.includes('نصر')) return true;
+        return false;
+      }).length;
+    });
+
+    const canManage = isSuperAdmin();
+
+    const totalTeamResumes = resumes.length;
+    const totalTeamAICalls = activity.filter(a => a.action?.includes('ai') || a.action === 'ai_generate').length + (Array.isArray(aiHistory) ? aiHistory.length : 0);
 
   const rows = specialists.map((sp, idx) => {
     const directUrl = (window.location.origin || '') + '/?key=' + sp.access_key;
@@ -1652,6 +1674,17 @@ async function viewTeam() {
       </div>
     </div>
   `;
+  } catch (err) {
+    console.error('viewTeam error:', err);
+    el('main').innerHTML = `
+      <div class="glass rounded-2xl p-8 max-w-xl mx-auto my-12 text-center border border-rose-500/30 shadow-2xl">
+        <div class="w-16 h-16 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-2xl mx-auto mb-4"><i class="fas fa-triangle-exclamation"></i></div>
+        <h3 class="font-bold text-lg text-white mb-2">تعذر تحميل لوحة المختصين</h3>
+        <p class="text-xs text-slate-400 mb-6">${esc(err.message || 'حدث خطأ أثناء تحميل البيانات')}</p>
+        <button class="btn-primary !py-2 !px-6 text-xs" onclick="viewTeam()"><i class="fas fa-rotate-right ml-1"></i>إعادة المحاولة</button>
+      </div>
+    `;
+  }
 }
 
 function newSpecialistModal() {
