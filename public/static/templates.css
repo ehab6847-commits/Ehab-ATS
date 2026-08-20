@@ -341,12 +341,13 @@
   color: #334155;
 }
 .cv-formal-pro .cv-sec-title {
-  font-size: 1.05em;
+  font-size: 1.08em;
   font-weight: 800;
   color: #000;
-  padding-bottom: 4px;
-  margin: 0 0 10px;
+  padding-bottom: 8px;
+  margin: 0 0 12px;
   border-bottom: 1.5px solid #000;
+  line-height: 1.45;
   text-transform: none;
   letter-spacing: normal;
 }
