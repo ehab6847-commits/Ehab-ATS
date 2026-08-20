@@ -1294,7 +1294,37 @@ html, body {
     overflow: hidden !important;
     box-shadow: none !important;
     border: none !important;
+  .cv-sec-title,
+  .cv-formal-pro .cv-sec-title,
+  .cv-bilingual-split-page .cv-sec-title {
+    padding-bottom: 10px !important;
+    margin-bottom: 14px !important;
+    line-height: 1.6 !important;
+    display: block !important;
+    box-sizing: border-box !important;
   }
+  [dir="rtl"] * {
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+}
+.cv-sec-title,
+.cv-formal-pro .cv-sec-title,
+.cv-bilingual-split-page .cv-sec-title {
+  padding-bottom: 10px !important;
+  margin-bottom: 14px !important;
+  line-height: 1.6 !important;
+  display: block !important;
+  box-sizing: border-box !important;
+}
+[dir="rtl"] .cv-sec-title,
+[dir="rtl"] .cv-name-ar,
+[dir="rtl"] .cv-name,
+[dir="rtl"] .cv-item-role,
+[dir="rtl"] .cv-item-desc {
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 body { background: #0f172a; padding: 20px; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; align-items: center; }
 .print-banner { background: #1e293b; color: #fff; padding: 12px 24px; border-radius: 12px; margin-bottom: 20px; text-align: center; max-width: 800px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
