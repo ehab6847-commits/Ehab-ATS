@@ -183,12 +183,17 @@
 .cv-bilingual-split-page .cv-sec-title {
   font-size: 1.05em;
   font-weight: 800;
-  text-transform: uppercase;
+  text-transform: none;
+  letter-spacing: normal;
   color: var(--cv-color, #0f172a);
   border-bottom: 1.5px solid var(--cv-color, #334155);
   padding-bottom: 6px;
   margin: 8px 0 6px;
   line-height: 1.35;
+}
+.cv-bilingual-split-page .column-en .cv-sec-title {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .cv-bilingual-split-page .cv-section {
@@ -342,6 +347,11 @@
   padding-bottom: 4px;
   margin: 0 0 10px;
   border-bottom: 1.5px solid #000;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.cv-formal-pro[dir="ltr"] .cv-sec-title,
+.cv-formal-pro .column-en .cv-sec-title {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -370,6 +380,24 @@
   font-size: 0.93em;
   color: #1e293b;
 }
+
+/* Global Arabic Ligature Protection for Screen and Print/PDF */
+[dir="rtl"] .cv-sec-title,
+[dir="rtl"] .cv-name-ar,
+[dir="rtl"] .cv-name,
+[dir="rtl"] .cv-jobtitle,
+[dir="rtl"] .cv-item-role,
+[dir="rtl"] .cv-item-desc,
+[dir="rtl"] p,
+[dir="rtl"] span,
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3 {
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
 @media print {
   .cv-formal-pro {
     page-break-inside: avoid;
@@ -378,5 +406,9 @@
   .cv-formal-pro .cv-item {
     page-break-inside: avoid;
     break-inside: avoid;
+  }
+  [dir="rtl"] * {
+    letter-spacing: normal !important;
+    text-transform: none !important;
   }
 }
