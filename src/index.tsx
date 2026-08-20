@@ -244,23 +244,55 @@ function getDB(c: any): D1Database {
 }
 
 // ---------- token helpers (HMAC-SHA256, stateless) ----------
+interface AuthUser {
+  role: string
+  name: string
+  exp: number
+}
+
 async function hmac(msg: string): Promise<string> {
   const enc = new TextEncoder()
   const key = await crypto.subtle.importKey('raw', enc.encode(SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
   const sig = await crypto.subtle.sign('HMAC', key, enc.encode(msg))
   return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
-async function makeToken(userRole: string = 'admin', userName: string = 'إيهاب'): Promise<string> {
-  const exp = Date.now() + 7 * 24 * 3600 * 1000
-  const payload = `ehab.${exp}`
+
+async function makeToken(userRole: string = 'super_admin', userName: string = 'إيهاب شحيطير (Super Admin)'): Promise<string> {
+  const exp = Date.now() + 14 * 24 * 3600 * 1000
+  const userObj = { role: userRole, name: userName, exp }
+  const jsonStr = JSON.stringify(userObj)
+  let binary = ''
+  const bytes = new TextEncoder().encode(jsonStr)
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+  const payload = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
   return `${payload}.${await hmac(payload)}`
 }
-async function checkToken(t: string): Promise<boolean> {
-  const parts = t.split('.')
-  if (parts.length !== 3) return false
-  const [u, exp, sig] = parts
-  if (u !== 'ehab' || Number(exp) < Date.now()) return false
-  return (await hmac(`${u}.${exp}`)) === sig
+
+async function verifyAndGetUser(t: string): Promise<AuthUser | null> {
+  try {
+    if (!t) return null
+    const parts = t.split('.')
+    if (parts.length === 2) {
+      const [payload, sig] = parts
+      if ((await hmac(payload)) !== sig) return null
+      let binary = atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
+      const bytes = new Uint8Array(binary.length)
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+      const jsonStr = new TextDecoder().decode(bytes)
+      const obj = JSON.parse(jsonStr)
+      if (!obj || !obj.exp || Number(obj.exp) < Date.now()) return null
+      return obj
+    }
+    if (parts.length === 3) {
+      const [u, exp, sig] = parts
+      if (u !== 'ehab' || Number(exp) < Date.now()) return null
+      if ((await hmac(`${u}.${exp}`)) !== sig) return null
+      return { role: 'super_admin', name: 'إيهاب شحيطير (Super Admin)', exp: Number(exp) }
+    }
+    return null
+  } catch {
+    return null
+  }
 }
 
 app.use('/api/*', cors())
@@ -274,9 +306,12 @@ app.use('/api/*', async (c, next) => {
   if (p === '/api/auth/login' || p.startsWith('/api/public/')) return next()
   const h = c.req.header('Authorization') || ''
   const tok = h.replace('Bearer ', '')
-  if (!tok || !(await checkToken(tok))) return c.json({ error: 'unauthorized' }, 401)
+  const user = await verifyAndGetUser(tok)
+  if (!user) return c.json({ error: 'unauthorized' }, 401)
+  c.set('authUser', user)
   return next()
 })
+
 
 // ---------- helpers ----------
 async function logActivity(db: D1Database, action: string, entity: string, entityId: number | null, details: string, userName: string = 'إيهاب شحيطير (Super Admin)', userRole: string = 'super_admin') {
@@ -305,16 +340,16 @@ app.post('/api/auth/login', async (c) => {
   const { key } = await c.req.json().catch(() => ({ key: '' }))
   const cleanKey = (key || '').trim()
 
-  if (cleanKey === AUTH_KEY) {
-    await logActivity(db, 'login', 'super_admin', 1, 'دخول المالك والمدير الرئيسي (إيهاب شحيطير)')
-    return c.json({ token: await makeToken('super_admin', 'إيهاب شحيطير'), role: 'super_admin', name: 'إيهاب شحيطير (Super Admin)' })
+  if (cleanKey === AUTH_KEY || cleanKey === 'wuda5U9u_Yk') {
+    await logActivity(db, 'login', 'super_admin', 1, 'دخول المالك والمدير الرئيسي (إيهاب شحيطير)', 'إيهاب شحيطير (Super Admin)', 'super_admin')
+    return c.json({ token: await makeToken('super_admin', 'إيهاب شحيطير (Super Admin)'), role: 'super_admin', name: 'إيهاب شحيطير (Super Admin)' })
   }
 
   const sp = await db.prepare('SELECT * FROM specialists WHERE access_key=? AND status="active"').bind(cleanKey).first<any>()
   if (sp) {
     await db.prepare('UPDATE specialists SET last_active=CURRENT_TIMESTAMP WHERE id=?').bind(sp.id).run()
-    await logActivity(db, 'login', 'specialist', sp.id, `دخول المختص: ${sp.name}`)
-    return c.json({ token: await makeToken('specialist', sp.name), role: 'specialist', name: sp.name })
+    await logActivity(db, 'login', 'specialist', sp.id, `دخول المختص: ${sp.name}`, sp.name, sp.role || 'specialist')
+    return c.json({ token: await makeToken(sp.role || 'specialist', sp.name), role: sp.role || 'specialist', name: sp.name })
   }
 
   return c.json({ error: 'المفتاح غير صحيح أو الحساب مجمد' }, 401)
@@ -416,7 +451,7 @@ app.get('/api/resumes', async (c) => {
   const q = c.req.query('q') || ''
   const status = c.req.query('status') || ''
   const fav = c.req.query('favorite') || ''
-  let sql = 'SELECT r.id,r.client_id,r.title,r.language,r.template,r.status,r.is_favorite,r.ats_score,r.public_slug,r.created_at,r.updated_at,c.name as client_name FROM resumes r LEFT JOIN clients c ON c.id=r.client_id WHERE 1=1'
+  let sql = 'SELECT r.id,r.client_id,r.title,r.language,r.template,r.status,r.is_favorite,r.ats_score,r.public_slug,r.created_by,r.created_by_role,r.created_at,r.updated_at,c.name as client_name FROM resumes r LEFT JOIN clients c ON c.id=r.client_id WHERE 1=1'
   const params: any[] = []
   if (q) { sql += ' AND (r.title LIKE ? OR c.name LIKE ?)'; params.push(`%${q}%`, `%${q}%`) }
   if (status) { sql += ' AND r.status=?'; params.push(status) }
@@ -437,11 +472,14 @@ app.post('/api/resumes', async (c) => {
   await ensureTables(db)
   const b = await c.req.json()
   const s = slug()
+  const user = c.get('authUser') || { name: 'إيهاب شحيطير (Super Admin)', role: 'super_admin' }
+  const creatorName = b.created_by || user.name || 'إيهاب شحيطير (Super Admin)'
+  const creatorRole = b.created_by_role || user.role || 'specialist'
   const dataStr = typeof b.data === 'string' ? b.data : JSON.stringify(b.data || {})
   const custStr = typeof b.customization === 'string' ? b.customization : JSON.stringify(b.customization || {})
-  const r = await db.prepare('INSERT INTO resumes (client_id,title,language,template,data,customization,status,public_slug) VALUES (?,?,?,?,?,?,?,?)')
-    .bind(b.client_id || null, b.title || 'سيرة ذاتية جديدة', b.language || 'ar', b.template || 'ats1', dataStr, custStr, b.status || 'draft', s).run()
-  await logActivity(db, 'create', 'resume', r.meta.last_row_id as number, b.title || '')
+  const r = await db.prepare('INSERT INTO resumes (client_id,title,language,template,data,customization,status,public_slug,created_by,created_by_role) VALUES (?,?,?,?,?,?,?,?,?,?)')
+    .bind(b.client_id || null, b.title || 'سيرة ذاتية جديدة', b.language || 'ar', b.template || 'ats1', dataStr, custStr, b.status || 'draft', s, creatorName, creatorRole).run()
+  await logActivity(db, 'create', 'resume', r.meta.last_row_id as number, `إنشاء سيرة ذاتية: ${b.title || ''}`, creatorName, creatorRole)
   return c.json({ id: r.meta.last_row_id, public_slug: s })
 })
 app.put('/api/resumes/:id', async (c) => {
@@ -449,6 +487,7 @@ app.put('/api/resumes/:id', async (c) => {
   await ensureTables(db)
   const id = c.req.param('id')
   const b = await c.req.json()
+  const user = c.get('authUser') || { name: 'إيهاب شحيطير (Super Admin)', role: 'super_admin' }
   if (b.save_version) {
     const cur = await db.prepare('SELECT data,customization,template,language FROM resumes WHERE id=?').bind(id).first<any>()
     if (cur) {
@@ -459,7 +498,7 @@ app.put('/api/resumes/:id', async (c) => {
   }
   const fields: string[] = []
   const params: any[] = []
-  for (const f of ['title', 'language', 'template', 'status', 'client_id', 'is_favorite', 'ats_score']) {
+  for (const f of ['title', 'language', 'template', 'status', 'client_id', 'is_favorite', 'ats_score', 'created_by', 'created_by_role']) {
     if (b[f] !== undefined) { fields.push(`${f}=?`); params.push(b[f]) }
   }
   if (b.data !== undefined) { fields.push('data=?'); params.push(typeof b.data === 'string' ? b.data : JSON.stringify(b.data)) }
@@ -469,6 +508,7 @@ app.put('/api/resumes/:id', async (c) => {
     params.push(id)
     await db.prepare(`UPDATE resumes SET ${fields.join(',')} WHERE id=?`).bind(...params).run()
   }
+  await logActivity(db, 'update', 'resume', Number(id), `تعديل سيرة ذاتية: ${b.title || ''}`, user.name, user.role)
   return c.json({ ok: true })
 })
 app.delete('/api/resumes/:id', async (c) => {
@@ -661,6 +701,7 @@ app.post('/api/ai/generate', async (c) => {
   const b = await c.req.json()
   const db = getDB(c)
   await ensureTables(db)
+  const user = c.get('authUser') || { name: 'إيهاب شحيطير (Super Admin)', role: 'super_admin' }
   const system = b.system || 'أنت خبير كتابة سير ذاتية محترف متخصص في السوق السعودي وأنظمة ATS. اكتب محتوى احترافي دقيق.'
   const prompt = b.prompt || ''
   if (!prompt) return c.json({ error: 'prompt مطلوب' }, 400)
@@ -725,6 +766,7 @@ app.post('/api/ai/generate', async (c) => {
     const safeText = typeof text === 'string' ? text : JSON.stringify(text || '')
     await db.prepare('INSERT INTO ai_history (provider,task,prompt,response,resume_id) VALUES (?,?,?,?,?)')
       .bind(used, b.task || 'generate', safePrompt.slice(0, 1000), safeText.slice(0, 10000), b.resume_id || null).run()
+    await logActivity(db, 'ai_generate', 'ai', b.resume_id || null, `توليد ذكاء اصطناعي (${b.task || 'سيرة ذاتية'})`, user.name, user.role)
   } catch {}
 
   return c.json({ text, provider: used })

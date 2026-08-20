@@ -1448,37 +1448,59 @@ async function viewTeam() {
   const spsLocal = ensureSpecialistsList();
   let specialists = [];
   let activity = [];
-  const resumes = getLocal(CLIENT_STORAGE_KEYS.resumes, []);
+  let resumes = [];
+  let aiHistory = [];
 
   try { specialists = (await api.get('/specialists')).data; } catch (e) {}
   try { activity = (await api.get('/activity')).data; } catch (e) {}
+  try { resumes = (await api.get('/resumes')).data; } catch (e) {}
+  try { aiHistory = (await api.get('/ai-history')).data; } catch (e) {}
 
+  if (!resumes || resumes.length === 0) {
+    resumes = getLocal(CLIENT_STORAGE_KEYS.resumes, []);
+  }
   if (!specialists || specialists.length < 3) {
     specialists = spsLocal;
   }
 
-  // Calculate live dynamic metrics for each specialist
+  // Calculate live dynamic metrics for each specialist accurately
   specialists.forEach(sp => {
+    const spKeywords = [sp.name, sp.access_key, sp.email].filter(Boolean);
+    const isSpMatch = (str) => {
+      if (!str) return false;
+      return spKeywords.some(k => str === k || str.includes(k));
+    };
+
     sp.resumesCount = resumes.filter(r => {
-      const creator = r.created_by || (r.id === 1 ? 'إيهاب شحيطير (Super Admin)' : 'إيهاب شحيطير');
-      return creator === sp.name || (sp.id === 1 && creator.includes('إيهاب'));
+      const creator = r.created_by || r.specialist_name || '';
+      if (isSpMatch(creator)) return true;
+      if (sp.id === 1 && (!creator || creator.includes('إيهاب'))) return true;
+      return false;
     }).length;
 
     sp.aiCallsCount = activity.filter(a => {
-      const u = a.user_name || (a.details?.includes('إيهاب') ? 'إيهاب شحيطير (Super Admin)' : (a.details?.includes('يزن') ? 'يزن سمير' : 'إيهاب شحيطير (Super Admin)'));
-      return (a.action?.includes('ai') || a.action === 'ai_generate') && (u === sp.name || (sp.id === 1 && u.includes('إيهاب')));
-    }).length;
+      const isAI = a.action?.includes('ai') || a.action === 'ai_generate' || a.entity === 'ai';
+      if (!isAI) return false;
+      const user = a.user_name || '';
+      const details = a.details || '';
+      if (isSpMatch(user) || isSpMatch(details)) return true;
+      if (sp.id === 1 && (!user || user.includes('إيهاب')) && !details.includes('يزن') && !details.includes('شهاب') && !details.includes('غانم') && !details.includes('نصر')) return true;
+      return false;
+    }).length + (aiHistory || []).filter(h => isSpMatch(h.user_name) || isSpMatch(h.prompt)).length;
 
     sp.totalActions = activity.filter(a => {
-      const u = a.user_name || (a.details?.includes('إيهاب') ? 'إيهاب شحيطير (Super Admin)' : (a.details?.includes('يزن') ? 'يزن سمير' : 'إيهاب شحيطير (Super Admin)'));
-      return u === sp.name || (sp.id === 1 && u.includes('إيهاب'));
+      const user = a.user_name || '';
+      const details = a.details || '';
+      if (isSpMatch(user) || isSpMatch(details)) return true;
+      if (sp.id === 1 && (!user || user.includes('إيهاب')) && !details.includes('يزن') && !details.includes('شهاب') && !details.includes('غانم') && !details.includes('نصر')) return true;
+      return false;
     }).length;
   });
 
   const canManage = isSuperAdmin();
 
   const totalTeamResumes = resumes.length;
-  const totalTeamAICalls = activity.filter(a => a.action?.includes('ai') || a.action === 'ai_generate').length;
+  const totalTeamAICalls = activity.filter(a => a.action?.includes('ai') || a.action === 'ai_generate').length + (aiHistory || []).length;
 
   const rows = specialists.map((sp, idx) => {
     const directUrl = (window.location.origin || '') + '/?key=' + sp.access_key;
