@@ -794,7 +794,7 @@ app.get('/cv/:slug', async (c) => {
 <title>${r.title} | Ehab ATS</title>
 <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;600;700&family=Almarai:wght@300;400;700&family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;800&family=Changa:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;600;700&family=Inter:wght@300;400;600;700&family=Kufam:wght@400;600;700&family=Montserrat:wght@300;400;600;700&family=Noto+Sans+Arabic:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&family=Readex+Pro:wght@300;400;600;700&family=Roboto:wght@300;400;600;700&family=Rubik:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
-<link href="/static/templates.css" rel="stylesheet">
+<link href="/static/templates.css?v=1787274629506" rel="stylesheet">
 <style>
 body{margin:0;background:#e5e7eb;font-family:'Cairo',sans-serif}
 .wrap{display:flex;flex-direction:column;align-items:center;padding:24px 8px}
@@ -810,7 +810,7 @@ body{margin:0;background:#e5e7eb;font-family:'Cairo',sans-serif}
 <div class="toolbar"><button onclick="window.print()">🖨️ طباعة / حفظ PDF</button></div>
 <div id="cv"></div>
 </div>
-<script src="/static/templates.js"></script>
+<script src="/static/templates.js?v=1787274629506"></script>
 <script>
 fetch('/api/public/cv/${s}').then(r=>r.json()).then(r=>{
   const data = JSON.parse(r.data||'{}'); const cust = JSON.parse(r.customization||'{}');
@@ -832,15 +832,15 @@ app.get('/', (c) => {
 <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{cairo:['Cairo','sans-serif']}}}}</script>
 <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;600;700&family=Almarai:wght@300;400;700&family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;800&family=Changa:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;600;700&family=Inter:wght@300;400;600;700&family=Kufam:wght@400;600;700&family=Montserrat:wght@300;400;600;700&family=Noto+Sans+Arabic:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&family=Readex+Pro:wght@300;400;600;700&family=Roboto:wght@300;400;600;700&family=Rubik:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
-<link href="/static/styles.css" rel="stylesheet">
-<link href="/static/templates.css" rel="stylesheet">
+<link href="/static/styles.css?v=1787274629506" rel="stylesheet">
+<link href="/static/templates.css?v=1787274629506" rel="stylesheet">
 </head>
 <body class="font-cairo bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors">
 <div id="root"></div>
 <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-<script src="/static/templates.js"></script>
+<script src="/static/templates.js?v=1787274629506"></script>
 <script src="/static/ats.js"></script>
-<script src="/static/builder.js"></script>
+<script src="/static/builder.js?v=1787274629506"></script>
 <script src="/static/app.js"></script>
 </body>
 </html>`)

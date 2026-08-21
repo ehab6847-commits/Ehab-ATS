@@ -383,7 +383,7 @@ function renderBuilderForm() {
         <span class="font-bold flex-1">البيانات الشخصية والمعلومات <span class="text-xs text-slate-400 font-normal">(${p.nameAr || 'الاسم'})</span></span>
         <i class="fas fa-chevron-down text-slate-400 text-xs transition-transform duration-200" id="chevron-personal"></i>
       </div>
-      <div class="section-body p-3">
+      <div class="section-body p-3" style="display:none;">
         <div class="grid grid-cols-2 gap-2">
           ${pf('nameAr', 'الاسم (عربي) *')} ${pf('nameEn', 'Name (En)', 'ltr')}
           ${pf('titleAr', 'المسمى الوظيفي (اختياري)')} ${pf('titleEn', 'Job Title (En - اختياري)', 'ltr')}
@@ -444,7 +444,7 @@ function bSectionCard(sec, i) {
 
   return `
   <div class="section-card ${sec.visible === false ? 'opacity-50' : ''} collapsed" data-idx="${i}">
-    <div class="section-head">
+    <div class="section-head" onclick="bToggleCollapse(${i})">
       <span class="drag-handle" onclick="event.stopPropagation()"><i class="fas fa-grip-vertical"></i></span>
       <i class="fas ${def.icon} text-indigo-400" onclick="bToggleCollapse(${i})"></i>
       <span class="font-bold flex-1 cursor-pointer" onclick="bToggleCollapse(${i})">${bEsc(sec.titleAr || def.ar)} <span class="text-xs text-slate-400 font-normal">(${isTextKind ? ((sec.textAr || sec.textEn) ? '1' : '0') : (sec.items || []).length})</span></span>
@@ -459,7 +459,7 @@ function bSectionCard(sec, i) {
       <button class="mini-btn" title="نسخ القسم" onclick="bDupSection(${i})"><i class="fas fa-copy"></i></button>
       <button class="mini-btn danger" title="حذف" onclick="bDelSection(${i})"><i class="fas fa-trash"></i></button>
     </div>
-    <div class="section-body">
+    <div class="section-body" style="display:none;">
       <div class="grid grid-cols-2 gap-2 mb-2">
         <div><label class="fld">عنوان القسم (عربي)</label><input class="input-field !py-1.5" value="${bEsc(sec.titleAr || '')}" placeholder="${bEsc(def.ar)}" oninput="bSecField(${i},'titleAr',this.value)"></div>
         <div><label class="fld">Section Title (En)</label><input class="input-field !py-1.5" dir="ltr" value="${bEsc(sec.titleEn || '')}" placeholder="${bEsc(def.en || '')}" oninput="bSecField(${i},'titleEn',this.value)"></div>
@@ -479,7 +479,14 @@ function bSectionCard(sec, i) {
 
 function bToggleCollapse(i) {
   const card = document.querySelector(`.section-card[data-idx="${i}"]`);
-  if (card) card.classList.toggle('collapsed');
+  if (!card) return;
+  const isCollapsed = card.classList.toggle('collapsed');
+  const body = card.querySelector('.section-body');
+  if (body) {
+    body.style.display = isCollapsed ? 'none' : 'block';
+  }
+  const chev = card.querySelector('.fa-chevron-down');
+  if (chev) chev.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
 function bItemCard(sec, i, it, j) {
@@ -1515,29 +1522,46 @@ function bApplyLiveEditToPreview() {
 function bToggleAccordion(target) {
   if (target === 'personal') {
     const card = document.getElementById('sec-card-personal');
-    if (card) {
-      card.classList.toggle('collapsed');
-      const chev = document.getElementById('chevron-personal');
-      if (chev) chev.style.transform = card.classList.contains('collapsed') ? 'rotate(0deg)' : 'rotate(180deg)';
+    if (!card) return;
+    const isCollapsed = card.classList.toggle('collapsed');
+    const body = card.querySelector('.section-body');
+    if (body) {
+      body.style.display = isCollapsed ? 'none' : 'block';
     }
+    const chev = document.getElementById('chevron-personal');
+    if (chev) chev.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)';
     return;
   }
-  const card = document.querySelector(`.section-card[data-idx="${target}"]`);
-  if (card) {
-    card.classList.toggle('collapsed');
-    const chev = card.querySelector('.fa-chevron-down');
-    if (chev) chev.style.transform = card.classList.contains('collapsed') ? 'rotate(0deg)' : 'rotate(180deg)';
-  }
+  bToggleCollapse(target);
 }
 
 function bToggleAllSections(expand) {
   const pCard = document.getElementById('sec-card-personal');
   if (pCard) {
-    if (expand) pCard.classList.remove('collapsed');
-    else pCard.classList.add('collapsed');
+    const body = pCard.querySelector('.section-body');
+    const chev = document.getElementById('chevron-personal');
+    if (expand) {
+      pCard.classList.remove('collapsed');
+      if (body) body.style.display = 'block';
+      if (chev) chev.style.transform = 'rotate(180deg)';
+    } else {
+      pCard.classList.add('collapsed');
+      if (body) body.style.display = 'none';
+      if (chev) chev.style.transform = 'rotate(0deg)';
+    }
   }
-  document.querySelectorAll('.section-card').forEach(card => {
-    if (expand) card.classList.remove('collapsed');
-    else card.classList.add('collapsed');
+
+  document.querySelectorAll('.section-card[data-idx]').forEach(card => {
+    const body = card.querySelector('.section-body');
+    const chev = card.querySelector('.fa-chevron-down');
+    if (expand) {
+      card.classList.remove('collapsed');
+      if (body) body.style.display = 'block';
+      if (chev) chev.style.transform = 'rotate(180deg)';
+    } else {
+      card.classList.add('collapsed');
+      if (body) body.style.display = 'none';
+      if (chev) chev.style.transform = 'rotate(0deg)';
+    }
   });
 }
