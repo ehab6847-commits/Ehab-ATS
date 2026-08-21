@@ -388,38 +388,14 @@ function translateTextToEnglish(text) {
 }
 
 function classifySectionHeading(rawLine) {
-  const clean = sanitizeText(rawLine).toLowerCase().replace(/[:：]+$/, '').trim();
-  if (!clean || clean.length > 50) return null;
-
-  if (/^(الهدف المهني|الهدف الوظيفي|الهدف|الملخص المهني|الملخص|نبذة عامة|نبذة|مقدمة|profile|summary|professional summary|executive summary|career summary|objective|about|about me)$/i.test(clean) ||
-      (clean.startsWith('الهدف') && clean.length < 25) || (clean.startsWith('الملخص') && clean.length < 25)) {
-    return 'summary';
-  }
-
-  if (/^(المؤهل العلمي|المؤهلات العلمية|المؤهلات الأكاديمية|المؤهلات|التعليم|المؤهل|دراستي|education|academic background|academic qualifications|qualifications|academic)$/i.test(clean) ||
-      (clean.startsWith('المؤهل') && clean.length < 25) || (clean.startsWith('التعليم') && clean.length < 25)) {
-    return 'education';
-  }
-
-  if (/^(الخبرات العملية|الخبرة العملية|الخبرات المهنية|الخبرات|خبراتي|سجل الخبرة|experience|work experience|employment|employment history|work history|professional experience)$/i.test(clean) ||
-      (clean.startsWith('الخبر') && clean.length < 25)) {
-    return 'experience';
-  }
-
-  if (/^(الدورات والشهادات|الدورات التدريبية|الدورات|الشهادات المهنية|الشهادات|البرامج التدريبية|الكورسات|courses|certifications|training|certificates|workshops)$/i.test(clean) ||
-      (clean.startsWith('الدورات') && clean.length < 25) || (clean.startsWith('الشهادات') && clean.length < 25)) {
-    return 'training';
-  }
-
-  if (/^(المهارات المهنية|المهارات الشخصية|المهارات التقنية|المهارات|مهاراتي|skills|core skills|technical skills|key skills|competencies)$/i.test(clean) ||
-      (clean.startsWith('المهارات') && clean.length < 25)) {
-    return 'skills';
-  }
-
-  if (/^(اللغات|اللغة|languages|language skills)$/i.test(clean)) {
-    return 'languages';
-  }
-
+  if (!rawLine) return null;
+  const clean = sanitizeText(rawLine).toLowerCase().replace(/^[#\*\_–•▪🔹■\d+\.\s]+|[#\*\_–:\s]+$/g, '').trim();
+  if (/^(?:الهدف المهني|الهدف الوظيفي|المستهدف الوظيفي|Career Objective|Objective|الملخص المهني|الملخص التنفيذي|النبذة المهنية|نبذة عني|نبذة تعريفية|نبذة|عني|الملخص|Summary|About Me|Profile)(?:$|[\s:\-])/i.test(clean)) return 'summary';
+  if (/^(?:المؤهلات العلمية|المؤهل العلمي|التعليم والمؤهلات|التعليم|المؤهلات|الدراسة|Education|Academic Background|Academic Qualifications|Qualifications)(?:$|[\s:\-])/i.test(clean)) return 'education';
+  if (/^(?:الخبرات العملية|الخبرة المهنية|الخبرات المهنية|سجل الخبرات|الخبرة|الخبرات|خبراتي|Work Experience|Experience|Employment|Professional Experience)(?:$|[\s:\-])/i.test(clean)) return 'experience';
+  if (/^(?:الدورات التدريبية|الشهادات الاحترافية|الدورات والشهادات|الدورات|الكورسات|الشهادات|البرامج التدريبية|Courses|Certificates|Certifications|Training|Workshops)(?:$|[\s:\-])/i.test(clean)) return 'training';
+  if (/^(?:المهارات الشخصية|المهارات التقنية|المهارات والقدرات|المهارات المهنية|المهارات|مهاراتي|القدرات|Skills|Core Skills|Technical Skills|Key Skills|Competencies)(?:$|[\s:\-])/i.test(clean)) return 'skills';
+  if (/^(?:اللغات والمهارات اللغوية|اللغات|اللغة|Languages|Language Skills)(?:$|[\s:\-])/i.test(clean)) return 'languages';
   return null;
 }
 
@@ -437,14 +413,20 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
 
   let activeSection = 'personal';
 
-  for (let i = 0; i < lines.length; i++) {
+    for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const heading = classifySectionHeading(line);
     if (heading) {
       activeSection = heading;
+      const afterColon = line.replace(/^[#\*\_–•▪🔹■\d+\.\s]*(?:الهدف المهني|الهدف الوظيفي|المستهدف الوظيفي|Career Objective|Objective|الملخص المهني|الملخص التنفيذي|النبذة المهنية|نبذة عني|نبذة تعريفية|نبذة|عني|الملخص|Summary|About Me|Profile|الخبرات العملية|الخبرة المهنية|الخبرات المهنية|سجل الخبرات|الخبرة|الخبرات|Work Experience|Experience|Employment|المؤهلات العلمية|المؤهل العلمي|التعليم والمؤهلات|التعليم|الدراسة|Education|Academic|الدورات التدريبية|الشهادات الاحترافية|الدورات والشهادات|الدورات|الكورسات|الشهادات|Courses|Certificates|Certifications|Training|المهارات الشخصية|المهارات التقنية|المهارات والقدرات|المهارات|القدرات|Skills|Competencies|اللغات والمهارات اللغوية|اللغات|Languages)[#\*\_–:\s]*/i, '').trim();
+      if (afterColon) {
+        rawSections[activeSection].push(afterColon);
+      }
       continue;
     }
-    rawSections[activeSection].push(line);
+    if (rawSections[activeSection]) {
+      rawSections[activeSection].push(line);
+    }
   }
 
   // 1. Parse Personal Data
@@ -474,6 +456,19 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
     }
   }
 
+  let nationalityAr = '', nationalityEn = '';
+  for (let l of lines) {
+    const natM = l.match(/(?:الجنسية\s*[:\-]\s*([^\n\r,]+))/i);
+    if (natM && natM[1]) {
+      nationalityAr = natM[1].trim();
+      nationalityEn = translateTextToEnglish(nationalityAr);
+      break;
+    } else if (/(?:^|\s)(?:سعودي|سعودية)(?:$|\s)/i.test(l) && !nameAr.includes(l)) {
+      nationalityAr = 'سعودية';
+      nationalityEn = 'Saudi';
+    }
+  }
+
   for (let i = 0; i < Math.min(6, lines.length); i++) {
     const l = cleanContentLine(lines[i]);
     if (!l || l.includes('@') || phoneRegex.test(l) || classifySectionHeading(l)) continue;
@@ -482,7 +477,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
       nameEn = translateArabicNameToEnglish(nameAr);
       continue;
     }
-    if (nameAr && !titleAr && l.length > 2 && l.length < 80 && !/(?:سعودي|المملكة|الرياض|جدة|الطائف|القصيم|مكة|حائل)/.test(l)) {
+    if (nameAr && !titleAr && l.length > 2 && l.length < 80 && !classifySectionHeading(l) && !/(?:سعودي|سعودية|المملكة|الرياض|جدة|الطائف|القصيم|مكة|حائل|الخبر|الدمام|المدينة|الهاتف|الجوال|البريد|الإيميل|المنطقة|الجنسية|العنوان|الهدف|الملخص|نبذة)/i.test(l)) {
       titleAr = l;
       titleEn = translateTextToEnglish(titleAr);
       break;
@@ -671,8 +666,8 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
       cityEn: cityEn || 'Makkah, Saudi Arabia',
       linkedin: '',
       website: '',
-      nationality: 'سعودية',
-      nationalityEn: 'Saudi',
+      nationality: nationalityAr || '',
+      nationalityEn: nationalityEn || '',
       birthdate: '',
       photo: '',
       logo: '',

@@ -283,10 +283,17 @@ api.defaults.adapter = async function (config) {
     const promptStr = typeof rawPrompt === 'string' ? rawPrompt : (typeof rawPrompt === 'object' ? JSON.stringify(rawPrompt) : String(rawPrompt));
 
     // Strip out prompt instructions if present to isolate clean user text
-    let cleanPrompt = promptStr
-      .replace(/^استخرج ونظم وحول النص والمعلومات التالية إلى سيرة ذاتية مكتملة الحقول ومحتوى احترافي جداً:\s*"?/gi, '')
-      .replace(/"?\s*أرجع البيانات كـ JSON[\s\S]*$/gi, '')
-      .trim();
+    let cleanPrompt = promptStr;
+    const matchQuotes = promptStr.match(/"([^"]{10,})"/);
+    if (matchQuotes) {
+      cleanPrompt = matchQuotes[1];
+    } else {
+      cleanPrompt = promptStr
+        .replace(/^استخرج ونظم[\s\S]*?:\s*/gi, '')
+        .replace(/\*\*تعليمات مهمة[\s\S]*$/gi, '')
+        .replace(/أرجع البيانات كـ JSON[\s\S]*$/gi, '')
+        .trim();
+    }
     if (!cleanPrompt) cleanPrompt = promptStr;
 
     let resultText = '';

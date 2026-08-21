@@ -185,9 +185,7 @@ function renderBuilder() {
             ${bRenderTemplateCarouselCards(r.template)}
           </div>
         </div>
-      </div>
     </div>
-  </div>
   </div>`;
 
   renderBuilderForm();
@@ -416,12 +414,14 @@ function bUploadImg(input, key) {
 function bSectionCard(sec, i) {
   const def = SECTION_TYPES[sec.type] || { ar: sec.type, icon: 'fa-list', kind: 'list' };
   const items = (sec.items || []).map((it, j) => bItemCard(sec, i, it, j)).join('');
+  const isTextKind = def.kind === 'text';
+
   return `
   <div class="section-card ${sec.visible === false ? 'opacity-50' : ''} collapsed" data-idx="${i}">
     <div class="section-head">
       <span class="drag-handle" onclick="event.stopPropagation()"><i class="fas fa-grip-vertical"></i></span>
       <i class="fas ${def.icon} text-indigo-400" onclick="bToggleCollapse(${i})"></i>
-      <span class="font-bold flex-1 cursor-pointer" onclick="bToggleCollapse(${i})">${bEsc(sec.titleAr || def.ar)} <span class="text-xs text-slate-400">(${(sec.items || []).length})</span></span>
+      <span class="font-bold flex-1 cursor-pointer" onclick="bToggleCollapse(${i})">${bEsc(sec.titleAr || def.ar)} <span class="text-xs text-slate-400">(${isTextKind ? ((sec.textAr || sec.textEn) ? '1' : '0') : (sec.items || []).length})</span></span>
       
       <!-- Quick Section AI Button -->
       <button class="mini-btn !bg-violet-500/20 !text-violet-300 hover:!bg-violet-500/40" title="مساعد الذكاء الاصطناعي لهذا القسم" onclick="event.stopPropagation(); bSectionAIModal(${i})"><i class="fas fa-wand-magic-sparkles"></i> AI</button>
@@ -437,9 +437,15 @@ function bSectionCard(sec, i) {
         <div><label class="fld">عنوان القسم (عربي)</label><input class="input-field !py-1.5" value="${bEsc(sec.titleAr || '')}" placeholder="${bEsc(def.ar)}" oninput="bSecField(${i},'titleAr',this.value)"></div>
         <div><label class="fld">Section Title (En)</label><input class="input-field !py-1.5" dir="ltr" value="${bEsc(sec.titleEn || '')}" placeholder="${bEsc(def.en || '')}" oninput="bSecField(${i},'titleEn',this.value)"></div>
       </div>
+      ${isTextKind ? `
+        <div class="space-y-2 mb-2">
+          <div><label class="fld">محتوى ونص القسم (عربي)</label><textarea class="input-field !py-1.5 text-xs" rows="3" oninput="bSecField(${i},'textAr',this.value)">${bEsc(sec.textAr || '')}</textarea></div>
+          <div><label class="fld">Section Content (En)</label><textarea class="input-field !py-1.5 text-xs" dir="ltr" rows="3" oninput="bSecField(${i},'textEn',this.value)">${bEsc(sec.textEn || '')}</textarea></div>
+        </div>
+      ` : ''}
       ${def.kind === 'skills' ? `<label class="flex items-center gap-2 text-xs text-slate-400 mb-2"><input type="checkbox" ${sec.showBars ? 'checked' : ''} onchange="bSecField(${i},'showBars',this.checked)"> عرض كأشرطة مستوى بدل شرائح</label>` : ''}
       ${items}
-      <button class="btn-ghost w-full !py-1.5 !text-sm mt-1" onclick="bAddItem(${i})"><i class="fas fa-plus ml-1"></i>إضافة عنصر للقسم</button>
+      ${!isTextKind ? `<button class="btn-ghost w-full !py-1.5 !text-sm mt-1" onclick="bAddItem(${i})"><i class="fas fa-plus ml-1"></i>إضافة عنصر للقسم</button>` : ''}
     </div>
   </div>`;
 }
@@ -816,47 +822,28 @@ function bOneShotAIModal() {
 
 async function runOneShotAI() {
   const text = (document.getElementById('oneshot-text')?.value || '').trim();
-  if (!text) return toast('اكتب أو يلصق المعلومات أولاً', 'err');
+  if (!text) return toast('اكتب أو إلصق المعلومات أولاً', 'err');
 
   const lang = document.getElementById('oneshot-lang')?.value || B.resume.language || 'ar';
   const st = document.getElementById('oneshot-status');
   if (st) st.innerHTML = '<div class="spinner !w-4 !h-4 !border-2 inline-block ml-1"></div> جاري تنظيم البيانات وتوليد محتوى السيرة الذاتية بالذكاء الاصطناعي...';
 
-  const prompt = `استخرج ونظم وحول النص والمعلومات التالية إلى سيرة ذاتية مكتملة الحقول ومحتوى احترافي جداً:
-"${text}"
-
-**تعليمات مهمة جداً:**
-1. كل خبرة عملية مختلفة (شركة أو جهة مختلفة) يجب أن تكون عنصر (item) مستقل ومنفصل تماماً في مصفوفة items داخل قسم experience. لا تدمج خبرتين في عنصر واحد أبداً!
-2. كل مرحلة تعليمية مختلفة يجب أن تكون عنصر مستقل في قسم education.
-3. كل مهارة يجب أن تكون عنصر مستقل في قسم skills.
-4. حقل descAr و descEn يحتوي فقط المهام والنقاط الخاصة بتلك الخبرة الواحدة، وليس خلط مهام خبرات أخرى.
-5. إذا وجدت خبرتين أو أكثر في النص، أنشئ عنصرين أو أكثر منفصلين.
-
-أرجع البيانات كـ JSON بالبنية التالية فقط (بدون أي شروح أو markdown):
-{
-  "personal": { "nameAr": "", "nameEn": "", "titleAr": "", "titleEn": "", "email": "", "phone": "", "cityAr": "", "cityEn": "", "linkedin": "", "website": "", "nationality": "" },
-  "sections": [
-    { "id": "s1", "type": "summary", "visible": true, "textAr": "", "textEn": "" },
-    { "id": "s2", "type": "experience", "visible": true, "items": [
-      { "roleAr": "المسمى الوظيفي 1", "roleEn": "", "orgAr": "اسم الشركة 1", "orgEn": "", "start": "", "end": "", "descAr": "مهام الخبرة الأولى فقط", "descEn": "" },
-      { "roleAr": "المسمى الوظيفي 2", "roleEn": "", "orgAr": "اسم الشركة 2", "orgEn": "", "start": "", "end": "", "descAr": "مهام الخبرة الثانية فقط", "descEn": "" }
-    ] },
-    { "id": "s3", "type": "education", "visible": true, "items": [{ "degreeAr": "", "degreeEn": "", "schoolAr": "", "schoolEn": "", "year": "", "gpa": "" }] },
-    { "id": "s4", "type": "skills", "visible": true, "items": [{ "nameAr": "", "nameEn": "", "level": 4 }] },
-    { "id": "s5", "type": "languages", "visible": true, "items": [{ "nameAr": "", "nameEn": "", "levelAr": "", "levelEn": "" }] },
-    { "id": "s6", "type": "courses", "visible": true, "items": [{ "nameAr": "", "nameEn": "", "issuerAr": "", "issuerEn": "", "year": "" }] }
-  ]
-}`;
-
   try {
-    const { data } = await api.post('/ai/generate', { prompt, task: 'full_resume', language: lang, resume_id: B.id });
-    const m = data.text.match(/\{[\s\S]*\}/);
-    if (!m) throw new Error('رد غير صالح');
-    const upd = JSON.parse(m[0]);
-    if (!upd.sections || !upd.personal) throw new Error('بنية غير صحيحة');
+    let upd = null;
+    if (typeof parseUserRawResumeText === 'function') {
+      upd = parseUserRawResumeText(text, lang);
+    }
+
+    if (!upd || !upd.sections || !upd.personal) {
+      const { data } = await api.post('/ai/generate', { prompt: text, task: 'full_resume', language: lang, resume_id: B.id });
+      const m = (data.text || '').match(/\{[\s\S]*\}/);
+      if (m) upd = JSON.parse(m[0]);
+    }
+
+    if (!upd || !upd.sections || !upd.personal) throw new Error('بنية غير صحيحة');
 
     // Retain existing uploaded photos/logos/signatures if any
-    if (B.data.personal) {
+    if (B.data && B.data.personal) {
       upd.personal.photo = B.data.personal.photo || '';
       upd.personal.logo = B.data.personal.logo || '';
       upd.personal.signature = B.data.personal.signature || '';
@@ -872,10 +859,7 @@ async function runOneShotAI() {
     renderBuilderForm();
     bPreview();
     closeModal();
-    if (window.innerWidth <= 900 && typeof bSwitchMobileTab === 'function') {
-      bSwitchMobileTab('preview');
-    }
-    toast('تم تعبئة وتوليد السيرة الذاتية بنجاح على القالب المختار ✅ (' + bEsc(data.provider) + ')');
+    toast('تم تعبئة وتوليد السيرة الذاتية بنجاح على القالب المختار ✅');
   } catch (e) {
     if (st) st.innerHTML = '<span class="text-rose-400"><i class="fas fa-circle-xmark ml-1"></i> ' + bEsc(e.message || 'فشل التوليد') + '</span>';
   }
