@@ -425,3 +425,129 @@
     text-transform: none !important;
   }
 }
+
+/* ==========================================================================
+   Modern Tinted Cards ATS Template (.cv-tinted-cards)
+   ========================================================================== */
+.cv-tinted-cards {
+  background: #ffffff;
+  color: #0f172a;
+}
+.cv-tinted-cards .cv-section-tinted {
+  background: rgba(248, 250, 252, 0.75);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+.cv-tinted-cards .cv-sec-title {
+  font-size: 1.05em;
+  font-weight: 800;
+  color: #0f172a;
+  border-bottom: 1.5px solid #cbd5e1;
+  padding-bottom: 6px;
+  margin: 0 0 10px;
+}
+.cv-top-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+.cv-metric-box {
+  background: rgba(241, 245, 249, 0.85);
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 12px;
+  border-top: 3px solid var(--cv-accent, #0284c7);
+}
+.cv-metric-title {
+  font-size: 0.72em;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.cv-metric-val {
+  font-size: 0.88em;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+/* 6 Skills & Courses Layout Components */
+.cv-cards-plus-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 12px;
+}
+.cv-card-plus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(241, 245, 249, 0.85);
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: #1e293b;
+}
+.cv-card-plus .cv-plus-icon {
+  color: var(--cv-accent, #0284c7);
+  font-weight: 900;
+  font-size: 1.1em;
+  line-height: 1;
+}
+.cv-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cv-chip-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.88em;
+  font-weight: 600;
+  color: #1e293b;
+}
+.cv-lang-tinted-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cv-lang-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(241, 245, 249, 0.9);
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 0.9em;
+  color: #1e293b;
+}
+
+/* Inline Live Edit Mode Styling */
+.cv-live-editing [contenteditable="true"] {
+  outline: 1.5px dashed #6366f1 !important;
+  outline-offset: 2px !important;
+  border-radius: 3px !important;
+  cursor: text !important;
+  transition: outline 0.15s ease, background 0.15s ease;
+}
+.cv-live-editing [contenteditable="true"]:hover {
+  background: rgba(99, 102, 241, 0.08) !important;
+  outline: 1.5px dashed #4f46e5 !important;
+}
+.cv-live-editing [contenteditable="true"]:focus {
+  background: rgba(99, 102, 241, 0.12) !important;
+  outline: 2px solid #4f46e5 !important;
+}
+

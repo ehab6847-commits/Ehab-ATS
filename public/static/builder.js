@@ -1,5 +1,5 @@
 /* ============ Ehab ATS - Resume Builder (builder.js) ============ */
-const B = { id: null, resume: null, data: null, cust: null, dirty: false, saveTimer: null, verCounter: 0 };
+const B = { liveEditMode: false, id: null, resume: null, data: null, cust: null, dirty: false, saveTimer: null, verCounter: 0 };
 
 function bEsc(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function bid() { return 'x' + Math.random().toString(36).slice(2, 9); }
@@ -128,12 +128,66 @@ function renderBuilder() {
 
     <div class="builder-grid flex-1">
       <div class="builder-form-col" id="b-form"></div>
-      <div class="builder-preview-col" id="b-preview-col" dir="ltr" style="display:flex; justify-content:center; align-items:flex-start; overflow-x:hidden; overflow-y:auto; width:100%;">
-        <div id="b-preview-outer" style="display:flex; justify-content:center; align-items:flex-start; width:100%; min-height:100%;">
+            <div class="builder-preview-col flex flex-col justify-between" id="b-preview-col" dir="ltr" style="display:flex; flex-direction:column; align-items:center; overflow-x:hidden; overflow-y:auto; width:100%; position:relative; background:#0b0f19;">
+        <!-- Top Customizer Floating Bar (matching requested layout) -->
+        <div id="b-preview-customizer" class="w-full sticky top-0 z-20 glass-strong border-b border-slate-700/80 px-3 py-2 flex items-center justify-between gap-2 flex-wrap shadow-xl">
+          <!-- Quick Color Themes -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-[11px] font-bold text-slate-300">الثيمات:</span>
+            <button class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-900 border border-slate-700 text-sky-400 hover:bg-slate-800" onclick="bApplyTheme('#0f172a','#0284c7')" title="كحلي"><span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block ml-1"></span>كحلي</button>
+            <button class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-900 border border-slate-700 text-rose-400 hover:bg-slate-800" onclick="bApplyTheme('#881337','#be123c')" title="نبيذي"><span class="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block ml-1"></span>نبيذي</button>
+            <button class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-900 border border-slate-700 text-emerald-400 hover:bg-slate-800" onclick="bApplyTheme('#064e3b','#059669')" title="زيتوني"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block ml-1"></span>زيتوني</button>
+            <button class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-800" onclick="bApplyTheme('#1e293b','#475569')" title="رمادي"><span class="w-2.5 h-2.5 rounded-full bg-slate-500 inline-block ml-1"></span>رمادي</button>
+            <button class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-900 border border-slate-700 text-amber-300 hover:bg-slate-800" onclick="bApplyTheme('#000000','#d97706')" title="أسود وذهبي"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block ml-1"></span>ذهبي</button>
+            <button class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-900 border border-slate-700 text-white hover:bg-slate-800" onclick="bApplyTheme('#000000','#000000')" title="رسمي أسود"><span class="w-2.5 h-2.5 rounded-full bg-black inline-block ml-1"></span>أسود</button>
+          </div>
+
+          <!-- 6 Skills & Courses Layout Selector -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-[11px] font-bold text-slate-300">المهارات:</span>
+            <select id="b-skills-layout-sel" class="input-field !py-1 !px-2 text-xs font-semibold !w-auto bg-slate-900 border-slate-700 text-sky-300" onchange="bSetSkillsLayout(this.value)">
+              <option value="cards_plus" ${(c.skillsLayout === 'cards_plus' || !c.skillsLayout) ? 'selected' : ''}>➕ بطاقات بأيقونة (+)</option>
+              <option value="chips" ${c.skillsLayout === 'chips' ? 'selected' : ''}>🏷️ كبسولات ملونة (Tags)</option>
+              <option value="grid_dots" ${c.skillsLayout === 'grid_dots' ? 'selected' : ''}>• شبكة منقطة (عمودين)</option>
+              <option value="columns_clean" ${c.skillsLayout === 'columns_clean' ? 'selected' : ''}>📑 أعمدة متوازية</option>
+              <option value="progress" ${c.skillsLayout === 'progress' ? 'selected' : ''}>📊 شريط مستوى وتقدم</option>
+              <option value="list_classic" ${c.skillsLayout === 'list_classic' ? 'selected' : ''}>📜 قائمة كلاسيكية</option>
+            </select>
+          </div>
+
+          <!-- Font Size & Margin Controls -->
+          <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 text-xs">
+              <span class="text-[10px] text-slate-400 font-bold">العناوين:</span>
+              <button class="mini-btn" onclick="bChangeFontSize(-1)" title="تصغير">-</button>
+              <span class="text-xs font-bold text-white w-5 text-center">${c.fontSize || 14}</span>
+              <button class="mini-btn" onclick="bChangeFontSize(1)" title="تكبير">+</button>
+            </div>
+
+            <!-- Inline Live Edit Toggle -->
+            <button id="b-btn-live-edit" class="btn-ghost !py-1 !px-2.5 text-xs font-bold ${B.liveEditMode ? '!bg-amber-500 !text-slate-950 shadow-md' : 'text-slate-300 border border-slate-700 bg-slate-900'}" onclick="bToggleLiveEditMode()" title="تعديل مباشر بالكتابة داخل السيرة مباشرة">
+              <i class="fas fa-pen-to-square ml-1 text-sky-400"></i><span>${B.liveEditMode ? 'إيقاف التعديل المباشر' : 'تعديل مباشر ✏️'}</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="b-preview-outer" style="display:flex; justify-content:center; align-items:flex-start; width:100%; min-height:calc(100vh - 240px); padding:16px 4px 100px;">
           <div id="b-preview-wrap" dir="${r.language === 'en' ? 'ltr' : 'rtl'}" style="transform-origin:top center; width:794px; min-width:794px; max-width:794px; margin:0 auto;"></div>
+        </div>
+
+        <!-- Bottom Template Carousel Dock -->
+        <div id="b-template-carousel-dock" class="w-full fixed bottom-0 left-0 right-0 z-30 glass-strong border-t border-slate-700/80 px-3 py-2 shadow-2xl">
+          <div class="flex items-center justify-between mb-1.5 px-2">
+            <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5"><i class="fas fa-layer-group text-sky-400"></i>اختر قالب السيرة لمعاينته فوراً بنقرة واحدة (${Object.keys(TEMPLATE_DEFS).length} قالب متاح):</span>
+            <span class="text-[11px] text-emerald-400 font-semibold">القالب المختار: <b class="text-white">${bEsc(TEMPLATE_DEFS[r.template]?.name || r.template)}</b></span>
+          </div>
+          <div class="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin px-1" id="b-tpl-cards-row" style="scrollbar-width:thin;">
+            ${bRenderTemplateCarouselCards(r.template)}
+          </div>
         </div>
       </div>
     </div>
+  </div>
   </div>`;
 
   renderBuilderForm();
@@ -257,6 +311,9 @@ function bPreview() {
   try { wrap.innerHTML = renderTemplate(B.resume.template, B.data, B.cust, B.resume.language); }
   catch (e) { wrap.innerHTML = '<p class="text-rose-400 p-4">خطأ في المعاينة: ' + bEsc(e.message) + '</p>'; }
   bScalePreview();
+  if (B.liveEditMode) {
+    bApplyLiveEditToPreview();
+  }
 }
 function bScalePreview() {
   const col = document.getElementById('b-preview-col');
@@ -1352,4 +1409,92 @@ window.onload = function() {
 </html>`);
   printWin.document.close();
   toast('جاري فتح نافذة تنزيل ملف الـ PDF... 📄');
+}
+
+
+function bRenderTemplateCarouselCards(activeTpl) {
+  return Object.entries(TEMPLATE_DEFS).map(([key, tpl]) => {
+    const isAct = key === activeTpl;
+    return `
+      <div class="tpl-dock-card shrink-0 cursor-pointer rounded-xl p-2 transition-all duration-200 ${isAct ? 'border-2 border-sky-400 bg-sky-950/80 shadow-lg shadow-sky-500/20 scale-[1.03]' : 'border border-slate-700/80 bg-slate-900/90 hover:border-slate-500 hover:bg-slate-800/90'}" style="min-width:130px; max-width:145px;" onclick="bSwitchTemplateFromDock('${key}')">
+        <div class="h-14 rounded-lg bg-white/95 p-1.5 relative overflow-hidden flex flex-col justify-between border border-slate-300 shadow-inner">
+          <div class="flex items-center gap-1">
+            <div class="w-2.5 h-2.5 rounded-full" style="background:${tpl.color || '#000'}"></div>
+            <div class="h-1.5 rounded-full w-12 bg-slate-700"></div>
+          </div>
+          <div class="space-y-0.5">
+            <div class="h-1 rounded w-full bg-slate-300"></div>
+            <div class="h-1 rounded w-4/5 bg-slate-300"></div>
+            <div class="h-1 rounded w-3/5 bg-slate-300"></div>
+          </div>
+          ${isAct ? `<div class="absolute top-1 left-1 bg-sky-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-black shadow">✓</div>` : ''}
+        </div>
+        <div class="text-[11px] font-bold truncate mt-1.5 text-center ${isAct ? 'text-sky-300' : 'text-slate-200'}">${bEsc(tpl.name)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function bSwitchTemplateFromDock(tplKey) {
+  if (!B || !B.resume) return;
+  B.resume.template = tplKey;
+  const sel = document.getElementById('b-tpl');
+  if (sel) sel.value = tplKey;
+  bTouched();
+  bPreview();
+  const row = document.getElementById('b-tpl-cards-row');
+  if (row) row.innerHTML = bRenderTemplateCarouselCards(tplKey);
+  toast('تم تطبيق قالب: ' + (TEMPLATE_DEFS[tplKey]?.name || tplKey) + ' ✨');
+}
+
+function bApplyTheme(primary, accent) {
+  if (!B || !B.cust) return;
+  B.cust.primaryColor = primary;
+  B.cust.accentColor = accent;
+  bTouched();
+  bPreview();
+  toast('تم تطبيق الثيم اللوني بنجاح 🎨');
+}
+
+function bSetSkillsLayout(layout) {
+  if (!B || !B.cust) return;
+  B.cust.skillsLayout = layout;
+  B.cust.coursesLayout = layout;
+  bTouched();
+  bPreview();
+  toast('تم تحديث تنسيق المهارات والدورات 🧩');
+}
+
+function bToggleLiveEditMode() {
+  B.liveEditMode = !B.liveEditMode;
+  const btn = document.getElementById('b-btn-live-edit');
+  if (btn) {
+    btn.className = 'btn-ghost !py-1 !px-2.5 text-xs font-bold ' + (B.liveEditMode ? '!bg-amber-500 !text-slate-950 shadow-md' : 'text-slate-300 border border-slate-700 bg-slate-900');
+    btn.innerHTML = '<i class="fas fa-pen-to-square ml-1 ' + (B.liveEditMode ? 'text-slate-950' : 'text-sky-400') + '"></i><span>' + (B.liveEditMode ? 'إيقاف التعديل المباشر' : 'تعديل مباشر ✏️') + '</span>';
+  }
+  bApplyLiveEditToPreview();
+  if (B.liveEditMode) {
+    toast('تم تفعيل وضع التعديل المباشر ✏️ — انقر على أي نص لتعديله فوراً!');
+  } else {
+    toast('تم حفظ التعديلات المباشرة بنجاح ✅');
+  }
+}
+
+function bApplyLiveEditToPreview() {
+  const wrap = document.getElementById('b-preview-wrap');
+  if (!wrap) return;
+  if (B.liveEditMode) {
+    wrap.classList.add('cv-live-editing');
+    wrap.querySelectorAll('.cv-name-ar, .cv-name-en, .cv-name, .cv-jobtitle, .cv-item-role, .cv-item-org, .cv-item-desc, .cv-summary-text, .cv-card-plus span, .cv-chip-pill, .cv-degree-title, .cv-school-name, p, span').forEach(el => {
+      if (!el.querySelector('input') && !el.querySelector('button') && el.textContent.trim().length > 0) {
+        el.setAttribute('contenteditable', 'true');
+        el.oninput = function() {
+          bTouched();
+        };
+      }
+    });
+  } else {
+    wrap.classList.remove('cv-live-editing');
+    wrap.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+  }
 }

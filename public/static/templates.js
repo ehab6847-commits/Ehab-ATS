@@ -1,10 +1,15 @@
 /* ===== Ehab ATS — Template Engine (16 templates) ===== */
 
 const TEMPLATE_DEFS = {
+  ats_tinted_cards:{ name: 'البطاقات المظللة الحديث ⭐', nameEn: 'Modern Tinted Cards ATS', group: 'ats', layout: 'tinted_cards', header: 'tinted_top', color: '#0f172a', accent: '#0284c7', line: '2px solid #0284c7', ats: true },
   formal_pro:    { name: 'رسمي احترافي ⭐', nameEn: 'Professional Formal', group: 'bw', layout: 'formal_pro', header: 'formal_center', color: '#000000', accent: '#1e293b', line: '1.5px solid #000000', ats: true },
   ats1:          { name: 'ATS كلاسيكي', nameEn: 'ATS Classic', group: 'bw', layout: 'single', header: 'center', color: '#111827', accent: '#374151', line: '2px solid #111827', ats: true },
   ats2:          { name: 'ATS بسيط', nameEn: 'ATS Simple', group: 'bw', layout: 'single', header: 'right', color: '#111827', accent: '#4b5563', line: '1px solid #9ca3af', ats: true },
   ats3:          { name: 'ATS مضغوط', nameEn: 'ATS Compact', group: 'bw', layout: 'single', header: 'split', color: '#000000', accent: '#374151', line: '1.5px solid #000', ats: true },
+  executive_frosted:{ name: 'تنفيذي زجاجي راقي 💎', nameEn: 'Modern Executive Frosted', group: 'color', layout: 'frosted_cards', header: 'frosted_band', color: '#1e1b4b', accent: '#4338ca', bandBg: 'linear-gradient(135deg,#0f172a,#1e1b4b)', line: '2px solid #4338ca' },
+  tech_modern_grid:{ name: 'تقني شبكي عصري ⚡', nameEn: 'Modern Tech Grid', group: 'ats', layout: 'tech_grid', header: 'tech_header', color: '#0f172a', accent: '#2563eb', line: '2px solid #2563eb', ats: true },
+  creative_subtle:{ name: 'إبداعي هادئ انسيابي 🎨', nameEn: 'Subtle Creative Pastel', group: 'color', layout: 'subtle_cards', header: 'subtle_header', color: '#831843', accent: '#db2777', line: '2px solid #db2777' },
+  academic_boxed:{ name: 'أكاديمي بصناديق منظمة 🎓', nameEn: 'Boxed Academic Pro', group: 'bw', layout: 'academic_boxed', header: 'academic_header', color: '#1e293b', accent: '#475569', line: '2px solid #1e293b', ats: true },
   bilingual_2col:{ name: 'ثنائي بحارتين (عمودين متساويين)', nameEn: 'Bilingual 2-Col Split', group: 'bw', layout: 'bilingual_split', header: 'center', color: '#0f172a', accent: '#334155', line: '2px solid #0f172a', ats: true },
   canva_purple:  { name: 'كانفا بنفسجي إبداعي 🎨', nameEn: 'Canva Creative Violet', group: 'canva', layout: 'canva_card', header: 'canva_circle', color: '#6d28d9', accent: '#8b5cf6', bandBg: 'linear-gradient(135deg,#4c1d95,#7c3aed)' },
   canva_emerald: { name: 'كانفا زمردي فخم 💎', nameEn: 'Canva Royal Emerald', group: 'canva', layout: 'canva_card', header: 'canva_circle', color: '#047857', accent: '#10b981', bandBg: 'linear-gradient(135deg,#064e3b,#047857)' },
@@ -122,157 +127,174 @@ function dateRange(item, lang) {
   return `<span class="cv-item-date">${tplEsc(start)}${start && end ? ' — ' : ''}${tplEsc(end)}</span>`;
 }
 
-function renderSectionBody(sec, lang, tpl) {
+function renderBulletList(desc) {
+  if (!desc) return '';
+  const lines = String(desc).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  return lines.map(line => {
+    const cleanL = line.replace(/^[•\-\*▪🔹■\d+\.]+\s*/, '').trim();
+    if (!cleanL) return '';
+    return `
+      <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.45;margin-bottom:2px;">
+        <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.1em;line-height:1;flex-shrink:0;">•</span>
+        <span>${tplEsc(cleanL)}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderSectionBody(sec, lang, tpl, cust = {}) {
   const v = mkPick(lang);
+  const kind = SECTION_TYPES[sec.type]?.kind || 'custom';
+  const isFormal = tpl.layout === 'formal_pro';
+  const isTinted = tpl.layout === 'tinted_cards' || tpl.layout === 'frosted_cards' || tpl.layout === 'subtle_cards' || tpl.layout === 'academic_boxed';
   const items = sec.items || [];
-  const kind = (SECTION_TYPES[sec.type] || {}).kind || sec.kind || 'custom';
-  const isFormal = (tpl && (tpl.layout === 'formal_pro' || tpl.nameEn === 'Professional Formal'));
+  const skillLayout = cust.skillsLayout || (isTinted ? 'cards_plus' : (isFormal ? 'grid_dots' : 'grid_dots'));
+  const courseLayout = cust.coursesLayout || (isTinted ? 'cards_plus' : (isFormal ? 'grid_dots' : 'grid_dots'));
 
   if (kind === 'text') {
-    let txt;
-    if (lang === 'en') {
-      txt = (sec.textAr && typeof translateTextToEnglish === 'function') ? translateTextToEnglish(sec.textAr) : (sec.textEn || sec.textAr || '');
-    } else if (lang === 'bilingual') {
-      txt = sec.textAr || sec.textEn || '';
-    } else {
-      txt = sec.textAr || sec.textEn || '';
+    let txt = v(sec, 'textAr', 'textEn');
+    if (txt) {
+      return `<div class="cv-item cv-summary-text" style="font-weight:400;text-align:justify;line-height:1.6;color:#1e293b;">${tplEsc(txt).replace(/\n/g, '<br>')}</div>`;
     }
-    const cleanTxt = String(txt || '').replace(/[\*\_#~`]/g, '').trim();
-    const alignStyle = isFormal ? 'text-align:justify;' : '';
-    return `<p class="cv-item-desc cv-summary-text" style="margin:0;line-height:1.6;font-weight:400;${alignStyle}">${tplEsc(cleanTxt)}</p>`;
-  }
-
-  if (kind === 'timeline') {
-    return items.map(it => {
-      const roleRaw = v(it, 'roleAr', 'roleEn') || v(it, 'nameAr', 'nameEn');
-      const orgRaw = v(it, 'orgAr', 'orgEn') || v(it, 'companyAr', 'companyEn');
-      const descRaw = v(it, 'descAr', 'descEn');
-
-      const role = String(roleRaw || '').replace(/[\*\_#~`]/g, '').trim();
-      const org = String(orgRaw || '').replace(/[\*\_#~`]/g, '').trim();
-      const desc = String(descRaw || '').replace(/[\*\_#~`]/g, '').trim();
-
-      let descHtml = '';
-      if (desc) {
-        const lines = desc.split(/\r?\n/).map(l => l.replace(/^[•\-\*\d+\.\s]+/, '').trim()).filter(Boolean);
-        if (lines.length > 0) {
-          descHtml = lines.map(l => `
-            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;margin-top:2px;margin-bottom:2px;font-weight:400;line-height:1.45;">
-              <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
-              <span style="flex:1;color:inherit;">${tplEsc(l)}</span>
-            </div>`).join('');
-        }
-      }
-
-      return `
-      <div class="cv-item" style="margin-bottom:8px">
-        <div class="cv-item-head">
-          <div>
-            <span class="cv-item-role" style="font-weight:700;${isFormal ? 'color:#000;' : ''}">${tplEsc(role)}</span>
-            ${org ? `<span class="cv-item-org" style="font-weight:600;color:#334155"> | ${tplEsc(org)}</span>` : ''}
-          </div>
-          ${dateRange(it, lang)}
-        </div>
-        ${descHtml}
-      </div>`;
-    }).join('');
+    return items.map(it => `<div class="cv-item cv-summary-text" style="font-weight:400;text-align:justify;line-height:1.6;color:#1e293b;">${tplEsc(String(v(it, 'textAr', 'textEn') || v(it, 'nameAr', 'nameEn'))).replace(/\n/g, '<br>')}</div>`).join('');
   }
 
   if (kind === 'education') {
     return items.map(it => {
-      const degRaw = v(it, 'degreeAr', 'degreeEn');
-      const schRaw = v(it, 'schoolAr', 'schoolEn');
-      const degree = String(degRaw || '').replace(/[\*\_#~`]/g, '').trim();
-      const school = String(schRaw || '').replace(/[\*\_#~`]/g, '').trim();
-
+      const deg = v(it, 'degreeAr', 'degreeEn');
+      const sch = v(it, 'schoolAr', 'schoolEn');
+      const yr = it.year ? tplEsc(String(it.year)) : '';
+      const gpa = it.gpa ? tplEsc(String(it.gpa)) : '';
+      const hasHead = deg || yr;
       return `
-      <div class="cv-item" style="margin-bottom:8px">
-        <div class="cv-item-head">
-          <div>
-            ${degree ? `<span class="cv-item-role" style="font-weight:700;color:${isFormal ? '#000' : 'inherit'};">${tplEsc(degree)}</span>` : ''}
-            ${(degree && school) ? `<span style="font-weight:400;color:#64748b"> — </span>` : ''}
-            ${school ? `<span class="cv-item-desc" style="font-weight:400;display:inline;color:inherit;">${tplEsc(school)}</span>` : ''}
-          </div>
-          <span class="cv-item-date" style="font-weight:600;color:#475569;">${tplEsc(it.year || '')}</span>
-        </div>
-        ${it.gpa ? `<div class="cv-item-desc" style="font-weight:400;margin-top:1px">${lang === 'en' ? 'GPA' : 'المعدل'}: ${tplEsc(it.gpa)}</div>` : ''}
-        ${(it.descAr || it.descEn) ? `<div class="cv-item-desc" style="font-weight:400;margin-top:1px">${tplEsc(String(v(it, 'descAr', 'descEn')).replace(/[\*\_#~`]/g, '').trim())}</div>` : ''}
+      <div class="cv-item cv-edu-item" style="margin-bottom:10px;">
+        ${hasHead ? `
+          <div class="cv-item-head" style="display:flex;justify-content:space-between;align-items:baseline;">
+            <span class="cv-item-role cv-degree-title" style="font-weight:700;font-size:1.02em;color:#0f172a;">${tplEsc(deg)}</span>
+            ${yr ? `<span class="cv-item-date" style="font-weight:600;font-size:0.85em;color:#64748b;">${yr}</span>` : ''}
+          </div>` : ''}
+        ${sch ? `<div class="cv-item-org cv-school-name" style="font-weight:500;font-size:0.95em;color:#334155;margin-top:2px;">${tplEsc(sch)}${gpa ? ' · ' + gpa : ''}</div>` : (gpa ? `<div class="cv-sub" style="font-weight:400;">${gpa}</div>` : '')}
       </div>`;
     }).join('');
   }
 
-  if (kind === 'skills') {
-    if (isFormal) {
-      return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">` +
-        items.map(it => `
-        <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;font-weight:400;line-height:1.45;">
-          <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
-          <span style="flex:1;color:inherit;">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
-        </div>`).join('') +
-      `</div>`;
-    }
-
-    const useBars = !tpl.ats && sec.showBars;
-    if (useBars) {
-      return items.map(it => `
-        <div class="cv-skill-row">
-          <span class="cv-skill-name" style="font-weight:400">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
-          <div class="cv-skill-bar"><div class="cv-skill-fill" style="width:${Math.min(100, (Number(it.level) || 3) * 20)}%"></div></div>
-        </div>`).join('');
-    }
-    return `<div class="cv-chips">${items.map(it => `<span class="cv-chip" style="font-weight:400">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~`]/g, '').trim())}</span>`).join('')}</div>`;
-  }
-
-  if (kind === 'languages') {
-    if (isFormal) {
-      return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">` +
-        items.map(it => `
-        <div class="cv-bullet-item" style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:3px;font-size:0.93em;">
-          <div style="display:flex;align-items:baseline;gap:6px;">
-            <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
-            <span style="font-weight:700;color:#000;">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
-          </div>
-          <span class="cv-lang-level" style="font-weight:400;color:#475569;">${tplEsc(String(v(it, 'levelAr', 'levelEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
-        </div>`).join('') +
-      `</div>`;
-    }
-
-    return items.map(it => `
-      <div class="cv-lang-row">
-        <span style="font-weight:600">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
-        <span class="cv-lang-level" style="font-weight:400">${tplEsc(String(v(it, 'levelAr', 'levelEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
-      </div>`).join('');
+  if (kind === 'timeline') {
+    return items.map(it => {
+      const role = v(it, 'roleAr', 'roleEn');
+      const org = v(it, 'orgAr', 'orgEn');
+      const dRange = dateRange(it, lang);
+      const desc = v(it, 'descAr', 'descEn');
+      return `
+      <div class="cv-item cv-exp-item" style="margin-bottom:12px;">
+        <div class="cv-item-head" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;">
+          <span class="cv-item-role" style="font-weight:700;font-size:1.02em;color:#0f172a;">${tplEsc(role)}</span>
+          ${dRange}
+        </div>
+        ${org ? `<div class="cv-item-org" style="font-weight:600;font-size:0.93em;color:#475569;margin-bottom:4px;">${tplEsc(org)}</div>` : ''}
+        ${desc ? `<div class="cv-item-desc" style="font-weight:400;margin-top:4px;">${renderBulletList(desc)}</div>` : ''}
+      </div>`;
+    }).join('');
   }
 
   if (kind === 'certs') {
-    const rendered = items.map(it => {
-      const name = String(v(it, 'nameAr', 'nameEn') || '').replace(/[\*\_#~`]/g, '').trim();
-      const org = String(v(it, 'orgAr', 'orgEn') || v(it, 'issuerAr', 'issuerEn') || '').replace(/[\*\_#~`]/g, '').trim();
-      const yr = it.year ? ` (${tplEsc(it.year)})` : '';
+    if (courseLayout === 'cards_plus' || isTinted) {
       return `
-      <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;font-weight:400;line-height:1.45;">
-        <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
-        <span style="flex:1;color:inherit;"><span style="font-weight:400;">${tplEsc(name)}</span>${org ? `<span style="color:#64748b"> — ${tplEsc(org)}</span>` : ''}${yr}</span>
-      </div>`;
+        <div class="cv-cards-plus-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;">
+          ${items.map(it => `
+            <div class="cv-card-plus" style="display:flex;align-items:center;gap:8px;background:rgba(241,245,249,0.85);border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:0.9em;font-weight:600;color:#1e293b;">
+              <span class="cv-plus-icon" style="color:#0284c7;font-weight:900;font-size:1.1em;line-height:1;">+</span>
+              <span>${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (courseLayout === 'chips') {
+      return `
+        <div class="cv-chips-wrap" style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${items.map(it => `
+            <span class="cv-chip-pill" style="display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:20px;padding:4px 12px;font-size:0.88em;font-weight:600;color:#1e293b;">
+              <i class="fas fa-certificate text-[10px] text-sky-600"></i>${tplEsc(v(it, 'nameAr', 'nameEn'))}
+            </span>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    const rendered = items.map(it => {
+      const name = v(it, 'nameAr', 'nameEn');
+      const iss = v(it, 'issuerAr', 'issuerEn');
+      const yr = it.year ? tplEsc(String(it.year)) : '';
+      return `
+        <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.45;margin-bottom:3px;">
+          <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.1em;line-height:1;flex-shrink:0;">•</span>
+          <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(name)}${iss ? ' — ' + tplEsc(iss) : ''}${yr ? ' (' + yr + ')' : ''}</span>
+        </div>
+      `;
     }).join('');
 
-    if (isFormal) {
-      return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">${rendered}</div>`;
-    }
-    return rendered;
+    return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">${rendered}</div>`;
   }
 
-  if (kind === 'list') {
+  if (kind === 'skills') {
+    if (skillLayout === 'cards_plus' || isTinted) {
+      return `
+        <div class="cv-cards-plus-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;">
+          ${items.map(it => `
+            <div class="cv-card-plus" style="display:flex;align-items:center;gap:8px;background:rgba(241,245,249,0.85);border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:0.9em;font-weight:600;color:#1e293b;">
+              <span class="cv-plus-icon" style="color:#0284c7;font-weight:900;font-size:1.1em;line-height:1;">+</span>
+              <span>${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (skillLayout === 'chips') {
+      return `
+        <div class="cv-chips-wrap" style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${items.map(it => `
+            <span class="cv-chip-pill" style="display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:20px;padding:4px 12px;font-size:0.88em;font-weight:600;color:#1e293b;">
+              <i class="fas fa-check text-[10px] text-emerald-600"></i>${tplEsc(v(it, 'nameAr', 'nameEn'))}
+            </span>
+          `).join('')}
+        </div>
+      `;
+    }
+
     const rendered = items.map(it => `
-      <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;font-weight:400;line-height:1.45;">
-        <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.15em;line-height:1;flex-shrink:0;">•</span>
-        <span style="flex:1;color:inherit;">${tplEsc(String(v(it, 'textAr', 'textEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
+      <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.45;margin-bottom:3px;">
+        <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.1em;line-height:1;flex-shrink:0;">•</span>
+        <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
       </div>
     `).join('');
-    if (isFormal) {
-      return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">${rendered}</div>`;
+
+    return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">${rendered}</div>`;
+  }
+
+  if (kind === 'languages') {
+    if (isTinted || skillLayout === 'cards_plus') {
+      return `
+        <div class="cv-lang-tinted-wrap" style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${items.map(it => `
+            <div class="cv-lang-pill" style="display:inline-flex;align-items:center;gap:6px;background:rgba(241,245,249,0.9);border:1px solid #cbd5e1;border-radius:6px;padding:5px 12px;font-size:0.9em;color:#1e293b;">
+              <b style="font-weight:700;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</b>
+              ${(it.levelAr || it.levelEn) ? `<span style="color:#64748b;font-weight:500;">(${tplEsc(v(it, 'levelAr', 'levelEn'))})</span>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `;
     }
-    return rendered;
+
+    const rendered = items.map(it => `
+      <div class="cv-lang-item" style="display:flex;justify-content:space-between;align-items:center;font-size:0.92em;margin-bottom:3px;">
+        <span style="font-weight:700;color:#0f172a;">• ${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
+        ${(it.levelAr || it.levelEn) ? `<span style="font-weight:500;color:#64748b;">${tplEsc(v(it, 'levelAr', 'levelEn'))}</span>` : ''}
+      </div>
+    `).join('');
+
+    return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">${rendered}</div>`;
   }
 
   if (kind === 'references') {
@@ -281,17 +303,17 @@ function renderSectionBody(sec, lang, tpl) {
     }
     return items.map(it => `
       <div class="cv-item" style="margin-bottom:7px">
-        <span class="cv-item-role" style="font-weight:600">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~`]/g, '').trim())}</span>
-        ${(it.orgAr || it.orgEn) ? ` <span class="cv-item-org" style="font-weight:400">— ${tplEsc(String(v(it, 'orgAr', 'orgEn')).replace(/[\*\_#~`]/g, '').trim())}</span>` : ''}
-        ${it.phone ? `<div class="cv-sub" dir="ltr" style="text-align:inherit;font-weight:400">${tplEsc(it.phone)}${it.email ? ' • ' + tplEsc(it.email) : ''}</div>` : (it.email ? `<div class="cv-sub" style="font-weight:400">${tplEsc(it.email)}</div>` : '')}
+        <span class="cv-item-role" style="font-weight:600">${tplEsc(String(v(it, 'nameAr', 'nameEn')).replace(/[\*\_#~\`]/g, '').trim())}</span>
+        ${(it.orgAr || it.orgEn) ? ` <span class="cv-item-org" style="font-weight:400">— ${tplEsc(String(v(it, 'orgAr', 'orgEn')).replace(/[\*\_#~\`]/g, '').trim())}</span>` : ''}
+        ${it.phone ? `<div class="cv-sub" dir="ltr" style="text-align:inherit;font-weight:400"><a href="tel:${tplEsc(String(it.phone).replace(/\s+/g, ''))}" class="cv-link cv-link-blue" style="color:#2563eb;text-decoration:none;font-weight:600;">${tplEsc(it.phone)}</a>${it.email ? ' • ' + tplEsc(it.email) : ''}</div>` : (it.email ? `<div class="cv-sub" style="font-weight:400">${tplEsc(it.email)}</div>` : '')}
       </div>`).join('');
   }
 
   // custom
   if (sec.textAr || sec.textEn) {
-    return `<p class="cv-item-desc" style="margin:0;font-weight:400;line-height:1.6">${tplEsc(String(v(sec, 'textAr', 'textEn')).replace(/[\*\_#~`]/g, '').trim())}</p>`;
+    return `<p class="cv-item-desc" style="margin:0;font-weight:400;line-height:1.6">${tplEsc(String(v(sec, 'textAr', 'textEn')).replace(/[\*\_#~\`]/g, '').trim())}</p>`;
   }
-  return items.map(it => `<div class="cv-item" style="font-weight:400"><span class="cv-item-role" style="font-weight:600">${tplEsc(String(v(it, 'nameAr', 'nameEn') || v(it, 'textAr', 'textEn')).replace(/[\*\_#~`]/g, '').trim())}</span>${(it.descAr || it.descEn) ? `<div class="cv-item-desc" style="font-weight:400">${tplEsc(String(v(it, 'descAr', 'descEn')).replace(/[\*\_#~`]/g, '').trim())}</div>` : ''}</div>`).join('');
+  return items.map(it => `<div class="cv-item" style="font-weight:400"><span class="cv-item-role" style="font-weight:600">${tplEsc(String(v(it, 'nameAr', 'nameEn') || v(it, 'textAr', 'textEn')).replace(/[\*\_#~\`]/g, '').trim())}</span>${(it.descAr || it.descEn) ? `<div class="cv-item-desc" style="font-weight:400">${tplEsc(String(v(it, 'descAr', 'descEn')).replace(/[\*\_#~\`]/g, '').trim())}</div>` : ''}</div>`).join('');
 }
 
 function renderContact(p, lang, allowContactIcons) {
@@ -319,10 +341,15 @@ function renderContact(p, lang, allowContactIcons) {
   if (p.website) {
     let webUrl = p.website.trim();
     if (!webUrl.startsWith('http://') && !webUrl.startsWith('https://')) webUrl = 'https://' + webUrl;
-    bits.push(`<span dir="ltr" style="display:inline-flex;align-items:center;"><a href="${tplEsc(webUrl)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#0284c7;text-decoration:none;display:inline-flex;align-items:center;">${ic('fas fa-globe')}<span>${tplEsc(p.website)}</span></a></span>`);
+    bits.push(`<span dir="ltr" style="display:inline-flex;align-items:center;"><a href="${tplEsc(webUrl)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#0284c7;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;">${ic('fas fa-globe')}<span>${tplEsc(p.website)}</span></a></span>`);
   }
-  const nat = lang === 'en' ? (p.nationalityEn || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(p.nationalityAr || p.nationality) : '') || p.nationality) : (p.nationalityAr || p.nationality || p.nationalityEn);
-  if (nat) bits.push(`<span style="display:inline-flex;align-items:center;">${ic('fas fa-flag')}<span>${tplEsc(nat)}</span></span>`);
+
+  // Nationality is 100% OPTIONAL - Only render if explicitly provided!
+  const rawNat = p.nationality || p.nationalityAr || p.nationalityEn || '';
+  if (rawNat && rawNat.trim()) {
+    const nat = lang === 'en' ? (p.nationalityEn || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(rawNat) : '') || rawNat) : rawNat;
+    bits.push(`<span style="display:inline-flex;align-items:center;">${ic('fas fa-flag')}<span>${tplEsc(nat)}</span></span>`);
+  }
 
   if (bits.length === 0) return '';
   const sep = `<span class="cv-contact-sep" style="margin:0 8px;color:#94a3b8;font-weight:300;">|</span>`;
@@ -450,8 +477,55 @@ function renderTemplate(templateId, data, cust, language) {
   const qr = cust.qrDataUrl ? `<div class="cv-qr-wrap"><img class="cv-qr" src="${cust.qrDataUrl}" alt="QR"><div class="cv-qr-label">${lang === 'en' ? 'Online CV' : 'نسخة أونلاين'}</div></div>` : '';
   const sig = (data.personal && data.personal.signature) ? `<div class="cv-signature-wrap"><img class="cv-signature" src="${data.personal.signature}" alt=""></div>` : '';
 
-  const cls = `cv-page${tpl.layout === 'formal_pro' ? ' cv-formal-pro' : ''}${tpl.serif ? ' cv-serif' : ''}${tpl.ats ? ' cv-ats' : ''}`;
+  const cls = `cv-page${tpl.layout === 'formal_pro' ? ' cv-formal-pro' : ''}${tpl.layout === 'tinted_cards' ? ' cv-tinted-cards' : ''}${tpl.serif ? ' cv-serif' : ''}${tpl.ats ? ' cv-ats' : ''}`;
   const styleAttr = `style="${vars.join(';')}"`;
+
+  // Modern Tinted Cards ATS Layout with Top 3 Info Metric Boxes
+  if (tpl.layout === 'tinted_cards' || templateId === 'ats_tinted_cards') {
+    const p = data.personal || {};
+    const eduSection = (data.sections || []).find(s => s.type === 'education');
+    const firstEdu = eduSection?.items?.[0] || {};
+    const gradYear = firstEdu.year || (lang === 'en' ? '2024' : '١٤٤٥هـ');
+    const degreeTitle = (lang === 'en' ? (firstEdu.degreeEn || firstEdu.degreeAr) : (firstEdu.degreeAr || firstEdu.degreeEn)) || (lang === 'en' ? "Bachelor's Degree" : 'درجة البكالوريوس');
+    const university = (lang === 'en' ? (firstEdu.schoolEn || firstEdu.schoolAr) : (firstEdu.schoolAr || firstEdu.schoolEn)) || (lang === 'en' ? 'University' : 'الجامعة');
+    const targetJob = (lang === 'en' ? (p.titleEn || p.titleAr) : (p.titleAr || p.titleEn)) || (lang === 'en' ? 'Professional Specialist' : 'التخصص المستهدف');
+
+    const topMetricsHtml = `
+      <div class="cv-top-metrics-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0 18px;">
+        <div class="cv-metric-box" style="background:rgba(241,245,249,0.85);border:1.5px solid #cbd5e1;border-radius:8px;padding:8px 12px;border-top:3px solid var(--cv-accent,#0284c7);">
+          <div class="cv-metric-title" style="font-size:0.75em;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">${lang === 'en' ? 'GRADUATION YEAR' : 'سنة التخرج'}</div>
+          <div class="cv-metric-val" style="font-size:0.95em;font-weight:700;color:#0f172a;margin-top:3px;">${tplEsc(gradYear)}</div>
+        </div>
+        <div class="cv-metric-box" style="background:rgba(241,245,249,0.85);border:1.5px solid #cbd5e1;border-radius:8px;padding:8px 12px;border-top:3px solid var(--cv-accent,#0284c7);">
+          <div class="cv-metric-title" style="font-size:0.75em;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">${lang === 'en' ? 'UNIVERSITY & DEGREE' : 'الجامعة والشهادة'}</div>
+          <div class="cv-metric-val" style="font-size:0.9em;font-weight:700;color:#0f172a;margin-top:3px;">${tplEsc(degreeTitle)}${university ? ' — ' + tplEsc(university) : ''}</div>
+        </div>
+        <div class="cv-metric-box" style="background:rgba(241,245,249,0.85);border:1.5px solid #cbd5e1;border-radius:8px;padding:8px 12px;border-top:3px solid var(--cv-accent,#0284c7);">
+          <div class="cv-metric-title" style="font-size:0.75em;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">${lang === 'en' ? 'TARGET SPECIALTY' : 'المسمى المستهدف'}</div>
+          <div class="cv-metric-val" style="font-size:0.9em;font-weight:700;color:#0f172a;margin-top:3px;">${tplEsc(targetJob)}</div>
+        </div>
+      </div>
+    `;
+
+    const secCards = sections.map(s => `
+      <section class="cv-section cv-section-tinted" style="background:rgba(248,250,252,0.8);border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+        ${secTitle(s, lang, showIcons)}
+        ${renderSectionBody(s, lang, tpl, cust)}
+      </section>
+    `).join('');
+
+    return `
+      <div class="${cls} cv-tinted-cards" dir="${dir}" ${styleAttr}>
+        <div class="cv-inner">
+          ${renderHeader(tpl, data, cust, lang)}
+          ${topMetricsHtml}
+          ${secCards}
+          ${sig}
+        </div>
+        ${qr}
+      </div>
+    `;
+  }
 
   // 2-Column Split Bilingual Layout: Activated whenever language is bilingual OR bilingual template is selected
   if (lang === 'bilingual' || tpl.layout === 'bilingual_split' || templateId === 'bilingual_2col') {
