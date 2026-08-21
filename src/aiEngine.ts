@@ -463,10 +463,7 @@ function parseUserRawResumeText(rawText, lang = 'ar') {
       nationalityAr = natM[1].trim();
       nationalityEn = translateTextToEnglish(nationalityAr);
       break;
-    } else if (/(?:^|\s)(?:سعودي|سعودية)(?:$|\s)/i.test(l) && !nameAr.includes(l)) {
-      nationalityAr = 'سعودية';
-      nationalityEn = 'Saudi';
-    }
+    } 
   }
 
   for (let i = 0; i < Math.min(6, lines.length); i++) {
@@ -753,4 +750,3 @@ if (typeof window !== 'undefined') {
     generateCoverLetterFromSmartEngine
   };
 }
-

@@ -129,7 +129,7 @@ function renderBuilder() {
     <div class="builder-grid flex-1">
       <div class="builder-form-col" id="b-form"></div>
                   <div class="builder-preview-col" id="b-preview-col" dir="ltr" style="display:block; position:relative; overflow-y:auto; overflow-x:hidden; width:100%; height:100%; background:#0b0f19; padding:0 0 140px 0;">
-        <!-- Top Customizer Floating Bar (matching requested layout) -->
+                <!-- Top Customizer Floating Bar with 3 Dedicated Layout Selectors -->
         <div id="b-preview-customizer" class="w-full sticky top-0 z-20 glass-strong border-b border-slate-700/80 px-3 py-2 flex items-center justify-between gap-2 flex-wrap shadow-xl">
           <!-- Quick Color Themes -->
           <div class="flex items-center gap-1.5 flex-wrap">
@@ -142,20 +142,49 @@ function renderBuilder() {
             <button class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-900 border border-slate-700 text-white hover:bg-slate-800" onclick="bApplyTheme('#000000','#000000')" title="رسمي أسود"><span class="w-2.5 h-2.5 rounded-full bg-black inline-block ml-1"></span>أسود</button>
           </div>
 
-          <!-- 6 Skills & Courses Layout Selector -->
-          <div class="flex items-center gap-1.5 flex-wrap">
-            <span class="text-[11px] font-bold text-slate-300">المهارات:</span>
-            <select id="b-skills-layout-sel" class="input-field !py-1 !px-2 text-xs font-semibold !w-auto bg-slate-900 border-slate-700 text-sky-300" onchange="bSetSkillsLayout(this.value)">
-              <option value="cards_plus" ${(c.skillsLayout === 'cards_plus' || !c.skillsLayout) ? 'selected' : ''}>➕ بطاقات بأيقونة (+)</option>
-              <option value="chips" ${c.skillsLayout === 'chips' ? 'selected' : ''}>🏷️ كبسولات ملونة (Tags)</option>
-              <option value="grid_dots" ${c.skillsLayout === 'grid_dots' ? 'selected' : ''}>• شبكة منقطة (عمودين)</option>
-              <option value="columns_clean" ${c.skillsLayout === 'columns_clean' ? 'selected' : ''}>📑 أعمدة متوازية</option>
-              <option value="progress" ${c.skillsLayout === 'progress' ? 'selected' : ''}>📊 شريط مستوى وتقدم</option>
-              <option value="list_classic" ${c.skillsLayout === 'list_classic' ? 'selected' : ''}>📜 قائمة كلاسيكية</option>
-            </select>
+          <!-- 3 Dedicated Selectors for Skills, Courses & Languages -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <!-- 1. Skills Layout Selector -->
+            <div class="flex items-center gap-1">
+              <span class="text-[11px] font-bold text-sky-400">المهارات:</span>
+              <select id="b-skills-layout-sel" class="input-field !py-1 !px-2 text-xs font-semibold !w-auto bg-slate-900 border-slate-700 text-sky-300" onchange="bSetSkillsLayout(this.value)">
+                <option value="cards_plus" ${(c.skillsLayout === 'cards_plus' || !c.skillsLayout) ? 'selected' : ''}>➕ بطاقات (+)</option>
+                <option value="chips" ${c.skillsLayout === 'chips' ? 'selected' : ''}>🏷️ كبسولات ملونة</option>
+                <option value="columns_clean" ${c.skillsLayout === 'columns_clean' ? 'selected' : ''}>📑 أعمدة متوازية</option>
+                <option value="progress" ${c.skillsLayout === 'progress' ? 'selected' : ''}>📊 شريط تقدم ومستوى</option>
+                <option value="grid_dots" ${c.skillsLayout === 'grid_dots' ? 'selected' : ''}>• شبكة منقطة (عمودين)</option>
+                <option value="list_classic" ${c.skillsLayout === 'list_classic' ? 'selected' : ''}>📜 قائمة كلاسيكية</option>
+              </select>
+            </div>
+
+            <!-- 2. Courses Layout Selector -->
+            <div class="flex items-center gap-1">
+              <span class="text-[11px] font-bold text-purple-400">الدورات:</span>
+              <select id="b-courses-layout-sel" class="input-field !py-1 !px-2 text-xs font-semibold !w-auto bg-slate-900 border-slate-700 text-purple-300" onchange="bSetCoursesLayout(this.value)">
+                <option value="cards_plus" ${(c.coursesLayout === 'cards_plus' || !c.coursesLayout) ? 'selected' : ''}>➕ بطاقات (+)</option>
+                <option value="chips" ${c.coursesLayout === 'chips' ? 'selected' : ''}>🏷️ كبسولات (Tags)</option>
+                <option value="columns_clean" ${c.coursesLayout === 'columns_clean' ? 'selected' : ''}>📑 أعمدة متوازية</option>
+                <option value="org_badge" ${c.coursesLayout === 'org_badge' ? 'selected' : ''}>🏛️ بطاقات مع الجهة</option>
+                <option value="grid_dots" ${c.coursesLayout === 'grid_dots' ? 'selected' : ''}>• شبكة منقطة (عمودين)</option>
+                <option value="list_classic" ${c.coursesLayout === 'list_classic' ? 'selected' : ''}>📜 قائمة كلاسيكية</option>
+              </select>
+            </div>
+
+            <!-- 3. Languages Layout Selector -->
+            <div class="flex items-center gap-1">
+              <span class="text-[11px] font-bold text-emerald-400">اللغات:</span>
+              <select id="b-languages-layout-sel" class="input-field !py-1 !px-2 text-xs font-semibold !w-auto bg-slate-900 border-slate-700 text-emerald-300" onchange="bSetLanguagesLayout(this.value)">
+                <option value="pills_level" ${(c.languagesLayout === 'pills_level' || !c.languagesLayout) ? 'selected' : ''}>🏷️ كبسولات بالمستوى</option>
+                <option value="progress" ${c.languagesLayout === 'progress' ? 'selected' : ''}>📊 أشرطة تقدم ومستوى</option>
+                <option value="columns_clean" ${c.languagesLayout === 'columns_clean' ? 'selected' : ''}>📑 أعمدة متوازية</option>
+                <option value="cards_plus" ${c.languagesLayout === 'cards_plus' ? 'selected' : ''}>➕ بطاقات (+)</option>
+                <option value="grid_dots" ${c.languagesLayout === 'grid_dots' ? 'selected' : ''}>• نقاط مدمجة (عمودين)</option>
+                <option value="list_classic" ${c.languagesLayout === 'list_classic' ? 'selected' : ''}>📜 قائمة كلاسيكية</option>
+              </select>
+            </div>
           </div>
 
-          <!-- Font Size & Margin Controls -->
+          <!-- Font Size & Live Edit Controls -->
           <div class="flex items-center gap-1.5">
             <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 text-xs">
               <span class="text-[10px] text-slate-400 font-bold">العناوين:</span>
@@ -390,7 +419,7 @@ function renderBuilderForm() {
           ${pf('email', 'الإيميل', 'ltr')} ${pf('phone', 'التليفون', 'ltr')}
           ${pf('cityAr', 'المدينة (عربي)')} ${pf('cityEn', 'City (En)', 'ltr')}
           ${pf('linkedin', 'LinkedIn', 'ltr')} ${pf('website', 'موقع/Portfolio', 'ltr')}
-          ${pf('nationality', 'الجنسية (اختياري)')} ${pf('birthdate', 'تاريخ الميلاد (اختياري)', 'ltr')}
+          ${pf('birthdate', 'تاريخ الميلاد (اختياري)', 'ltr')}
         </div>
         <div class="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-700/50">
           <div><label class="fld !text-[10px]">صورة شخصية</label><input type="file" accept="image/*" class="input-field !py-1 !text-[10px]" onchange="bUploadImg(this,'photo')"></div>
@@ -1478,10 +1507,27 @@ function bSetSkillsLayout(layout) {
   if (!B) return;
   if (!B.cust) B.cust = {};
   B.cust.skillsLayout = layout;
+  bTouched();
+  bPreview();
+  toast('تم تحديث تنسيق المهارات 🧩');
+}
+
+function bSetCoursesLayout(layout) {
+  if (!B) return;
+  if (!B.cust) B.cust = {};
   B.cust.coursesLayout = layout;
   bTouched();
   bPreview();
-  toast('تم تحديث تنسيق المهارات والدورات: ' + layout + ' 🧩');
+  toast('تم تحديث تنسيق الدورات والشهادات 📜');
+}
+
+function bSetLanguagesLayout(layout) {
+  if (!B) return;
+  if (!B.cust) B.cust = {};
+  B.cust.languagesLayout = layout;
+  bTouched();
+  bPreview();
+  toast('تم تحديث تنسيق اللغات 🌐');
 }
 
 function bToggleLiveEditMode() {

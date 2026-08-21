@@ -145,6 +145,7 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
   const items = sec.items || [];
   const skillLayout = cust.skillsLayout || (isTinted ? 'cards_plus' : (isFormal ? 'grid_dots' : 'grid_dots'));
   const courseLayout = cust.coursesLayout || skillLayout;
+  const langLayout = cust.languagesLayout || (isTinted ? 'pills_level' : (isFormal ? 'grid_dots' : 'pills_level'));
 
   if (kind === 'text') {
     let txt = v(sec, 'textAr', 'textEn');
@@ -191,27 +192,26 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
     }).join('');
   }
 
-  if (kind === 'skills' || kind === 'certs') {
-    const layout = kind === 'skills' ? skillLayout : courseLayout;
-
-    if (layout === 'chips') {
+  // --- Skills Section Layouts ---
+  if (kind === 'skills') {
+    if (skillLayout === 'chips') {
       return `
         <div class="cv-chips-wrap" style="display:flex;flex-wrap:wrap;gap:6px;">
           ${items.map(it => `
             <span class="cv-chip-pill" style="display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:20px;padding:4px 12px;font-size:0.88em;font-weight:600;color:#1e293b;">
-              <i class="fas ${kind === 'skills' ? 'fa-check text-emerald-600' : 'fa-certificate text-sky-600'} text-[10px]"></i>${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}
+              <i class="fas fa-check text-[10px] text-emerald-600"></i>${tplEsc(v(it, 'nameAr', 'nameEn'))}
             </span>
           `).join('')}
         </div>
       `;
     }
 
-    if (layout === 'columns_clean') {
+    if (skillLayout === 'columns_clean') {
       return `
         <div class="cv-columns-clean" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 20px;">
           ${items.map(it => `
             <div class="cv-col-item" style="padding:4px 0;border-bottom:1px dashed #cbd5e1;font-weight:600;font-size:0.9em;color:#0f172a;display:flex;align-items:center;justify-content:space-between;">
-              <span>${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}</span>
+              <span>${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
               <span style="color:#0284c7;font-weight:bold;font-size:0.85em;">✓</span>
             </div>
           `).join('')}
@@ -219,7 +219,7 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
       `;
     }
 
-    if (layout === 'progress') {
+    if (skillLayout === 'progress') {
       return `
         <div class="cv-progress-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px 20px;">
           ${items.map(it => {
@@ -241,20 +241,99 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
       `;
     }
 
-    if (layout === 'list_classic') {
+    if (skillLayout === 'list_classic') {
       return `
         <div class="cv-list-classic" style="display:flex;flex-direction:column;gap:3px;">
           ${items.map(it => `
             <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
               <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.05em;line-height:1;flex-shrink:0;">•</span>
-              <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}</span>
+              <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
             </div>
           `).join('')}
         </div>
       `;
     }
 
-    if (layout === 'grid_dots') {
+    if (skillLayout === 'grid_dots') {
+      return `
+        <div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">
+          ${items.map(it => `
+            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
+              <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.05em;line-height:1;flex-shrink:0;">•</span>
+              <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // Default: cards_plus
+    return `
+      <div class="cv-cards-plus-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;">
+        ${items.map(it => `
+          <div class="cv-card-plus" style="display:flex;align-items:center;gap:8px;background:rgba(241,245,249,0.85);border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:0.9em;font-weight:600;color:#1e293b;">
+            <span class="cv-plus-icon" style="color:#0284c7;font-weight:900;font-size:1.1em;line-height:1;">+</span>
+            <span>${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // --- Courses / Certifications Section Layouts ---
+  if (kind === 'certs') {
+    if (courseLayout === 'chips') {
+      return `
+        <div class="cv-chips-wrap" style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${items.map(it => `
+            <span class="cv-chip-pill" style="display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:20px;padding:4px 12px;font-size:0.88em;font-weight:600;color:#1e293b;">
+              <i class="fas fa-certificate text-[10px] text-sky-600"></i>${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}
+            </span>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (courseLayout === 'columns_clean') {
+      return `
+        <div class="cv-columns-clean" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 20px;">
+          ${items.map(it => `
+            <div class="cv-col-item" style="padding:4px 0;border-bottom:1px dashed #cbd5e1;font-weight:600;font-size:0.9em;color:#0f172a;display:flex;align-items:center;justify-content:space-between;">
+              <span>${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}</span>
+              <span style="color:#0284c7;font-weight:bold;font-size:0.85em;">✓</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (courseLayout === 'org_badge') {
+      return `
+        <div class="cv-org-badge-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;">
+          ${items.map(it => `
+            <div class="cv-org-badge-card" style="background:rgba(241,245,249,0.9);border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;">
+              <div style="font-weight:700;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</div>
+              ${(it.issuerAr || it.issuerEn || it.year) ? `<div style="font-size:0.82em;color:#64748b;margin-top:2px;">${tplEsc(v(it, 'issuerAr', 'issuerEn'))}${it.year ? ' (' + tplEsc(it.year) + ')' : ''}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (courseLayout === 'list_classic') {
+      return `
+        <div class="cv-list-classic" style="display:flex;flex-direction:column;gap:3px;">
+          ${items.map(it => `
+            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
+              <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.05em;line-height:1;flex-shrink:0;">•</span>
+              <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}${it.year ? ' (' + tplEsc(it.year) + ')' : ''}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (courseLayout === 'grid_dots') {
       return `
         <div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">
           ${items.map(it => `
@@ -280,28 +359,95 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
     `;
   }
 
+  // --- Languages Section Layouts ---
   if (kind === 'languages') {
-    if (skillLayout === 'cards_plus' || isTinted) {
+    if (langLayout === 'progress') {
       return `
-        <div class="cv-lang-tinted-wrap" style="display:flex;flex-wrap:wrap;gap:8px;">
+        <div class="cv-lang-progress-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px 20px;">
+          ${items.map(it => {
+            const lv = it.level || (/(?:أصيل|متقن|ممتاز|Native|Fluent|Excellent)/i.test(it.levelAr || it.levelEn) ? 5 : 4);
+            const pct = Math.min(100, Math.max(20, lv * 20));
+            return `
+              <div class="cv-prog-item">
+                <div style="display:flex;justify-content:space-between;font-weight:700;font-size:0.88em;color:#0f172a;margin-bottom:3px;">
+                  <span>${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
+                  <span style="font-size:0.8em;color:#64748b;">${tplEsc(v(it, 'levelAr', 'levelEn')) || pct + '%'}</span>
+                </div>
+                <div style="height:6px;background:#e2e8f0;border-radius:999px;overflow:hidden;">
+                  <div style="height:100%;width:${pct}%;background:var(--cv-accent,#0284c7);border-radius:999px;"></div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    if (langLayout === 'columns_clean') {
+      return `
+        <div class="cv-lang-columns" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 20px;">
           ${items.map(it => `
-            <div class="cv-lang-pill" style="display:inline-flex;align-items:center;gap:6px;background:rgba(241,245,249,0.9);border:1px solid #cbd5e1;border-radius:6px;padding:5px 12px;font-size:0.9em;color:#1e293b;">
-              <b style="font-weight:700;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</b>
-              ${(it.levelAr || it.levelEn) ? `<span style="color:#64748b;font-weight:500;">(${tplEsc(v(it, 'levelAr', 'levelEn'))})</span>` : ''}
+            <div class="cv-col-item" style="padding:4px 0;border-bottom:1px dashed #cbd5e1;font-weight:600;font-size:0.9em;color:#0f172a;display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-weight:700;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
+              <span style="color:#64748b;font-size:0.85em;font-weight:500;">${tplEsc(v(it, 'levelAr', 'levelEn'))}</span>
             </div>
           `).join('')}
         </div>
       `;
     }
 
-    const rendered = items.map(it => `
-      <div class="cv-lang-item" style="display:flex;justify-content:space-between;align-items:center;font-size:0.92em;margin-bottom:3px;">
-        <span style="font-weight:700;color:#0f172a;">• ${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
-        ${(it.levelAr || it.levelEn) ? `<span style="font-weight:500;color:#64748b;">${tplEsc(v(it, 'levelAr', 'levelEn'))}</span>` : ''}
-      </div>
-    `).join('');
+    if (langLayout === 'cards_plus') {
+      return `
+        <div class="cv-cards-plus-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;">
+          ${items.map(it => `
+            <div class="cv-card-plus" style="display:flex;align-items:center;gap:8px;background:rgba(241,245,249,0.85);border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:0.9em;font-weight:600;color:#1e293b;">
+              <span class="cv-plus-icon" style="color:#0284c7;font-weight:900;font-size:1.1em;line-height:1;">+</span>
+              <span>${tplEsc(v(it, 'nameAr', 'nameEn'))} ${(it.levelAr || it.levelEn) ? '(' + tplEsc(v(it, 'levelAr', 'levelEn')) + ')' : ''}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
 
-    return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">${rendered}</div>`;
+    if (langLayout === 'list_classic') {
+      return `
+        <div class="cv-list-classic" style="display:flex;flex-direction:column;gap:3px;">
+          ${items.map(it => `
+            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
+              <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.05em;line-height:1;flex-shrink:0;">•</span>
+              <span style="font-weight:700;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
+              ${(it.levelAr || it.levelEn) ? `<span style="font-weight:500;font-size:0.88em;color:#64748b;">— ${tplEsc(v(it, 'levelAr', 'levelEn'))}</span>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (langLayout === 'grid_dots') {
+      return `
+        <div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">
+          ${items.map(it => `
+            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
+              <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.05em;line-height:1;flex-shrink:0;">•</span>
+              <span style="font-weight:700;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
+              ${(it.levelAr || it.levelEn) ? `<span style="font-weight:500;font-size:0.88em;color:#64748b;">(${tplEsc(v(it, 'levelAr', 'levelEn'))})</span>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // Default: pills_level
+    return `
+      <div class="cv-lang-tinted-wrap" style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${items.map(it => `
+          <div class="cv-lang-pill" style="display:inline-flex;align-items:center;gap:6px;background:rgba(241,245,249,0.9);border:1px solid #cbd5e1;border-radius:6px;padding:5px 12px;font-size:0.9em;color:#1e293b;">
+            <b style="font-weight:700;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</b>
+            ${(it.levelAr || it.levelEn) ? `<span style="color:#64748b;font-weight:500;">(${tplEsc(v(it, 'levelAr', 'levelEn'))})</span>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `;
   }
 
   if (kind === 'references') {
@@ -351,12 +497,7 @@ function renderContact(p, lang, allowContactIcons) {
     bits.push(`<span dir="ltr" style="display:inline-flex;align-items:center;"><a href="${tplEsc(webUrl)}" class="cv-link cv-link-blue" target="_blank" rel="noopener" style="color:#0284c7;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;">${ic('fas fa-globe')}<span>${tplEsc(p.website)}</span></a></span>`);
   }
 
-  // Nationality is 100% OPTIONAL - Only render if explicitly provided!
-  const rawNat = p.nationality || p.nationalityAr || p.nationalityEn || '';
-  if (rawNat && rawNat.trim()) {
-    const nat = lang === 'en' ? (p.nationalityEn || (typeof translateTextToEnglish === 'function' ? translateTextToEnglish(rawNat) : '') || rawNat) : rawNat;
-    bits.push(`<span style="display:inline-flex;align-items:center;">${ic('fas fa-flag')}<span>${tplEsc(nat)}</span></span>`);
-  }
+  // Nationality hidden per user request
 
   if (bits.length === 0) return '';
   const sep = `<span class="cv-contact-sep" style="margin:0 8px;color:#94a3b8;font-weight:300;">|</span>`;
