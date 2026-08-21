@@ -133,7 +133,7 @@ function renderBulletList(desc) {
   return lines.map(line => {
     const cleanL = line.replace(/^[•\-\*▪🔹■\d+\.]+\s*/, '').trim();
     if (!cleanL) return '';
-    return `<div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;padding:0;"><span class="cv-bullet-dot" style="display:inline-block;width:6px;height:6px;min-width:6px;min-height:6px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span><span style="font-weight:400;color:#1e293b;">${tplEsc(cleanL)}</span></div>`;
+    return `<div class="cv-bullet-item" style="display:flex;align-items:flex-start;gap:8px;line-height:1.5;margin:2px 0;padding:0;"><span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.52em;"></span><span style="font-weight:400;color:#1e293b;line-height:1.5;">${tplEsc(cleanL)}</span></div>`;
   }).join('');
 }
 
@@ -245,8 +245,8 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
       return `
         <div class="cv-list-classic" style="display:flex;flex-direction:column;gap:3px;">
           ${items.map(it => `
-            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
-              <span class="cv-bullet-dot" style="display:inline-block;width:6px;height:6px;min-width:6px;min-height:6px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
+            <div class="cv-bullet-item" style="display:flex;align-items:center;gap:8px;line-height:1.5;margin:2px 0;">
+              <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
               <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
             </div>
           `).join('')}
@@ -258,8 +258,8 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
       return `
         <div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">
           ${items.map(it => `
-            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
-              <span class="cv-bullet-dot" style="display:inline-block;width:6px;height:6px;min-width:6px;min-height:6px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
+            <div class="cv-bullet-item" style="display:flex;align-items:center;gap:8px;line-height:1.5;margin:2px 0;">
+              <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
               <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
             </div>
           `).join('')}
@@ -272,7 +272,7 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
         <div class="cv-flow-dots-wrap" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;line-height:1.6;padding:2px 0;">
           ${items.map(it => `
             <span class="cv-flow-item" style="display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:0.92em;color:#0f172a;">
-              <span class="cv-bullet-dot" style="display:inline-block;width:6px;height:6px;min-width:6px;min-height:6px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
+              <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
               <span>${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
             </span>
           `).join('')}
@@ -350,8 +350,8 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
       return `
         <div class="cv-list-classic" style="display:flex;flex-direction:column;gap:3px;">
           ${items.map(it => `
-            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
-              <span class="cv-bullet-dot" style="display:inline-block;width:6px;height:6px;min-width:6px;min-height:6px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
+            <div class="cv-bullet-item" style="display:flex;align-items:center;gap:8px;line-height:1.5;margin:2px 0;">
+              <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
               <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}${it.year ? ' (' + tplEsc(it.year) + ')' : ''}</span>
             </div>
           `).join('')}
@@ -363,8 +363,8 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
       return `
         <div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">
           ${items.map(it => `
-            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
-              <span class="cv-bullet-dot" style="display:inline-block;width:6px;height:6px;min-width:6px;min-height:6px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
+            <div class="cv-bullet-item" style="display:flex;align-items:center;gap:8px;line-height:1.5;margin:2px 0;">
+              <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
               <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}</span>
             </div>
           `).join('')}
@@ -439,8 +439,8 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
       return `
         <div class="cv-list-classic" style="display:flex;flex-direction:column;gap:3px;">
           ${items.map(it => `
-            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
-              <span class="cv-bullet-dot" style="display:inline-block;width:6px;height:6px;min-width:6px;min-height:6px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
+            <div class="cv-bullet-item" style="display:flex;align-items:center;gap:8px;line-height:1.5;margin:2px 0;">
+              <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
               <span style="font-weight:700;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
               ${(it.levelAr || it.levelEn) ? `<span style="font-weight:500;font-size:0.88em;color:#64748b;">— ${tplEsc(v(it, 'levelAr', 'levelEn'))}</span>` : ''}
             </div>
@@ -453,8 +453,8 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
       return `
         <div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">
           ${items.map(it => `
-            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
-              <span class="cv-bullet-dot" style="display:inline-block;width:6px;height:6px;min-width:6px;min-height:6px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
+            <div class="cv-bullet-item" style="display:flex;align-items:center;gap:8px;line-height:1.5;margin:2px 0;">
+              <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;"></span>
               <span style="font-weight:700;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
               ${(it.levelAr || it.levelEn) ? `<span style="font-weight:500;font-size:0.88em;color:#64748b;">(${tplEsc(v(it, 'levelAr', 'levelEn'))})</span>` : ''}
             </div>
