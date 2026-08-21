@@ -144,7 +144,7 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
   const isTinted = tpl.layout === 'tinted_cards' || tpl.layout === 'frosted_cards' || tpl.layout === 'subtle_cards' || tpl.layout === 'academic_boxed';
   const items = sec.items || [];
   const skillLayout = cust.skillsLayout || (isTinted ? 'cards_plus' : (isFormal ? 'grid_dots' : 'grid_dots'));
-  const courseLayout = cust.coursesLayout || (isTinted ? 'cards_plus' : (isFormal ? 'grid_dots' : 'grid_dots'));
+  const courseLayout = cust.coursesLayout || skillLayout;
 
   if (kind === 'text') {
     let txt = v(sec, 'textAr', 'textEn');
@@ -186,90 +186,102 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
           ${dRange}
         </div>
         ${org ? `<div class="cv-item-org" style="font-weight:600;font-size:0.93em;color:#475569;margin-bottom:4px;">${tplEsc(org)}</div>` : ''}
-        ${desc ? `<div class="cv-item-desc" style="font-weight:400;margin-top:4px;">${renderBulletList(desc)}</div>` : ''}
+        ${desc ? `<div class="cv-item-desc" style="font-weight:400;margin-top:3px;">${renderBulletList(desc)}</div>` : ''}
       </div>`;
     }).join('');
   }
 
-  if (kind === 'certs') {
-    if (courseLayout === 'cards_plus' || isTinted) {
+  if (kind === 'skills' || kind === 'certs') {
+    const layout = kind === 'skills' ? skillLayout : courseLayout;
+
+    if (layout === 'chips') {
       return `
-        <div class="cv-cards-plus-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;">
+        <div class="cv-chips-wrap" style="display:flex;flex-wrap:wrap;gap:6px;">
           ${items.map(it => `
-            <div class="cv-card-plus" style="display:flex;align-items:center;gap:8px;background:rgba(241,245,249,0.85);border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:0.9em;font-weight:600;color:#1e293b;">
-              <span class="cv-plus-icon" style="color:#0284c7;font-weight:900;font-size:1.1em;line-height:1;">+</span>
+            <span class="cv-chip-pill" style="display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:20px;padding:4px 12px;font-size:0.88em;font-weight:600;color:#1e293b;">
+              <i class="fas ${kind === 'skills' ? 'fa-check text-emerald-600' : 'fa-certificate text-sky-600'} text-[10px]"></i>${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}
+            </span>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (layout === 'columns_clean') {
+      return `
+        <div class="cv-columns-clean" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 20px;">
+          ${items.map(it => `
+            <div class="cv-col-item" style="padding:4px 0;border-bottom:1px dashed #cbd5e1;font-weight:600;font-size:0.9em;color:#0f172a;display:flex;align-items:center;justify-content:space-between;">
               <span>${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}</span>
+              <span style="color:#0284c7;font-weight:bold;font-size:0.85em;">✓</span>
             </div>
           `).join('')}
         </div>
       `;
     }
 
-    if (courseLayout === 'chips') {
+    if (layout === 'progress') {
       return `
-        <div class="cv-chips-wrap" style="display:flex;flex-wrap:wrap;gap:6px;">
-          ${items.map(it => `
-            <span class="cv-chip-pill" style="display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:20px;padding:4px 12px;font-size:0.88em;font-weight:600;color:#1e293b;">
-              <i class="fas fa-certificate text-[10px] text-sky-600"></i>${tplEsc(v(it, 'nameAr', 'nameEn'))}
-            </span>
-          `).join('')}
+        <div class="cv-progress-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px 20px;">
+          ${items.map(it => {
+            const lv = it.level || 4;
+            const pct = Math.min(100, Math.max(20, lv * 20));
+            return `
+              <div class="cv-prog-item">
+                <div style="display:flex;justify-content:space-between;font-weight:700;font-size:0.88em;color:#0f172a;margin-bottom:3px;">
+                  <span>${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
+                  <span style="font-size:0.8em;color:#64748b;">${pct}%</span>
+                </div>
+                <div style="height:6px;background:#e2e8f0;border-radius:999px;overflow:hidden;">
+                  <div style="height:100%;width:${pct}%;background:var(--cv-accent,#0284c7);border-radius:999px;"></div>
+                </div>
+              </div>
+            `;
+          }).join('')}
         </div>
       `;
     }
 
-    const rendered = items.map(it => {
-      const name = v(it, 'nameAr', 'nameEn');
-      const iss = v(it, 'issuerAr', 'issuerEn');
-      const yr = it.year ? tplEsc(String(it.year)) : '';
+    if (layout === 'list_classic') {
       return `
-        <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.45;margin-bottom:3px;">
-          <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.1em;line-height:1;flex-shrink:0;">•</span>
-          <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(name)}${iss ? ' — ' + tplEsc(iss) : ''}${yr ? ' (' + yr + ')' : ''}</span>
-        </div>
-      `;
-    }).join('');
-
-    return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">${rendered}</div>`;
-  }
-
-  if (kind === 'skills') {
-    if (skillLayout === 'cards_plus' || isTinted) {
-      return `
-        <div class="cv-cards-plus-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;">
+        <div class="cv-list-classic" style="display:flex;flex-direction:column;gap:3px;">
           ${items.map(it => `
-            <div class="cv-card-plus" style="display:flex;align-items:center;gap:8px;background:rgba(241,245,249,0.85);border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:0.9em;font-weight:600;color:#1e293b;">
-              <span class="cv-plus-icon" style="color:#0284c7;font-weight:900;font-size:1.1em;line-height:1;">+</span>
-              <span>${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
+            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
+              <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.05em;line-height:1;flex-shrink:0;">•</span>
+              <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}</span>
             </div>
           `).join('')}
         </div>
       `;
     }
 
-    if (skillLayout === 'chips') {
+    if (layout === 'grid_dots') {
       return `
-        <div class="cv-chips-wrap" style="display:flex;flex-wrap:wrap;gap:6px;">
+        <div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">
           ${items.map(it => `
-            <span class="cv-chip-pill" style="display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:20px;padding:4px 12px;font-size:0.88em;font-weight:600;color:#1e293b;">
-              <i class="fas fa-check text-[10px] text-emerald-600"></i>${tplEsc(v(it, 'nameAr', 'nameEn'))}
-            </span>
+            <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
+              <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.05em;line-height:1;flex-shrink:0;">•</span>
+              <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}</span>
+            </div>
           `).join('')}
         </div>
       `;
     }
 
-    const rendered = items.map(it => `
-      <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.45;margin-bottom:3px;">
-        <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.1em;line-height:1;flex-shrink:0;">•</span>
-        <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
+    // Default: cards_plus
+    return `
+      <div class="cv-cards-plus-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;">
+        ${items.map(it => `
+          <div class="cv-card-plus" style="display:flex;align-items:center;gap:8px;background:rgba(241,245,249,0.85);border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:0.9em;font-weight:600;color:#1e293b;">
+            <span class="cv-plus-icon" style="color:#0284c7;font-weight:900;font-size:1.1em;line-height:1;">+</span>
+            <span>${tplEsc(v(it, 'nameAr', 'nameEn'))}${(it.issuerAr || it.issuerEn) ? ' — ' + tplEsc(v(it, 'issuerAr', 'issuerEn')) : ''}</span>
+          </div>
+        `).join('')}
       </div>
-    `).join('');
-
-    return `<div class="cv-grid-2col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">${rendered}</div>`;
+    `;
   }
 
   if (kind === 'languages') {
-    if (isTinted || skillLayout === 'cards_plus') {
+    if (skillLayout === 'cards_plus' || isTinted) {
       return `
         <div class="cv-lang-tinted-wrap" style="display:flex;flex-wrap:wrap;gap:8px;">
           ${items.map(it => `
@@ -467,7 +479,7 @@ function renderTemplate(templateId, data, cust, language) {
 
   const sections = (data.sections || []).filter(s => s.visible !== false);
   const showIcons = cust.showIcons !== false && !tpl.ats;
-  const secHtml = (s) => `<section class="cv-section">${secTitle(s, lang, showIcons)}${renderSectionBody(s, lang, tpl)}</section>`;
+  const secHtml = (s) => `<section class="cv-section">${secTitle(s, lang, showIcons)}${renderSectionBody(s, lang, tpl, cust)}</section>`;
 
   const qr = cust.qrDataUrl ? `<div class="cv-qr-wrap"><img class="cv-qr" src="${cust.qrDataUrl}" alt="QR"><div class="cv-qr-label">${lang === 'en' ? 'Online CV' : 'نسخة أونلاين'}</div></div>` : '';
   const sig = (data.personal && data.personal.signature) ? `<div class="cv-signature-wrap"><img class="cv-signature" src="${data.personal.signature}" alt=""></div>` : '';
@@ -545,14 +557,14 @@ function renderTemplate(templateId, data, cust, language) {
         <div class="column-ar" dir="rtl" style="display:table-cell; width:48%; text-align:right; vertical-align:top; padding-right:10px;">
           <section class="cv-section">
             ${secTitle(s, 'ar', showIcons)}
-            ${renderSectionBody(s, 'ar', tpl)}
+            ${renderSectionBody(s, 'ar', tpl, cust)}
           </section>
         </div>
         <div class="column-divider" style="display:table-cell; width:4%; border-left:2px solid var(--cv-accent,#b0b0b0); vertical-align:top;"></div>
         <div class="column-en" dir="ltr" style="display:table-cell; width:48%; text-align:left; vertical-align:top; padding-left:10px;">
           <section class="cv-section">
             ${secTitle(s, 'en', showIcons)}
-            ${renderSectionBody(s, 'en', tpl)}
+            ${renderSectionBody(s, 'en', tpl, cust)}
           </section>
         </div>
       </div>
@@ -599,7 +611,7 @@ function renderTemplate(templateId, data, cust, language) {
     const secCards = sections.map(s => `
       <section class="cv-canva-card">
         ${secTitle(s, lang, showIcons)}
-        ${renderSectionBody(s, lang, tpl)}
+        ${renderSectionBody(s, lang, tpl, cust)}
       </section>
     `).join('');
 

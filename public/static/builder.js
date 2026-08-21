@@ -1468,12 +1468,13 @@ function bApplyTheme(primary, accent) {
 }
 
 function bSetSkillsLayout(layout) {
-  if (!B || !B.cust) return;
+  if (!B) return;
+  if (!B.cust) B.cust = {};
   B.cust.skillsLayout = layout;
   B.cust.coursesLayout = layout;
   bTouched();
   bPreview();
-  toast('تم تحديث تنسيق المهارات والدورات 🧩');
+  toast('تم تحديث تنسيق المهارات والدورات: ' + layout + ' 🧩');
 }
 
 function bToggleLiveEditMode() {
