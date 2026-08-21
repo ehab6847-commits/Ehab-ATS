@@ -133,7 +133,7 @@ function renderBulletList(desc) {
   return lines.map(line => {
     const cleanL = line.replace(/^[•\-\*▪🔹■\d+\.]+\s*/, '').trim();
     if (!cleanL) return '';
-    return `<div class="cv-bullet-item" style="display:flex;align-items:flex-start;gap:8px;line-height:1.5;margin:2px 0;padding:0;"><span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.52em;"></span><span style="font-weight:400;color:#1e293b;line-height:1.5;">${tplEsc(cleanL)}</span></div>`;
+    return `<div class="cv-bullet-item cv-exp-bullet" style="display:flex;align-items:flex-start;gap:8px;line-height:1.5;margin:2px 0;padding:0;"><span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:8px;"></span><span style="font-weight:400;color:#1e293b;line-height:1.5;">${tplEsc(cleanL)}</span></div>`;
   }).join('');
 }
 
@@ -165,7 +165,7 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
       return `
       <div class="cv-item cv-edu-item" style="margin-bottom:10px;">
         ${hasHead ? `
-          <div class="cv-item-head" style="display:flex;justify-content:space-between;align-items:baseline;">
+          <div class="cv-item-head" style="display:flex;justify-content:space-between;align-items:center;">
             <span class="cv-item-role cv-degree-title" style="font-weight:700;font-size:1.02em;color:#0f172a;">${tplEsc(deg)}</span>
             ${yr ? `<span class="cv-item-date" style="font-weight:600;font-size:0.85em;color:#64748b;">${yr}</span>` : ''}
           </div>` : ''}
@@ -182,7 +182,7 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
       const desc = v(it, 'descAr', 'descEn');
       return `
       <div class="cv-item cv-exp-item" style="margin-bottom:12px;">
-        <div class="cv-item-head" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;">
+        <div class="cv-item-head" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
           <span class="cv-item-role" style="font-weight:700;font-size:1.02em;color:#0f172a;">${tplEsc(role)}</span>
           ${dRange}
         </div>
@@ -284,7 +284,7 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
       return `
         <div class="cv-grid-hyphens" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">
           ${items.map(it => `
-            <div class="cv-hyphen-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
+            <div class="cv-hyphen-item" style="display:flex;align-items:center;gap:6px;line-height:1.4;margin:2px 0;">
               <span style="color:#0284c7;font-weight:700;font-size:1.1em;line-height:1;flex-shrink:0;">—</span>
               <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
             </div>
