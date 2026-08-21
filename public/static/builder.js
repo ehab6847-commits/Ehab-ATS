@@ -154,6 +154,8 @@ function renderBuilder() {
                 <option value="progress" ${c.skillsLayout === 'progress' ? 'selected' : ''}>📊 شريط تقدم ومستوى</option>
                 <option value="grid_dots" ${c.skillsLayout === 'grid_dots' ? 'selected' : ''}>• شبكة منقطة (عمودين)</option>
                 <option value="list_classic" ${c.skillsLayout === 'list_classic' ? 'selected' : ''}>📜 قائمة كلاسيكية</option>
+                <option value="dots_flow" ${c.skillsLayout === 'dots_flow' ? 'selected' : ''}>• مصفوفة تنقيط ورا بعض</option>
+                <option value="hyphens_dash" ${c.skillsLayout === 'hyphens_dash' ? 'selected' : ''}>— شرطي (شرطات -)</option>
               </select>
             </div>
 

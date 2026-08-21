@@ -267,6 +267,32 @@ function renderSectionBody(sec, lang, tpl, cust = {}) {
       `;
     }
 
+        if (skillLayout === 'dots_flow' || skillLayout === 'matrix_dots') {
+      return `
+        <div class="cv-flow-dots-wrap" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;line-height:1.6;padding:2px 0;">
+          ${items.map(it => `
+            <span class="cv-flow-item" style="display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:0.92em;color:#0f172a;">
+              <span style="color:#0284c7;font-weight:900;font-size:1.1em;line-height:1;">•</span>
+              <span>${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
+            </span>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (skillLayout === 'hyphens_dash' || skillLayout === 'hyphen_list') {
+      return `
+        <div class="cv-grid-hyphens" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;">
+          ${items.map(it => `
+            <div class="cv-hyphen-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;">
+              <span style="color:#0284c7;font-weight:700;font-size:1.1em;line-height:1;flex-shrink:0;">—</span>
+              <span style="font-weight:600;font-size:0.92em;color:#0f172a;">${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
     // Default: cards_plus
     return `
       <div class="cv-cards-plus-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;">
