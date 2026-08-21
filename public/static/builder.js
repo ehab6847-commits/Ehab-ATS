@@ -349,16 +349,41 @@ function renderBuilderForm() {
     ensureEnglishData(B.data);
   }
   const p = B.data.personal || {};
-  const pf = (k, label, dir) => `<div><label class="fld">${label}</label><input class="input-field !py-1.5" ${dir ? 'dir="' + dir + '"' : ''} value="${bEsc(p[k] || '')}" oninput="bPersonal('${k}', this.value)"></div>`;
+  const pf = (k, label, dir) => `<div class="mb-1.5"><label class="fld !text-[11px] !mb-1">${label}</label><input class="input-field !py-1 !px-2.5 text-xs rounded-lg" ${dir ? 'dir="' + dir + '"' : ''} value="${bEsc(p[k] || '')}" oninput="bPersonal('${k}', this.value)"></div>`;
   const sections = (B.data.sections || []).map((sec, i) => bSectionCard(sec, i)).join('');
   
+  // Quick Section Jump Pills
+  const secPills = [
+    `<button class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 shrink-0" onclick="bToggleAccordion('personal')"><i class="fas fa-user ml-1 text-sky-400"></i>البيانات الشخصية</button>`,
+    ...(B.data.sections || []).map((sec, i) => {
+      const def = SECTION_TYPES[sec.type] || { ar: sec.type, icon: 'fa-list' };
+      return `<button class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 shrink-0" onclick="bToggleAccordion(${i})"><i class="fas ${def.icon} ml-1 text-indigo-400"></i>${bEsc(sec.titleAr || def.ar)}</button>`;
+    })
+  ].join('');
+
   document.getElementById('b-form').innerHTML = `
-    <div class="section-card">
-      <div class="section-head" onclick="this.parentElement.classList.toggle('collapsed')">
-        <i class="fas fa-user text-indigo-400"></i><span class="font-bold">البيانات الشخصية والمعلومات</span>
-        <i class="fas fa-chevron-down mr-auto text-slate-400 text-xs"></i>
+    <!-- Top Action & Quick Navigation Strip -->
+    <div class="mb-3">
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5"><i class="fas fa-bars-staggered text-indigo-400"></i>أقسام السيرة الذاتية:</span>
+        <div class="flex items-center gap-1">
+          <button class="mini-btn !text-[11px] !py-0.5 !px-2 text-slate-400 border border-slate-700 hover:text-white" onclick="bToggleAllSections(true)" title="فتح كل الأقسام"><i class="fas fa-angles-down ml-1"></i>فتح الكل</button>
+          <button class="mini-btn !text-[11px] !py-0.5 !px-2 text-slate-400 border border-slate-700 hover:text-white" onclick="bToggleAllSections(false)" title="طي كل الأقسام"><i class="fas fa-angles-up ml-1"></i>طي الكل</button>
+        </div>
       </div>
-      <div class="section-body">
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+        ${secPills}
+      </div>
+    </div>
+
+    <!-- Personal Info Card (Collapsible) -->
+    <div class="section-card collapsed mb-2" id="sec-card-personal">
+      <div class="section-head" onclick="bToggleAccordion('personal')">
+        <i class="fas fa-user text-sky-400"></i>
+        <span class="font-bold flex-1">البيانات الشخصية والمعلومات <span class="text-xs text-slate-400 font-normal">(${p.nameAr || 'الاسم'})</span></span>
+        <i class="fas fa-chevron-down text-slate-400 text-xs transition-transform duration-200" id="chevron-personal"></i>
+      </div>
+      <div class="section-body p-3">
         <div class="grid grid-cols-2 gap-2">
           ${pf('nameAr', 'الاسم (عربي) *')} ${pf('nameEn', 'Name (En)', 'ltr')}
           ${pf('titleAr', 'المسمى الوظيفي (اختياري)')} ${pf('titleEn', 'Job Title (En - اختياري)', 'ltr')}
@@ -367,10 +392,10 @@ function renderBuilderForm() {
           ${pf('linkedin', 'LinkedIn', 'ltr')} ${pf('website', 'موقع/Portfolio', 'ltr')}
           ${pf('nationality', 'الجنسية (اختياري)')} ${pf('birthdate', 'تاريخ الميلاد (اختياري)', 'ltr')}
         </div>
-        <div class="grid grid-cols-3 gap-2 mt-2">
-          <div><label class="fld">صورة شخصية</label><input type="file" accept="image/*" class="input-field !py-1 !text-xs" onchange="bUploadImg(this,'photo')"></div>
-          <div><label class="fld">لوجو</label><input type="file" accept="image/*" class="input-field !py-1 !text-xs" onchange="bUploadImg(this,'logo')"></div>
-          <div><label class="fld">توقيع</label><input type="file" accept="image/*" class="input-field !py-1 !text-xs" onchange="bUploadImg(this,'signature')"></div>
+        <div class="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-700/50">
+          <div><label class="fld !text-[10px]">صورة شخصية</label><input type="file" accept="image/*" class="input-field !py-1 !text-[10px]" onchange="bUploadImg(this,'photo')"></div>
+          <div><label class="fld !text-[10px]">لوجو</label><input type="file" accept="image/*" class="input-field !py-1 !text-[10px]" onchange="bUploadImg(this,'logo')"></div>
+          <div><label class="fld !text-[10px]">توقيع</label><input type="file" accept="image/*" class="input-field !py-1 !text-[10px]" onchange="bUploadImg(this,'signature')"></div>
         </div>
         <div class="flex gap-2 mt-1 text-xs">
           ${p.photo ? '<button class="mini-btn danger" onclick="bPersonal(\'photo\',\'\');renderBuilderForm()">حذف الصورة</button>' : ''}
@@ -380,10 +405,10 @@ function renderBuilderForm() {
       </div>
     </div>
     
-    <div id="b-sections" class="space-y-2 mt-2">${sections}</div>
+    <div id="b-sections" class="space-y-2">${sections}</div>
     
     <div class="mt-3">
-      <button class="btn-primary w-full !py-2 text-sm shadow-md" onclick="bOpenAddSectionModal()"><i class="fas fa-plus ml-1.5"></i>إضافة قسم جديد للسيرة الذاتية</button>
+      <button class="btn-primary w-full !py-2 text-sm shadow-md !bg-gradient-to-r !from-indigo-600 !to-purple-600" onclick="bOpenAddSectionModal()"><i class="fas fa-plus ml-1.5"></i>إضافة قسم جديد للسيرة الذاتية</button>
     </div>
 
     ${bCustomizationPanel()}
@@ -422,7 +447,8 @@ function bSectionCard(sec, i) {
     <div class="section-head">
       <span class="drag-handle" onclick="event.stopPropagation()"><i class="fas fa-grip-vertical"></i></span>
       <i class="fas ${def.icon} text-indigo-400" onclick="bToggleCollapse(${i})"></i>
-      <span class="font-bold flex-1 cursor-pointer" onclick="bToggleCollapse(${i})">${bEsc(sec.titleAr || def.ar)} <span class="text-xs text-slate-400">(${isTextKind ? ((sec.textAr || sec.textEn) ? '1' : '0') : (sec.items || []).length})</span></span>
+      <span class="font-bold flex-1 cursor-pointer" onclick="bToggleCollapse(${i})">${bEsc(sec.titleAr || def.ar)} <span class="text-xs text-slate-400 font-normal">(${isTextKind ? ((sec.textAr || sec.textEn) ? '1' : '0') : (sec.items || []).length})</span></span>
+      <i class="fas fa-chevron-down text-slate-400 text-xs transition-transform cursor-pointer ml-1" onclick="bToggleCollapse(${i})"></i>
       
       <!-- Quick Section AI Button -->
       <button class="mini-btn !bg-violet-500/20 !text-violet-300 hover:!bg-violet-500/40" title="مساعد الذكاء الاصطناعي لهذا القسم" onclick="event.stopPropagation(); bSectionAIModal(${i})"><i class="fas fa-wand-magic-sparkles"></i> AI</button>
@@ -1482,4 +1508,35 @@ function bApplyLiveEditToPreview() {
     wrap.classList.remove('cv-live-editing');
     wrap.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
   }
+}
+
+
+function bToggleAccordion(target) {
+  if (target === 'personal') {
+    const card = document.getElementById('sec-card-personal');
+    if (card) {
+      card.classList.toggle('collapsed');
+      const chev = document.getElementById('chevron-personal');
+      if (chev) chev.style.transform = card.classList.contains('collapsed') ? 'rotate(0deg)' : 'rotate(180deg)';
+    }
+    return;
+  }
+  const card = document.querySelector(`.section-card[data-idx="${target}"]`);
+  if (card) {
+    card.classList.toggle('collapsed');
+    const chev = card.querySelector('.fa-chevron-down');
+    if (chev) chev.style.transform = card.classList.contains('collapsed') ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+}
+
+function bToggleAllSections(expand) {
+  const pCard = document.getElementById('sec-card-personal');
+  if (pCard) {
+    if (expand) pCard.classList.remove('collapsed');
+    else pCard.classList.add('collapsed');
+  }
+  document.querySelectorAll('.section-card').forEach(card => {
+    if (expand) card.classList.remove('collapsed');
+    else card.classList.add('collapsed');
+  });
 }
