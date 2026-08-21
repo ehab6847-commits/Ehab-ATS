@@ -40,7 +40,9 @@
 .cv-item-role { font-weight: 700; font-size: 1em; }
 .cv-item-org { color: var(--cv-accent, #475569); font-weight: 600; font-size: .93em; }
 .cv-item-date { font-size: .82em; color: #64748b; white-space: nowrap; font-weight: 600; }
-.cv-item-desc { margin: 4px 0 0; font-size: .92em; color: #334155; white-space: pre-line; }
+.cv-item-desc { margin: 2px 0 0; font-size: .92em; color: #334155; white-space: normal; line-height: 1.4; }
+.cv-item-desc .cv-bullet-item { margin: 1px 0 !important; padding: 0 !important; line-height: 1.4 !important; }
+.cv-bullet-item { margin: 1px 0; line-height: 1.4; }
 
 .cv-chips { display: flex; flex-wrap: wrap; gap: 7px; }
 .cv-chip {

@@ -128,7 +128,7 @@ function renderBuilder() {
 
     <div class="builder-grid flex-1">
       <div class="builder-form-col" id="b-form"></div>
-            <div class="builder-preview-col flex flex-col justify-between" id="b-preview-col" dir="ltr" style="display:flex; flex-direction:column; align-items:center; overflow-x:hidden; overflow-y:auto; width:100%; position:relative; background:#0b0f19;">
+                  <div class="builder-preview-col" id="b-preview-col" dir="ltr" style="display:block; position:relative; overflow-y:auto; overflow-x:hidden; width:100%; height:100%; background:#0b0f19; padding:0 0 140px 0;">
         <!-- Top Customizer Floating Bar (matching requested layout) -->
         <div id="b-preview-customizer" class="w-full sticky top-0 z-20 glass-strong border-b border-slate-700/80 px-3 py-2 flex items-center justify-between gap-2 flex-wrap shadow-xl">
           <!-- Quick Color Themes -->
@@ -171,7 +171,7 @@ function renderBuilder() {
           </div>
         </div>
 
-        <div id="b-preview-outer" style="display:flex; justify-content:center; align-items:flex-start; width:100%; min-height:calc(100vh - 240px); padding:16px 4px 100px;">
+        <div id="b-preview-outer" style="display:flex; justify-content:center; align-items:flex-start; width:100%; margin-top:16px; margin-bottom:20px; padding:0 8px;">
           <div id="b-preview-wrap" dir="${r.language === 'en' ? 'ltr' : 'rtl'}" style="transform-origin:top center; width:794px; min-width:794px; max-width:794px; margin:0 auto;"></div>
         </div>
 
@@ -185,6 +185,7 @@ function renderBuilder() {
             ${bRenderTemplateCarouselCards(r.template)}
           </div>
         </div>
+      </div>
     </div>
   </div>`;
 

@@ -133,12 +133,7 @@ function renderBulletList(desc) {
   return lines.map(line => {
     const cleanL = line.replace(/^[•\-\*▪🔹■\d+\.]+\s*/, '').trim();
     if (!cleanL) return '';
-    return `
-      <div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.45;margin-bottom:2px;">
-        <span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.1em;line-height:1;flex-shrink:0;">•</span>
-        <span>${tplEsc(cleanL)}</span>
-      </div>
-    `;
+    return `<div class="cv-bullet-item" style="display:flex;align-items:baseline;gap:6px;line-height:1.4;margin:2px 0;padding:0;"><span class="cv-bullet-dot" style="color:#000;font-weight:900;font-size:1.05em;line-height:1;flex-shrink:0;">•</span><span style="font-weight:400;color:#1e293b;">${tplEsc(cleanL)}</span></div>`;
   }).join('');
 }
 
