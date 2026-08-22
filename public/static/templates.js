@@ -1,6 +1,9 @@
 /* ===== Ehab ATS — Template Engine (16 templates) ===== */
 
 const TEMPLATE_DEFS = {
+  canva_framed_beige:  { name: 'كانفا شبكي مؤطر بيج 📐', nameEn: 'Canva Beige Framed Grid', group: 'canva', layout: 'canva_framed_beige', header: 'framed_top', color: '#000000', accent: '#334155', line: '2px solid #000000' },
+  canva_sage_banner:   { name: 'كانفا زيتي بالأشرطة العريضة 🌿', nameEn: 'Canva Sage Green Banner', group: 'canva', layout: 'canva_sage_banner', header: 'sage_top', color: '#4d5b53', accent: '#62736a', line: '2px solid #4d5b53' },
+
   canva_navy_ribbon:   { name: 'كانفا كحلي بأشرطة متباينة 🎨', nameEn: 'Canva Navy Ribbon Pro', group: 'canva', layout: 'canva_ribbon', header: 'ribbon_top', color: '#162c46', accent: '#254870', line: '1.5px solid #162c46' },
   canva_violet_ribbon: { name: 'كانفا بنفسجي ملكي بأشرطة 🎨', nameEn: 'Canva Royal Plum Ribbon', group: 'canva', layout: 'canva_ribbon', header: 'ribbon_top', color: '#4c2a58', accent: '#703c7e', line: '1.5px solid #4c2a58' },
   canva_emerald_ribbon:{ name: 'كانفا زمردي بأشرطة متباينة 💎', nameEn: 'Canva Emerald Ribbon Pro', group: 'canva', layout: 'canva_ribbon', header: 'ribbon_top', color: '#064e3b', accent: '#0d6951', line: '1.5px solid #064e3b' },
@@ -1188,6 +1191,271 @@ function renderTemplate(templateId, data, cust, language) {
             <div style="position:absolute;${dir === 'rtl' ? 'right:10px;' : 'left:10px;'}top:8px;bottom:14px;width:1.5px;background:#cbd5e1;z-index:2;"></div>
             ${sectionsHtml}
           </div>
+          ${sig}
+        </div>
+        ${qr}
+      </div>
+    `;
+  }
+
+  
+  // --- Canva Beige Framed Grid Template (Matching Shareef Younis layout) ---
+  if (tpl.layout === 'canva_framed_beige') {
+    const p = data.personal || {};
+    const nr = resolveName(p);
+    const tr = resolveTitle(p);
+    const v = mkPick(lang);
+
+    const name = v(nr, 'ar', 'en') || 'الاسم الكامل';
+    const jobTitle = v(tr, 'ar', 'en') || '';
+    const phoneRaw = String(p.phone || '').replace(/\s+/g, '');
+    const phoneLink = phoneRaw ? `<a href="tel:${tplEsc(phoneRaw)}" style="color:#000;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-phone" style="font-size:11px;"></i><span>${tplEsc(p.phone)}</span></a>` : '';
+    const emailLink = p.email ? `<a href="mailto:${tplEsc(p.email)}" style="color:#000;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-envelope" style="font-size:11px;"></i><span>${tplEsc(p.email)}</span></a>` : '';
+    const city = v(p, 'cityAr', 'cityEn') || v(p, 'city', 'city') || '';
+    const cityHtml = city ? `<span style="display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-map-marker-alt" style="font-size:11px;"></i><span>${tplEsc(city)}</span></span>` : '';
+    const websiteHtml = p.website ? `<span style="display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-globe" style="font-size:11px;"></i><span>${tplEsc(p.website)}</span></span>` : '';
+
+    const iconMap = {
+      summary: 'fa-circle-info',
+      objective: 'fa-bullseye',
+      experience: 'fa-brain',
+      education: 'fa-graduation-cap',
+      skills: 'fa-gear',
+      techskills: 'fa-laptop-code',
+      softskills: 'fa-users',
+      languages: 'fa-language',
+      training: 'fa-certificate',
+      certifications: 'fa-award',
+      courses: 'fa-book-open'
+    };
+
+    const sectionsHtml = sections.map((s, sIdx) => {
+      const icon = iconMap[s.type] || 'fa-folder-open';
+      const title = secTitleText(s, lang);
+      const isText = s.type === 'summary' || s.type === 'objective' || s.type === 'custom';
+      const isExp = s.type === 'experience' || s.type === 'timeline' || s.type === 'internship';
+      const isEdu = s.type === 'education';
+      const isSkills = s.type === 'skills' || s.type === 'techskills' || s.type === 'softskills';
+      const isLangs = s.type === 'languages';
+      const items = s.items || [];
+
+      let bodyHtml = '';
+      if (isText) {
+        const txt = v(s, 'textAr', 'textEn') || (items[0] && v(items[0], 'textAr', 'textEn')) || '';
+        bodyHtml = `<div style="text-align:justify;line-height:1.65;font-size:11.5px;font-weight:600;color:#111827;">${tplEsc(txt).replace(/\n/g, '<br>')}</div>`;
+      } else if (isExp) {
+        bodyHtml = items.map(it => {
+          const role = v(it, 'roleAr', 'roleEn') || '';
+          const org = v(it, 'orgAr', 'orgEn') || '';
+          const dRange = dateRange(it, lang);
+          const desc = v(it, 'descAr', 'descEn');
+          return `
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:16px;">
+              <div style="width:65%;font-size:11.5px;line-height:1.55;color:#111827;font-weight:600;">
+                ${desc ? renderBulletList(desc) : ''}
+              </div>
+              <div style="width:33%;text-align:${dir === 'rtl' ? 'right' : 'left'};">
+                <div style="font-weight:900;font-size:13px;color:#000;">${tplEsc(role)}</div>
+                ${org ? `<div style="font-weight:700;font-size:11.5px;color:#1e293b;margin-top:1px;">${tplEsc(org)}</div>` : ''}
+                ${dRange ? `<div style="font-weight:700;font-size:11px;color:#334155;margin-top:2px;">${dRange}</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else if (isEdu) {
+        bodyHtml = items.map(it => {
+          const deg = v(it, 'degreeAr', 'degreeEn') || '';
+          const sch = v(it, 'schoolAr', 'schoolEn') || '';
+          const yr = it.year ? tplEsc(String(it.year)) : '';
+          return `
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+              <div style="font-size:11px;font-weight:700;color:#334155;">${yr}</div>
+              <div style="text-align:${dir === 'rtl' ? 'right' : 'left'};">
+                <div style="font-weight:900;font-size:13px;color:#000;">${tplEsc(deg)}</div>
+                ${sch ? `<div style="font-weight:700;font-size:11.5px;color:#1e293b;margin-top:1px;">${tplEsc(sch)}</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else if (isSkills) {
+        bodyHtml = `
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:11.5px;font-weight:700;color:#000;line-height:1.5;">
+            ${items.map(it => `<div>${tplEsc(v(it, 'nameAr', 'nameEn'))}.</div>`).join('')}
+          </div>
+        `;
+      } else if (isLangs) {
+        bodyHtml = `
+          <div style="display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:700;color:#000;">
+            ${items.map(it => `
+              <div>${tplEsc(v(it, 'nameAr', 'nameEn'))}: ${tplEsc(v(it, 'levelAr', 'levelEn') || 'ممتاز')}</div>
+            `).join('')}
+          </div>
+        `;
+      } else {
+        bodyHtml = renderSectionBody(s, lang, tpl, cust);
+      }
+
+      return `
+        <div class="cv-framed-section-box" style="border:2px solid #000000;border-top:none;padding:12px 18px;background:transparent;box-sizing:border-box;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;direction:${dir};">
+            <i class="fas ${icon}" style="font-size:18px;color:#000;"></i>
+            <div style="font-weight:900;font-size:15px;color:#000;">${tplEsc(title)}</div>
+          </div>
+          ${bodyHtml}
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="${cls} cv-canva-framed-beige-page" dir="${dir}" ${styleAttr} style="background:#f6ede4!important;color:#000;padding:26px 32px;font-family:'Cairo','Inter',sans-serif;">
+        <!-- Top Header Box -->
+        <div style="border:2px solid #000000;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;background:transparent;box-sizing:border-box;">
+          <!-- Left: 2x2 Contact Info Grid -->
+          <div style="display:grid;grid-template-columns:repeat(2,auto);gap:6px 18px;font-size:11.5px;font-weight:700;color:#000;direction:ltr;text-align:left;">
+            <div>${phoneLink}</div>
+            <div>${emailLink}</div>
+            <div>${websiteHtml || (cityHtml ? cityHtml : '')}</div>
+            <div>${cityHtml && websiteHtml ? cityHtml : ''}</div>
+          </div>
+          <!-- Right: Candidate Name + Title -->
+          <div style="text-align:${dir === 'rtl' ? 'right' : 'left'};">
+            <h1 class="cv-name" style="font-size:28px;font-weight:900;color:#000;margin:0 0 2px;letter-spacing:normal;">${tplEsc(name)}</h1>
+            ${jobTitle ? `<div class="cv-jobtitle" style="font-size:15px;font-weight:800;color:#000;">${tplEsc(jobTitle)}</div>` : ''}
+          </div>
+        </div>
+
+        <!-- Section Box Stack with Connected Borders -->
+        <div class="cv-framed-stack" style="margin-top:0;">
+          ${sectionsHtml}
+        </div>
+        ${sig}
+        ${qr}
+      </div>
+    `;
+  }
+
+  // --- Canva Sage Green Banner Template (Matching Sara Mohammed layout) ---
+  if (tpl.layout === 'canva_sage_banner') {
+    const p = data.personal || {};
+    const nr = resolveName(p);
+    const tr = resolveTitle(p);
+    const v = mkPick(lang);
+
+    const name = v(nr, 'ar', 'en') || 'الاسم الكامل';
+    const jobTitle = v(tr, 'ar', 'en') || '';
+    const phoneRaw = String(p.phone || '').replace(/\s+/g, '');
+    const phoneLink = phoneRaw ? `<a href="tel:${tplEsc(phoneRaw)}" style="color:#ffffff;text-decoration:none;font-weight:600;">${tplEsc(p.phone)}</a>` : '';
+    const emailLink = p.email ? `<a href="mailto:${tplEsc(p.email)}" style="color:#ffffff;text-decoration:none;font-weight:600;">${tplEsc(p.email)}</a>` : '';
+    const city = v(p, 'cityAr', 'cityEn') || v(p, 'city', 'city') || '';
+
+    const contactRow = [emailLink, phoneLink, city ? `<span>${tplEsc(city)}</span>` : ''].filter(Boolean);
+
+    const sectionsHtml = sections.map(s => {
+      const title = secTitleText(s, lang);
+      const isText = s.type === 'summary' || s.type === 'objective' || s.type === 'custom';
+      const isExp = s.type === 'experience' || s.type === 'timeline' || s.type === 'internship';
+      const isEdu = s.type === 'education';
+      const isSkills = s.type === 'skills' || s.type === 'techskills' || s.type === 'softskills';
+      const isLangs = s.type === 'languages';
+      const items = s.items || [];
+
+      let contentHtml = '';
+      if (isText) {
+        const txt = v(s, 'textAr', 'textEn') || (items[0] && v(items[0], 'textAr', 'textEn')) || '';
+        contentHtml = `<div style="text-align:justify;line-height:1.6;font-size:11.5px;color:#1e293b;padding:2px 4px;">${tplEsc(txt).replace(/\n/g, '<br>')}</div>`;
+      } else if (isExp) {
+        contentHtml = items.map(it => {
+          const role = v(it, 'roleAr', 'roleEn') || '';
+          const org = v(it, 'orgAr', 'orgEn') || '';
+          const dRange = dateRange(it, lang);
+          const desc = v(it, 'descAr', 'descEn');
+          return `
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:14px;padding:2px 4px;">
+              <div style="width:68%;font-size:11.5px;line-height:1.55;color:#1e293b;font-weight:500;">
+                ${desc ? renderBulletList(desc) : ''}
+              </div>
+              <div style="width:30%;text-align:${dir === 'rtl' ? 'right' : 'left'};">
+                <div style="font-weight:800;font-size:13px;color:#1e293b;">${tplEsc(role)}</div>
+                ${org ? `<div style="font-weight:700;font-size:11.5px;color:#475569;margin-top:1px;">${tplEsc(org)}</div>` : ''}
+                ${dRange ? `<div style="font-weight:700;font-size:11px;color:#64748b;margin-top:2px;">${dRange}</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else if (isEdu) {
+        contentHtml = items.map(it => {
+          const deg = v(it, 'degreeAr', 'degreeEn') || '';
+          const sch = v(it, 'schoolAr', 'schoolEn') || '';
+          const yr = it.year ? tplEsc(String(it.year)) : '';
+          return `
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding:2px 4px;">
+              <div style="font-size:11.5px;font-weight:700;color:#64748b;">${yr}</div>
+              <div style="text-align:${dir === 'rtl' ? 'right' : 'left'};">
+                <div style="font-weight:800;font-size:13px;color:#1e293b;">${tplEsc(deg)}</div>
+                ${sch ? `<div style="font-weight:600;font-size:11.5px;color:#475569;margin-top:1px;">${tplEsc(sch)}</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else if (isSkills) {
+        contentHtml = `
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 20px;padding:2px 4px;">
+            ${items.map(it => `
+              <div class="cv-bullet-item" style="display:flex;align-items:center;gap:8px;line-height:1.5;margin:2px 0;">
+                <span class="cv-bullet-dot" style="display:inline-block;width:5px;height:5px;min-width:5px;min-height:5px;border-radius:50%!important;background-color:#4d5b53!important;flex-shrink:0;margin:0;"></span>
+                <span style="font-weight:700;font-size:11.5px;color:#1e293b;">${tplEsc(v(it, 'nameAr', 'nameEn'))}.</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else if (isLangs) {
+        contentHtml = `
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px 30px;padding:2px 4px;">
+            ${items.map(it => {
+              const name = v(it, 'nameAr', 'nameEn');
+              const lv = it.level || 5;
+              const fullBlocks = Math.min(5, Math.max(1, lv));
+              const emptyBlocks = 5 - fullBlocks;
+              const blocksStr = '▮'.repeat(fullBlocks) + '▯'.repeat(emptyBlocks);
+              return `
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;font-weight:700;color:#1e293b;">
+                  <span style="color:#4d5b53;letter-spacing:2px;font-size:13px;">${blocksStr}</span>
+                  <span>${tplEsc(name)}: ${tplEsc(v(it, 'levelAr', 'levelEn') || 'ممتاز')}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } else {
+        contentHtml = renderSectionBody(s, lang, tpl, cust);
+      }
+
+      return `
+        <div class="cv-sage-section-block" style="margin-bottom:12px;">
+          <!-- Solid Full-Width Sage Ribbon Banner -->
+          <div style="background:#4d5b53;color:#ffffff;padding:6px 14px;font-weight:800;font-size:14px;letter-spacing:0.5px;margin-bottom:8px;text-align:${dir === 'rtl' ? 'right' : 'left'};">
+            ${tplEsc(title)}
+          </div>
+          ${contentHtml}
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="${cls} cv-canva-sage-page" dir="${dir}" ${styleAttr} style="background:#ffffff!important;color:#0f172a;padding:0 0 20px 0;font-family:'Cairo','Inter',sans-serif;">
+        <!-- Top Solid Header Banner -->
+        <div style="background:#4d5b53;color:#ffffff;padding:22px 30px 16px;margin-bottom:14px;">
+          <div style="text-align:${dir === 'rtl' ? 'right' : 'left'};margin-bottom:12px;">
+            <h1 class="cv-name" style="font-size:32px;font-weight:900;color:#ffffff;margin:0 0 2px;letter-spacing:0.5px;">${tplEsc(name)}</h1>
+            ${jobTitle ? `<div class="cv-jobtitle" style="font-size:16px;font-weight:700;color:#e2e8f0;opacity:0.95;">${tplEsc(jobTitle)}</div>` : ''}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px 14px;font-size:11.5px;font-weight:600;color:#ffffff;border-top:1px solid rgba(255,255,255,0.25);padding-top:10px;direction:ltr;">
+            ${contactRow.join('<span style="opacity:0.6;margin:0 4px;">—</span>')}
+          </div>
+        </div>
+
+        <div class="cv-inner" style="padding:0 30px;">
+          ${sectionsHtml}
           ${sig}
         </div>
         ${qr}

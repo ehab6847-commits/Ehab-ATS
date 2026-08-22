@@ -448,3 +448,14 @@
   color: var(--cv-color) !important;
   font-weight: 800 !important;
 }
+
+
+/* Canva Framed Beige & Sage Banner Templates */
+.cv-canva-framed-beige-page {
+  background: #f6ede4 !important;
+  color: #000000 !important;
+}
+.cv-canva-sage-page {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
