@@ -716,17 +716,21 @@ function renderTemplate(templateId, data, cust, language) {
     const cityText = p.cityAr || p.city || p.cityEn || 'المملكة العربية السعودية';
     const cityHtml = cityText ? `<span style="display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-map-marker-alt" style="color:#64748b;font-size:11px;"></i><span>${tplEsc(cityText)}</span></span>` : '';
 
-    const contactBits = [phoneLink, emailLink, cityHtml].filter(Boolean);
     const headerHtml = `
       <div class="cv-merged-header" style="text-align:center;margin-bottom:14px;">
         <h1 class="cv-name" style="font-size:25px;font-weight:800;color:#000;margin:0 0 2px;letter-spacing:normal;">${tplEsc(nameAr)}</h1>
-        <div class="cv-name-en" style="font-size:14.5px;font-weight:700;color:#475569;letter-spacing:0.5px;margin-bottom:8px;">${tplEsc(nameEn)}</div>
-        <div class="cv-merged-contact-wrap" style="text-align:center;margin-bottom:6px;">
-          <div class="cv-merged-contact-pill" style="display:inline-flex;align-items:center;justify-content:center;gap:12px;background:rgba(241,245,249,0.75);border:1px solid #e2e8f0;border-radius:6px;padding:5px 16px;font-size:11.5px;color:#1e293b;direction:rtl;">
-            ${contactBits.join('<span style="color:#cbd5e1;margin:0 4px;">|</span>')}
+        <div class="cv-name-en" style="font-size:14.5px;font-weight:700;color:#475569;letter-spacing:0.5px;margin-bottom:10px;">${tplEsc(nameEn)}</div>
+        <div class="cv-merged-contact-wrap" style="width:100%;margin-bottom:6px;box-sizing:border-box;">
+          <div class="cv-merged-contact-box" style="width:100%;display:flex;align-items:center;justify-content:space-around;background:rgba(241,245,249,0.7);border:1px solid #e2e8f0;border-radius:0;padding:6px 16px;font-size:11.5px;color:#1e293b;direction:rtl;box-sizing:border-box;">
+            ${cityHtml}
+            <span style="color:#cbd5e1;">|</span>
+            ${emailLink}
+            <span style="color:#cbd5e1;">|</span>
+            ${phoneLink}
           </div>
         </div>
-        <div style="border-bottom:1.5px solid #cbd5e1;margin-top:10px;"></div>
+        <!-- First Top Horizontal Divider: Prominent Solid Black -->
+        <div style="border-bottom:2px solid #000000;margin-top:10px;width:100%;"></div>
       </div>
     `;
 
@@ -762,7 +766,7 @@ function renderTemplate(templateId, data, cust, language) {
         arContent = `<div style="text-align:justify;line-height:1.6;font-size:11px;color:#1e293b;">${tplEsc(s.textAr || (s.items?.[0]?.textAr) || '').replace(/\n/g, '<br>')}</div>`;
       } else if (isEdu) {
         arContent = (s.items || []).map(it => `
-          <div style="border-right:3px solid #64748b;padding:4px 10px;background:rgba(248,250,252,0.7);margin-bottom:6px;font-size:11.5px;font-weight:700;color:#0f172a;">
+          <div style="border-right:3px solid #64748b;padding:6px 10px;background:rgba(248,250,252,0.7);margin-bottom:6px;font-size:11.5px;font-weight:700;color:#0f172a;border-radius:0;box-sizing:border-box;">
             <div>${tplEsc(it.degreeAr || it.degreeEn || '')}</div>
             ${it.schoolAr ? `<div style="font-weight:500;color:#64748b;font-size:10.5px;margin-top:2px;">${tplEsc(it.schoolAr)}</div>` : ''}
           </div>
@@ -776,15 +780,15 @@ function renderTemplate(templateId, data, cust, language) {
         `).join('');
       } else if (isLangs) {
         arContent = (s.items || []).map(it => `
-          <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;border-right:3px solid #0284c7;padding:3px 8px;border-radius:4px;margin-bottom:4px;font-size:11px;">
-            <span style="font-weight:700;color:#0f172a;">${tplEsc(it.nameAr || it.nameEn || '')}</span>
-            <span style="color:#0284c7;font-weight:600;">${tplEsc(it.levelAr || it.levelEn || '')}</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;border-right:3px solid #0284c7;padding:5px 10px;border-radius:0;margin-bottom:5px;font-size:11px;line-height:1.3;min-height:28px;box-sizing:border-box;">
+            <span style="font-weight:700;color:#0f172a;display:inline-flex;align-items:center;">${tplEsc(it.nameAr || it.nameEn || '')}</span>
+            <span style="color:#0284c7;font-weight:600;display:inline-flex;align-items:center;">${tplEsc(it.levelAr || it.levelEn || '')}</span>
           </div>
         `).join('');
       } else if (isCerts) {
         arContent = (s.items || []).map(it => `
           <div style="display:flex;align-items:baseline;gap:6px;line-height:1.45;margin-bottom:3px;font-size:11px;">
-            <span class="cv-bullet-dot" style="display:inline-block;width:5px;height:5px;min-width:5px;min-height:5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.45em;"></span>
+            <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.45em;"></span>
             <span style="font-weight:600;color:#0f172a;">${tplEsc(it.nameAr || it.nameEn || '')}${(it.issuerAr || it.issuerEn) ? ' (' + tplEsc(it.issuerAr || it.issuerEn) + ')' : ''}</span>
           </div>
         `).join('');
@@ -797,7 +801,7 @@ function renderTemplate(templateId, data, cust, language) {
           return `
             <div style="margin-bottom:8px;font-size:11.5px;">
               <div style="display:flex;align-items:baseline;gap:6px;font-weight:700;color:#0f172a;line-height:1.45;">
-                <span class="cv-bullet-dot" style="display:inline-block;width:5px;height:5px;min-width:5px;min-height:5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.45em;"></span>
+                <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.45em;"></span>
                 <span>${tplEsc(role)}${org ? ' - ' + tplEsc(org) : ''}</span>
               </div>
               ${desc ? `<div style="padding-inline-start:12px;margin-top:3px;font-weight:400;color:#334155;font-size:11px;">${renderBulletList(desc)}</div>` : ''}
@@ -812,7 +816,7 @@ function renderTemplate(templateId, data, cust, language) {
         enContent = `<div style="text-align:justify;line-height:1.6;font-size:11px;color:#1e293b;">${tplEsc(s.textEn || s.textAr || '').replace(/\n/g, '<br>')}</div>`;
       } else if (isEdu) {
         enContent = (s.items || []).map(it => `
-          <div style="border-left:3px solid #64748b;padding:4px 10px;background:rgba(248,250,252,0.7);margin-bottom:6px;font-size:11.5px;font-weight:700;color:#0f172a;">
+          <div style="border-left:3px solid #64748b;padding:6px 10px;background:rgba(248,250,252,0.7);margin-bottom:6px;font-size:11.5px;font-weight:700;color:#0f172a;border-radius:0;box-sizing:border-box;">
             <div>${tplEsc(it.degreeEn || it.degreeAr || '')}</div>
             ${it.schoolEn ? `<div style="font-weight:500;color:#64748b;font-size:10.5px;margin-top:2px;">${tplEsc(it.schoolEn)}</div>` : ''}
           </div>
@@ -826,9 +830,9 @@ function renderTemplate(templateId, data, cust, language) {
         `).join('');
       } else if (isLangs) {
         enContent = (s.items || []).map(it => `
-          <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;border-left:3px solid #0284c7;padding:3px 8px;border-radius:4px;margin-bottom:4px;font-size:11px;">
-            <span style="font-weight:700;color:#0f172a;">${tplEsc(it.nameEn || it.nameAr || '')}</span>
-            <span style="color:#0284c7;font-weight:600;">${tplEsc(it.levelEn || it.levelAr || '')}</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;border-left:3px solid #0284c7;padding:5px 10px;border-radius:0;margin-bottom:5px;font-size:11px;line-height:1.3;min-height:28px;box-sizing:border-box;">
+            <span style="font-weight:700;color:#0f172a;display:inline-flex;align-items:center;">${tplEsc(it.nameEn || it.nameAr || '')}</span>
+            <span style="color:#0284c7;font-weight:600;display:inline-flex;align-items:center;">${tplEsc(it.levelEn || it.levelAr || '')}</span>
           </div>
         `).join('');
       } else if (isCerts) {
@@ -879,6 +883,7 @@ function renderTemplate(templateId, data, cust, language) {
               </div>
             </div>
           </div>
+          <!-- Remaining horizontal section dividers: subtle light gray line -->
           ${!isLast ? '<div style="border-bottom:1px solid #e2e8f0;margin-top:12px;width:100%;"></div>' : ''}
         </div>
       `;
