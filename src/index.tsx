@@ -357,6 +357,10 @@ app.post('/api/auth/login', async (c) => {
 
 // ---------- specialists management ----------
 app.get('/api/specialists', async (c) => {
+  const user = c.get('authUser') as AuthUser | undefined
+  if (user?.role !== 'super_admin') {
+    return c.json({ error: 'غير مصرح بالوصول: إدارة المستخدمين خاصة بالمدير العام فقط' }, 403)
+  }
   const db = getDB(c)
   await ensureTables(db)
   const rs = await db.prepare('SELECT * FROM specialists ORDER BY id DESC').all()
@@ -364,32 +368,44 @@ app.get('/api/specialists', async (c) => {
 })
 
 app.post('/api/specialists', async (c) => {
+  const user = c.get('authUser') as AuthUser | undefined
+  if (user?.role !== 'super_admin') {
+    return c.json({ error: 'غير مصرح بالوصول: إدارة المستخدمين خاصة بالمدير العام فقط' }, 403)
+  }
   const db = getDB(c)
   await ensureTables(db)
   const b = await c.req.json()
   const accessKey = 'sp_' + Math.random().toString(36).slice(2, 10)
   const r = await db.prepare('INSERT INTO specialists (name,email,phone,role,access_key,status) VALUES (?,?,?,?,?,?)')
     .bind(b.name || 'مختص جديد', b.email || '', b.phone || '', b.role || 'specialist', accessKey, 'active').run()
-  await logActivity(db, 'create', 'specialist', r.meta.last_row_id as number, `إضافة مختص: ${b.name}`)
+  await logActivity(db, 'create', 'specialist', r.meta.last_row_id as number, `إضافة مختص: ${b.name}`, user?.name, user?.role)
   return c.json({ id: r.meta.last_row_id, access_key: accessKey })
 })
 
 app.put('/api/specialists/:id/status', async (c) => {
+  const user = c.get('authUser') as AuthUser | undefined
+  if (user?.role !== 'super_admin') {
+    return c.json({ error: 'غير مصرح بالوصول' }, 403)
+  }
   const db = getDB(c)
   await ensureTables(db)
   const id = c.req.param('id')
   const b = await c.req.json()
   await db.prepare('UPDATE specialists SET status=? WHERE id=?').bind(b.status || 'active', id).run()
-  await logActivity(db, 'update_status', 'specialist', Number(id), `تغيير حالة المختص إلى ${b.status}`)
+  await logActivity(db, 'update_status', 'specialist', Number(id), `تغيير حالة المختص إلى ${b.status}`, user?.name, user?.role)
   return c.json({ ok: true })
 })
 
 app.delete('/api/specialists/:id', async (c) => {
+  const user = c.get('authUser') as AuthUser | undefined
+  if (user?.role !== 'super_admin') {
+    return c.json({ error: 'غير مصرح بالوصول' }, 403)
+  }
   const db = getDB(c)
   await ensureTables(db)
   const id = c.req.param('id')
   await db.prepare('DELETE FROM specialists WHERE id=?').bind(id).run()
-  await logActivity(db, 'delete', 'specialist', Number(id), 'حذف مختص')
+  await logActivity(db, 'delete', 'specialist', Number(id), 'حذف مختص', user?.name, user?.role)
   return c.json({ ok: true })
 })
 
@@ -593,6 +609,10 @@ app.delete('/api/cover-letters/:id', async (c) => {
 
 // ---------- settings ----------
 app.get('/api/settings', async (c) => {
+  const user = c.get('authUser') as AuthUser | undefined
+  if (user?.role !== 'super_admin') {
+    return c.json({ error: 'غير مصرح بالوصول: الإعدادات متاحة للمدير العام فقط' }, 403)
+  }
   const db = getDB(c)
   await ensureTables(db)
   const rs = await db.prepare('SELECT key,value FROM settings').all<any>()
@@ -605,6 +625,10 @@ app.get('/api/settings', async (c) => {
   return c.json(out)
 })
 app.put('/api/settings', async (c) => {
+  const user = c.get('authUser') as AuthUser | undefined
+  if (user?.role !== 'super_admin') {
+    return c.json({ error: 'غير مصرح بالوصول' }, 403)
+  }
   const db = getDB(c)
   await ensureTables(db)
   const b = await c.req.json()
@@ -613,18 +637,26 @@ app.put('/api/settings', async (c) => {
     if (v.includes('••••')) continue
     await db.prepare('INSERT INTO settings (key,value,updated_at) VALUES (?,?,CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=CURRENT_TIMESTAMP').bind(k, v).run()
   }
-  await logActivity(db, 'update', 'settings', null, Object.keys(b).join(','))
+  await logActivity(db, 'update', 'settings', null, Object.keys(b).join(','), user?.name, user?.role)
   return c.json({ ok: true })
 })
 
 // ---------- activity + ai history + stats ----------
 app.get('/api/activity', async (c) => {
+  const user = c.get('authUser') as AuthUser | undefined
+  if (user?.role !== 'super_admin') {
+    return c.json({ error: 'غير مصرح بالوصول: سجل النشاط متاح للمدير العام فقط' }, 403)
+  }
   const db = getDB(c)
   await ensureTables(db)
   const rs = await db.prepare('SELECT * FROM activity_log ORDER BY id DESC LIMIT 100').all()
   return c.json(rs?.results || [])
 })
 app.get('/api/ai-history', async (c) => {
+  const user = c.get('authUser') as AuthUser | undefined
+  if (user?.role !== 'super_admin') {
+    return c.json({ error: 'غير مصرح بالوصول: سجل الذكاء الاصطناعي متاح للمدير العام فقط' }, 403)
+  }
   const db = getDB(c)
   await ensureTables(db)
   const rs = await db.prepare('SELECT id,provider,task,prompt,substr(response,1,500) as response,resume_id,created_at FROM ai_history ORDER BY id DESC LIMIT 100').all()

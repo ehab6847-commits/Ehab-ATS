@@ -1,6 +1,7 @@
 /* ===== Ehab ATS — Template Engine (16 templates) ===== */
 
 const TEMPLATE_DEFS = {
+  ats_merged_bilingual:{ name: 'سيرة مدمج وفق نظام ATS ⚡', nameEn: 'ATS Merged Bilingual Pro', group: 'ats', layout: 'ats_merged_bilingual', header: 'center', color: '#000000', accent: '#0f172a', line: '1.5px solid #000000', ats: true },
   ats_tinted_cards:{ name: 'البطاقات المظللة الحديث ⭐', nameEn: 'Modern Tinted Cards ATS', group: 'ats', layout: 'tinted_cards', header: 'tinted_top', color: '#0f172a', accent: '#0284c7', line: '2px solid #0284c7', ats: true },
   formal_pro:    { name: 'رسمي احترافي ⭐', nameEn: 'Professional Formal', group: 'bw', layout: 'formal_pro', header: 'formal_center', color: '#000000', accent: '#1e293b', line: '1.5px solid #000000', ats: true },
   ats1:          { name: 'ATS كلاسيكي', nameEn: 'ATS Classic', group: 'bw', layout: 'single', header: 'center', color: '#111827', accent: '#374151', line: '2px solid #111827', ats: true },
@@ -624,7 +625,7 @@ function renderTemplate(templateId, data, cust, language) {
   data = data || {};
   const lang = language || 'ar';
 
-  if (lang === 'en' || lang === 'bilingual') {
+  if (lang === 'en' || lang === 'bilingual' || tpl.layout === 'ats_merged_bilingual' || tpl.layout === 'bilingual_split') {
     ensureEnglishData(data);
   }
   const dir = lang === 'en' ? 'ltr' : 'rtl';
@@ -694,6 +695,176 @@ function renderTemplate(templateId, data, cust, language) {
           ${renderHeader(tpl, data, cust, lang)}
           ${topMetricsHtml}
           ${secCards}
+          ${sig}
+        </div>
+        ${qr}
+      </div>
+    `;
+  }
+
+  
+  // New ATS Merged Bilingual Pro Template (Exact replica of Ahmad Misfer Al-Otaibi layout)
+  if (tpl.layout === 'ats_merged_bilingual' || templateId === 'ats_merged_bilingual') {
+    const p = data.personal || {};
+    const nr = resolveName(p);
+    const tr = resolveTitle(p);
+
+    const nameAr = nr.ar || nr.en || '';
+    const phoneRaw = String(p.phone || '').replace(/\s+/g, '');
+    const phoneLink = phoneRaw ? `<a href="tel:${tplEsc(phoneRaw)}" style="color:#000;text-decoration:none;font-weight:600;">${tplEsc(p.phone)}</a>` : '';
+    const emailLink = p.email ? `<a href="mailto:${tplEsc(p.email)}" style="color:#000;text-decoration:none;font-weight:600;">${tplEsc(p.email)}</a>` : '';
+    const cityText = p.cityAr || p.city || p.cityEn || '';
+
+    const contactBits = [phoneLink, emailLink, cityText].filter(Boolean);
+    const headerHtml = `
+      <div class="cv-merged-header" style="text-align:center;margin-bottom:12px;">
+        <h1 class="cv-name" style="font-size:26px;font-weight:800;color:#000;margin:0 0 6px;letter-spacing:normal;">${tplEsc(nameAr)}</h1>
+        <div class="cv-merged-contact" style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:4px 10px;font-size:11.5px;color:#334155;direction:rtl;">
+          ${contactBits.join('<span style="color:#94a3b8;margin:0 4px;">|</span>')}
+        </div>
+        <div style="border-bottom:1.5px solid #cbd5e1;margin-top:10px;"></div>
+      </div>
+    `;
+
+    const sectionPairs = sections.map(s => {
+      const isText = s.type === 'summary' || s.type === 'objective' || s.type === 'custom';
+      const isEdu = s.type === 'education';
+      const isSkills = s.type === 'skills' || s.type === 'techskills' || s.type === 'softskills';
+      const isLangs = s.type === 'languages';
+      const isCerts = s.type === 'training' || s.type === 'certifications' || s.type === 'courses';
+
+      // English Title
+      const def = SECTION_TYPES[s.type] || { en: s.titleEn || s.type, ar: s.titleAr || s.type };
+      const enTitle = (s.titleEn || def.en || '').toUpperCase();
+      const arTitle = s.titleAr || def.ar || '';
+
+      // Arabic Content
+      let arContent = '';
+      if (isText) {
+        arContent = `<div style="text-align:justify;line-height:1.6;font-size:11px;color:#1e293b;">${tplEsc(s.textAr || (s.items?.[0]?.textAr) || '').replace(/\n/g, '<br>')}</div>`;
+      } else if (isEdu) {
+        arContent = (s.items || []).map(it => `
+          <div style="border-right:3px solid #64748b;padding:4px 10px;background:rgba(248,250,252,0.7);margin-bottom:6px;font-size:11.5px;font-weight:700;color:#0f172a;">
+            <div>${tplEsc(it.degreeAr || it.degreeEn || '')}</div>
+            ${it.schoolAr ? `<div style="font-weight:500;color:#64748b;font-size:10.5px;margin-top:2px;">${tplEsc(it.schoolAr)}</div>` : ''}
+          </div>
+        `).join('');
+      } else if (isSkills) {
+        arContent = (s.items || []).map((it, idx) => `
+          <div style="display:flex;align-items:baseline;gap:6px;font-size:11px;line-height:1.55;margin-bottom:3px;color:#0f172a;">
+            <span style="font-weight:700;color:#64748b;flex-shrink:0;min-width:18px;">${String(idx + 1).padStart(2, '0')}.</span>
+            <span style="font-weight:600;">${tplEsc(it.nameAr || it.nameEn || '')}</span>
+          </div>
+        `).join('');
+      } else if (isLangs) {
+        arContent = (s.items || []).map(it => `
+          <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;border-right:3px solid #0284c7;padding:3px 8px;border-radius:4px;margin-bottom:4px;font-size:11px;">
+            <span style="font-weight:700;color:#0f172a;">${tplEsc(it.nameAr || it.nameEn || '')}</span>
+            <span style="color:#0284c7;font-weight:600;">${tplEsc(it.levelAr || it.levelEn || '')}</span>
+          </div>
+        `).join('');
+      } else if (isCerts) {
+        arContent = (s.items || []).map(it => `
+          <div style="display:flex;align-items:baseline;gap:6px;line-height:1.45;margin-bottom:3px;font-size:11px;">
+            <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.45em;"></span>
+            <span style="font-weight:600;color:#0f172a;">${tplEsc(it.nameAr || it.nameEn || '')}${(it.issuerAr || it.issuerEn) ? ' (' + tplEsc(it.issuerAr || it.issuerEn) + ')' : ''}</span>
+          </div>
+        `).join('');
+      } else {
+        // Experience / Timeline / Custom
+        arContent = (s.items || []).map(it => {
+          const role = it.roleAr || it.roleEn || '';
+          const org = it.orgAr || it.orgEn || '';
+          const desc = it.descAr || it.descEn || '';
+          return `
+            <div style="margin-bottom:8px;font-size:11.5px;">
+              <div style="display:flex;align-items:baseline;gap:6px;font-weight:700;color:#0f172a;line-height:1.45;">
+                <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.45em;"></span>
+                <span>${tplEsc(role)}${org ? ' - ' + tplEsc(org) : ''}</span>
+              </div>
+              ${desc ? `<div style="padding-inline-start:12px;margin-top:3px;font-weight:400;color:#334155;font-size:11px;">${renderBulletList(desc)}</div>` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+
+      // English Content
+      let enContent = '';
+      if (isText) {
+        enContent = `<div style="text-align:justify;line-height:1.6;font-size:11px;color:#1e293b;">${tplEsc(s.textEn || s.textAr || '').replace(/\n/g, '<br>')}</div>`;
+      } else if (isEdu) {
+        enContent = (s.items || []).map(it => `
+          <div style="border-left:3px solid #64748b;padding:4px 10px;background:rgba(248,250,252,0.7);margin-bottom:6px;font-size:11.5px;font-weight:700;color:#0f172a;">
+            <div>${tplEsc(it.degreeEn || it.degreeAr || '')}</div>
+            ${it.schoolEn ? `<div style="font-weight:500;color:#64748b;font-size:10.5px;margin-top:2px;">${tplEsc(it.schoolEn)}</div>` : ''}
+          </div>
+        `).join('');
+      } else if (isSkills) {
+        enContent = (s.items || []).map((it, idx) => `
+          <div style="display:flex;align-items:baseline;gap:6px;font-size:11px;line-height:1.55;margin-bottom:3px;color:#0f172a;">
+            <span style="font-weight:700;color:#64748b;flex-shrink:0;min-width:18px;">${String(idx + 1).padStart(2, '0')}.</span>
+            <span style="font-weight:600;">${tplEsc(it.nameEn || it.nameAr || '')}</span>
+          </div>
+        `).join('');
+      } else if (isLangs) {
+        enContent = (s.items || []).map(it => `
+          <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;border-left:3px solid #0284c7;padding:3px 8px;border-radius:4px;margin-bottom:4px;font-size:11px;">
+            <span style="font-weight:700;color:#0f172a;">${tplEsc(it.nameEn || it.nameAr || '')}</span>
+            <span style="color:#0284c7;font-weight:600;">${tplEsc(it.levelEn || it.levelAr || '')}</span>
+          </div>
+        `).join('');
+      } else if (isCerts) {
+        enContent = (s.items || []).map(it => `
+          <div style="display:flex;align-items:baseline;gap:6px;line-height:1.45;margin-bottom:3px;font-size:11px;">
+            <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.45em;"></span>
+            <span style="font-weight:600;color:#0f172a;">${tplEsc(it.nameEn || it.nameAr || '')}${(it.issuerEn || it.issuerAr) ? ' (' + tplEsc(it.issuerEn || it.issuerAr) + ')' : ''}</span>
+          </div>
+        `).join('');
+      } else {
+        // Experience / Timeline / Custom
+        enContent = (s.items || []).map(it => {
+          const role = it.roleEn || it.roleAr || '';
+          const org = it.orgEn || it.orgAr || '';
+          const desc = it.descEn || it.descAr || '';
+          return `
+            <div style="margin-bottom:8px;font-size:11.5px;">
+              <div style="display:flex;align-items:baseline;gap:6px;font-weight:700;color:#0f172a;line-height:1.45;">
+                <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.45em;"></span>
+                <span>${tplEsc(role)}${org ? ' - ' + tplEsc(org) : ''}</span>
+              </div>
+              ${desc ? `<div style="padding-inline-start:12px;margin-top:3px;font-weight:400;color:#334155;font-size:11px;">${renderBulletList(desc)}</div>` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+
+      return `
+        <div class="cv-merged-row" style="display:table-row;">
+          <!-- English Left Column -->
+          <div class="cv-merged-col-en" dir="ltr" style="display:table-cell;width:49%;vertical-align:top;padding-right:12px;padding-bottom:14px;text-align:left;">
+            <div style="font-weight:800;font-size:12px;color:#000;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">${tplEsc(enTitle)}</div>
+            ${enContent}
+          </div>
+
+          <!-- Divider -->
+          <div class="cv-merged-divider" style="display:table-cell;width:2%;border-left:1px solid #e2e8f0;vertical-align:top;"></div>
+
+          <!-- Arabic Right Column -->
+          <div class="cv-merged-col-ar" dir="rtl" style="display:table-cell;width:49%;vertical-align:top;padding-left:12px;padding-bottom:14px;text-align:right;">
+            <div style="font-weight:800;font-size:13px;color:#000;margin-bottom:6px;">${tplEsc(arTitle)}</div>
+            ${arContent}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="${cls} cv-merged-bilingual-page" dir="rtl" ${styleAttr}>
+        <div class="cv-inner" style="padding:24px 30px;">
+          ${headerHtml}
+          <div class="cv-merged-table" style="display:table;width:100%;table-layout:fixed;">
+            ${sectionPairs}
+          </div>
           ${sig}
         </div>
         ${qr}

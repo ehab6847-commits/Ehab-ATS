@@ -61,20 +61,30 @@ function logLocalActivity(action, entity, entityId, details, userCustom) {
 }
 
 const DEFAULT_SPECIALISTS = [
-  { id: 1, name: 'إيهاب شحيطير (Super Admin & المالك الرئيسي)', email: 'ehab@ehabats.com', phone: '0501234567', role: 'المالك والمدير الرئيسي (Super Admin)', access_key: 'wuda5U9u_Yk', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() },
-  { id: 2, name: 'يزن سمير', email: 'yazan@ehabats.com', phone: '', role: 'مختص سير ذاتية معتمد (1)', access_key: 'sp_yzn_892k', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() },
-  { id: 3, name: 'الشيخ غانم', email: 'ghanem@ehabats.com', phone: '', role: 'مختص استشارات مهنية وسير (2)', access_key: 'sp_ghnm_437m', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() },
-  { id: 4, name: 'شهاب احمد عبدالله', email: 'shehab@ehabats.com', phone: '', role: 'مختص صياغة ومراجعة سير ATS (3)', access_key: 'sp_shhb_651v', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() },
-  { id: 5, name: 'المهندس نصر', email: 'nasr@ehabats.com', phone: '', role: 'مختص هندسي وتقني (4)', access_key: 'sp_nsr_928t', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() },
-  { id: 6, name: 'مختص 5 (متاح للتعيين)', email: 'slot5@ehabats.com', phone: '', role: 'مختص سير ذاتية (5)', access_key: 'sp_usr5_174w', status: 'active', created_at: new Date().toISOString(), last_active: new Date().toISOString() }
+  { id: 1, name: 'إيهاب شحيطير (Super Admin & المالك الرئيسي)', email: 'ehab@ehabats.com', phone: '0501234567', role: 'المالك والمدير الرئيسي (Super Admin)', access_key: 'wuda5U9u_Yk', status: 'active', created_at: '2026-01-01T00:00:00.000Z', last_active: new Date().toISOString() },
+  { id: 2, name: 'يزن سمير', email: 'yazan@ehabats.com', phone: '', role: 'مختص سير ذاتية معتمد (1)', access_key: 'sp_yzn_892k', status: 'active', created_at: '2026-01-01T00:00:00.000Z', last_active: new Date().toISOString() },
+  { id: 3, name: 'الشيخ غانم', email: 'ghanem@ehabats.com', phone: '', role: 'مختص استشارات مهنية وسير (2)', access_key: 'sp_ghnm_437m', status: 'active', created_at: '2026-01-01T00:00:00.000Z', last_active: new Date().toISOString() },
+  { id: 4, name: 'شهاب احمد عبدالله', email: 'shehab@ehabats.com', phone: '', role: 'مختص صياغة ومراجعة سير ATS (3)', access_key: 'sp_shhb_651v', status: 'active', created_at: '2026-01-01T00:00:00.000Z', last_active: new Date().toISOString() },
+  { id: 5, name: 'المهندس نصر', email: 'nasr@ehabats.com', phone: '', role: 'مختص هندسي وتقني (4)', access_key: 'sp_nsr_928t', status: 'active', created_at: '2026-01-01T00:00:00.000Z', last_active: new Date().toISOString() },
+  { id: 6, name: 'مختص 5 (متاح للتعيين)', email: 'slot5@ehabats.com', phone: '', role: 'مختص سير ذاتية (5)', access_key: 'sp_usr5_174w', status: 'active', created_at: '2026-01-01T00:00:00.000Z', last_active: new Date().toISOString() }
 ];
 
 function ensureSpecialistsList() {
   let list = getLocal(CLIENT_STORAGE_KEYS.specialists, []);
-  if (!list || list.length < 3) {
+  if (!list || list.length < 5) {
     setLocal(CLIENT_STORAGE_KEYS.specialists, DEFAULT_SPECIALISTS);
     return DEFAULT_SPECIALISTS;
   }
+  // Ensure default specialists are present with their exact access keys
+  DEFAULT_SPECIALISTS.forEach(defSp => {
+    const idx = list.findIndex(x => x.id === defSp.id || x.access_key === defSp.access_key);
+    if (idx === -1) {
+      list.push(defSp);
+    } else {
+      list[idx] = { ...defSp, ...list[idx], access_key: defSp.access_key };
+    }
+  });
+  setLocal(CLIENT_STORAGE_KEYS.specialists, list);
   return list;
 }
 
@@ -96,8 +106,8 @@ if (!localStorage.getItem(CLIENT_STORAGE_KEYS.resumes)) {
 }
 if (!localStorage.getItem(CLIENT_STORAGE_KEYS.activity)) {
   setLocal(CLIENT_STORAGE_KEYS.activity, [
-    { id: 1, action: 'login', entity: 'admin', entity_id: 1, details: 'دخول المالك والمدير الرئيسي (إيهاب شحيطير)', created_at: new Date().toISOString() },
-    { id: 2, action: 'create', entity: 'resume', entity_id: 1, details: 'إنشاء سيرة ذاتية جديدة بالذكاء الاصطناعي', created_at: new Date().toISOString() }
+    { id: 1, action: 'login', entity: 'admin', entity_id: 1, details: 'دخول المالك والمدير الرئيسي (إيهاب شحيطير)', user_name: 'إيهاب شحيطير (Super Admin)', user_role: 'super_admin', created_at: new Date().toISOString() },
+    { id: 2, action: 'create', entity: 'resume', entity_id: 1, details: 'إنشاء سيرة ذاتية جديدة بالذكاء الاصطناعي', user_name: 'إيهاب شحيطير (Super Admin)', user_role: 'super_admin', created_at: new Date().toISOString() }
   ]);
 }
 
@@ -110,16 +120,26 @@ api.defaults.adapter = async function (config) {
   if (url === '/auth/login' && method === 'post') {
     const key = (body.key || '').trim();
     if (key === 'wuda5U9u_Yk') {
-      logLocalActivity('login', 'admin', 1, 'دخول المالك والمدير الرئيسي (إيهاب شحيطير)');
+      logLocalActivity('login', 'admin', 1, 'دخول المالك والمدير الرئيسي (إيهاب شحيطير)', { name: 'إيهاب شحيطير (Super Admin)', role: 'super_admin', id: 1 });
       return { data: { token: 'token_admin_' + Date.now(), role: 'super_admin', name: 'إيهاب شحيطير (Super Admin)' }, status: 200, headers: {}, config };
     }
-    const sps = getLocal(CLIENT_STORAGE_KEYS.specialists);
+    const sps = getLocal(CLIENT_STORAGE_KEYS.specialists, DEFAULT_SPECIALISTS);
     const sp = sps.find(x => x.access_key === key && x.status === 'active');
-    if (sp || key.startsWith('sp_') || key.length >= 4) {
-      logLocalActivity('login', 'specialist', sp ? sp.id : 99, `دخول المختص: ${sp ? sp.name : 'مختص'}`);
-      return { data: { token: 'token_sp_' + Date.now(), role: 'specialist', name: sp ? sp.name : 'مختص' }, status: 200, headers: {}, config };
+    if (sp) {
+      logLocalActivity('login', 'specialist', sp.id, `دخول المختص: ${sp.name}`, { name: sp.name, role: 'specialist', id: sp.id });
+      return { data: { token: 'token_sp_' + Date.now(), role: 'specialist', name: sp.name }, status: 200, headers: {}, config };
     }
-    throw { response: { status: 401, data: { error: 'المفتاح غير صحيح' } } };
+    throw { response: { status: 401, data: { error: 'المفتاح غير صحيح أو الحساب مجمد' } } };
+  }
+
+  // Admin-only endpoints check
+  if (url === '/specialists' || url.startsWith('/specialists/') || url === '/settings' || url.startsWith('/settings/') || url === '/activity' || url === '/ai-history' || url === '/ai/history') {
+    const currentRole = S.role || localStorage.getItem('ehab_user_role');
+    const currentTok = S.token || localStorage.getItem('ehab_token') || '';
+    const isAdmin = currentRole === 'super_admin' || currentTok.includes('admin');
+    if (!isAdmin) {
+      throw { response: { status: 403, data: { error: 'غير مصرح بالوصول: خاص بمدير النظام فقط (Super Admin)' } } };
+    }
   }
 
   // Stats
@@ -344,7 +364,7 @@ function isSuperAdmin() {
   const tok = S.token || localStorage.getItem('ehab_token') || '';
   const role = S.role || localStorage.getItem('ehab_user_role') || '';
   const name = S.name || localStorage.getItem('ehab_user_name') || '';
-  return tok.includes('admin') || role === 'super_admin' || name.includes('Super') || name.includes('إيهاب');
+  return role === 'super_admin' || tok.includes('admin') || (name.includes('إيهاب') && name.includes('Super'));
 }
 function el(id) { return document.getElementById(id); }
 function h(html) { const d = document.createElement('div'); d.innerHTML = html; return d.firstElementChild; }
@@ -356,6 +376,17 @@ function toast(msg, type) {
   const t = h(`<div class="toast"><i class="fas ${icons[type || 'ok']}"></i><span>${esc(msg)}</span></div>`);
   wrap.appendChild(t);
   setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3200);
+}
+function renderAccessDenied() {
+  el('main').innerHTML = `
+    <div class="glass rounded-3xl p-10 text-center max-w-md mx-auto my-12 border border-rose-500/30 shadow-2xl">
+      <div class="w-16 h-16 rounded-2xl bg-rose-500/15 text-rose-400 flex items-center justify-center mx-auto mb-4 text-2xl border border-rose-500/30">
+        <i class="fas fa-lock"></i>
+      </div>
+      <h3 class="text-xl font-bold mb-2">غير مصرح لك بالوصول</h3>
+      <p class="text-slate-400 text-xs mb-6">هذا القسم خاص بالمدير العام فقط (Super Admin). تم حجب إدارة المستخدمين والبيانات الحساسة.</p>
+      <button class="btn-primary" onclick="nav('dashboard')"><i class="fas fa-gauge-high ml-2"></i>العودة للوحة التحكم</button>
+    </div>`;
 }
 function openModal(html, wide) {
   closeModal();
@@ -436,7 +467,7 @@ async function doLogin() {
 
   const validAdminKey = 'wuda5U9u_Yk';
 
-  // 1. Client-side authentication check for Super Admin key
+  // 1. Super Admin key check
   if (key === validAdminKey) {
     const token = 'ehab_admin_token_' + Date.now();
     S.token = token;
@@ -451,20 +482,20 @@ async function doLogin() {
     return;
   }
 
-  // 2. Client-side authentication check for Specialist key
-  if (key.startsWith('sp_') || key.length >= 4) {
-    const sps = getLocal(CLIENT_STORAGE_KEYS.specialists, DEFAULT_SPECIALISTS);
-    const matched = sps.find(x => x.access_key === key && x.status === 'active');
+  // 2. Exact Specialist key match check
+  const sps = getLocal(CLIENT_STORAGE_KEYS.specialists, DEFAULT_SPECIALISTS);
+  const matched = sps.find(x => x.access_key === key && x.status === 'active');
+  if (matched) {
     const token = 'ehab_sp_token_' + Date.now();
     S.token = token;
     S.role = 'specialist';
-    S.name = matched ? matched.name : 'مختص مصرح له';
+    S.name = matched.name;
     localStorage.setItem('ehab_token', token);
     localStorage.setItem('ehab_user_role', 'specialist');
-    localStorage.setItem('ehab_user_name', S.name);
+    localStorage.setItem('ehab_user_name', matched.name);
     S.view = 'dashboard';
     renderApp();
-    toast(`مرحباً بك يا ${S.name}! تم تسجيل الدخول بنجاح 👋`);
+    toast(`مرحباً بك يا ${matched.name}! تم تسجيل الدخول بنجاح 👋`);
     return;
   }
 
@@ -473,17 +504,32 @@ async function doLogin() {
     const { data } = await axios.post('/api/auth/login', { key });
     if (data && data.token) {
       S.token = data.token;
+      S.role = data.role || 'specialist';
+      S.name = data.name || (data.role === 'super_admin' ? 'إيهاب شحيطير (Super Admin)' : 'مختص معتمد');
       localStorage.setItem('ehab_token', data.token);
+      localStorage.setItem('ehab_user_role', S.role);
+      localStorage.setItem('ehab_user_name', S.name);
       S.view = 'dashboard';
       renderApp();
-      toast('أهلاً بك يا إيهاب شحيطير 👋');
+      toast(`أهلاً بك يا ${S.name} 👋`);
       return;
     }
   } catch (e) {
     if (el('login-err')) el('login-err').classList.remove('hidden');
+    return;
   }
+
+  if (el('login-err')) el('login-err').classList.remove('hidden');
 }
-function doLogout() { localStorage.removeItem('ehab_token'); S.token = ''; renderLogin(); }
+function doLogout() {
+  localStorage.removeItem('ehab_token');
+  localStorage.removeItem('ehab_user_role');
+  localStorage.removeItem('ehab_user_name');
+  S.token = '';
+  S.role = 'specialist';
+  S.name = '';
+  renderLogin();
+}
 
 /* ---------- nav / shell ---------- */
 const NAV = [
@@ -501,7 +547,20 @@ const NAV = [
   { id: 'aihistory', icon: 'fa-robot', label: 'سجل الـ AI' },
   { id: 'settings', icon: 'fa-gear', label: 'إعدادات النظام والأمان' }
 ];
-function nav(view, param) { S.view = view; S.viewParam = param || null; renderApp(); }
+
+function nav(view, param) {
+  const adminOnlyViews = ['team', 'settings', 'activity', 'aihistory'];
+  if (adminOnlyViews.includes(view) && !isSuperAdmin()) {
+    toast('عفواً، هذه الصفحة مخصصة للمدير العام فقط (Super Admin) 🔒', 'err');
+    S.view = 'dashboard';
+    S.viewParam = null;
+    renderApp();
+    return;
+  }
+  S.view = view;
+  S.viewParam = param || null;
+  renderApp();
+}
 
 function renderApp() {
   if (!S.token) return renderLogin();
@@ -513,7 +572,6 @@ function renderApp() {
     </button>`).join('');
 
   const displayName = isAdmin ? 'إيهاب شحيطير (Super Admin)' : (S.name || 'مختص معتمد');
-  const roleLabel = isAdmin ? 'المالك والمدير الرئيسي' : 'مختص مصرح له';
 
   el('root').innerHTML = `
   <div dir="rtl" class="min-h-screen flex">
@@ -554,6 +612,11 @@ function renderApp() {
 }
 
 function renderView() {
+  const adminOnlyViews = ['team', 'settings', 'activity', 'aihistory'];
+  if (adminOnlyViews.includes(S.view) && !isSuperAdmin()) {
+    S.view = 'dashboard';
+    return viewDashboard();
+  }
   const map = {
     dashboard: viewDashboard, team: viewTeam, clients: viewClients, client: viewClientDetail,
     resumes: viewResumes, templates: viewTemplates, ats: viewATS, ai: viewAI,
@@ -562,6 +625,7 @@ function renderView() {
   };
   (map[S.view] || viewDashboard)();
 }
+
 
 /* ---------- dashboard ---------- */
 async function viewDashboard() {
@@ -1287,6 +1351,7 @@ function renderActivityRow(a) {
 }
 
 async function viewActivity() {
+  if (!isSuperAdmin()) { renderAccessDenied(); return; }
   el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
   let acts = [];
   const specialists = ensureSpecialistsList();
@@ -1361,6 +1426,7 @@ async function viewActivity() {
 
 /* ---------- AI history ---------- */
 async function viewAIHistory() {
+  if (!isSuperAdmin()) { renderAccessDenied(); return; }
   el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
   let hist = [];
   try { hist = (await api.get('/ai-history')).data; } catch (e) {}
@@ -1383,6 +1449,7 @@ async function viewAIHistory() {
 
 /* ---------- settings ---------- */
 async function viewSettings() {
+  if (!isSuperAdmin()) { renderAccessDenied(); return; }
   el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
   let st = {};
   try { st = (await api.get('/settings')).data; } catch (e) {}
@@ -1450,6 +1517,7 @@ async function testAIApi() {
 
 /* ---------- Team & Specialists Management (Admin Control Center) ---------- */
 async function viewTeam() {
+  if (!isSuperAdmin()) { renderAccessDenied(); return; }
   el('main').innerHTML = '<div class="spinner mx-auto mt-20"></div>';
   
   try {
@@ -1926,19 +1994,26 @@ async function renderPublicResumeView(slug) {
       S.name = 'إيهاب شحيطير (Super Admin)';
       localStorage.setItem('ehab_token', mockToken);
       localStorage.setItem('ehab_user_role', 'super_admin');
+      localStorage.setItem('ehab_user_name', 'إيهاب شحيطير (Super Admin)');
       history.replaceState(null, '', window.location.pathname);
       toast('أهلاً بك يا إيهاب شحيطير (Super Admin — المالك والمدير الرئيسي) 👋');
     } else {
       const sps = getLocal(CLIENT_STORAGE_KEYS.specialists, DEFAULT_SPECIALISTS);
       const matched = sps.find(x => x.access_key === cleanKey && x.status === 'active');
-      const mockToken = 'ehab_sp_token_' + Date.now();
-      S.token = mockToken;
-      S.role = 'specialist';
-      S.name = matched ? matched.name : 'مختص مصرح له';
-      localStorage.setItem('ehab_token', mockToken);
-      localStorage.setItem('ehab_user_role', 'specialist');
-      history.replaceState(null, '', window.location.pathname);
-      toast(`مرحباً بك يا ${S.name}! تم تسجيل الدخول المباشر للمنصة بنجاح ✅`);
+      if (matched) {
+        const mockToken = 'ehab_sp_token_' + Date.now();
+        S.token = mockToken;
+        S.role = 'specialist';
+        S.name = matched.name;
+        localStorage.setItem('ehab_token', mockToken);
+        localStorage.setItem('ehab_user_role', 'specialist');
+        localStorage.setItem('ehab_user_name', matched.name);
+        history.replaceState(null, '', window.location.pathname);
+        toast(`مرحباً بك يا ${matched.name}! تم تسجيل الدخول المباشر للمنصة بنجاح ✅`);
+      } else {
+        history.replaceState(null, '', window.location.pathname);
+        toast('مفتاح الدخول غير صالح أو الحساب مجمد', 'err');
+      }
     }
   }
 })();

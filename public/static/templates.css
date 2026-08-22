@@ -414,3 +414,22 @@
   align-items: center !important;
   gap: 6px !important;
 }
+
+
+/* ATS Merged Bilingual Pro Template Styles */
+.cv-merged-bilingual-page {
+  background: #ffffff !important;
+  color: #0f172a;
+  font-family: 'Cairo', 'Inter', sans-serif;
+}
+.cv-merged-bilingual-page a {
+  color: #000000 !important;
+  text-decoration: none !important;
+}
+.cv-merged-bilingual-page a:hover {
+  text-decoration: underline !important;
+}
+.cv-merged-row:last-child .cv-merged-col-en,
+.cv-merged-row:last-child .cv-merged-col-ar {
+  padding-bottom: 0 !important;
+}
