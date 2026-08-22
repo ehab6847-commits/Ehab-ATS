@@ -433,3 +433,18 @@
 .cv-merged-row:last-child .cv-merged-col-ar {
   padding-bottom: 0 !important;
 }
+
+
+/* Canva Ribbon and Spine Pro Templates */
+.cv-canva-ribbon-page {
+  background: #ffffff !important;
+  color: #0f172a;
+}
+.cv-canva-spine-page {
+  background: #ffffff !important;
+  color: #0f172a;
+}
+.cv-canva-spine-page .cv-item-role {
+  color: var(--cv-color) !important;
+  font-weight: 800 !important;
+}

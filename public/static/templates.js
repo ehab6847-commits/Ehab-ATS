@@ -1,6 +1,12 @@
 /* ===== Ehab ATS — Template Engine (16 templates) ===== */
 
 const TEMPLATE_DEFS = {
+  canva_navy_ribbon:   { name: 'كانفا كحلي بأشرطة متباينة 🎨', nameEn: 'Canva Navy Ribbon Pro', group: 'canva', layout: 'canva_ribbon', header: 'ribbon_top', color: '#162c46', accent: '#254870', line: '1.5px solid #162c46' },
+  canva_violet_ribbon: { name: 'كانفا بنفسجي ملكي بأشرطة 🎨', nameEn: 'Canva Royal Plum Ribbon', group: 'canva', layout: 'canva_ribbon', header: 'ribbon_top', color: '#4c2a58', accent: '#703c7e', line: '1.5px solid #4c2a58' },
+  canva_emerald_ribbon:{ name: 'كانفا زمردي بأشرطة متباينة 💎', nameEn: 'Canva Emerald Ribbon Pro', group: 'canva', layout: 'canva_ribbon', header: 'ribbon_top', color: '#064e3b', accent: '#0d6951', line: '1.5px solid #064e3b' },
+  canva_spine_navy:    { name: 'كانفا تايم لاين كحلي مع الشريط الجانبي ⭐', nameEn: 'Canva Timeline Navy Spine', group: 'canva', layout: 'canva_spine', header: 'spine_top', color: '#162c46', accent: '#0284c7', line: '2px solid #162c46' },
+  canva_spine_emerald: { name: 'كانفا تايم لاين زمردي جانبي 💎', nameEn: 'Canva Timeline Emerald Spine', group: 'canva', layout: 'canva_spine', header: 'spine_top', color: '#064e3b', accent: '#10b981', line: '2px solid #064e3b' },
+
   ats_merged_bilingual:{ name: 'سيرة مدمج وفق نظام ATS ⚡', nameEn: 'ATS Merged Bilingual Pro', group: 'ats', layout: 'ats_merged_bilingual', header: 'center', color: '#000000', accent: '#0f172a', line: '1.5px solid #000000', ats: true },
   ats_tinted_cards:{ name: 'البطاقات المظللة الحديث ⭐', nameEn: 'Modern Tinted Cards ATS', group: 'ats', layout: 'tinted_cards', header: 'tinted_top', color: '#0f172a', accent: '#0284c7', line: '2px solid #0284c7', ats: true },
   formal_pro:    { name: 'رسمي احترافي ⭐', nameEn: 'Professional Formal', group: 'bw', layout: 'formal_pro', header: 'formal_center', color: '#000000', accent: '#1e293b', line: '1.5px solid #000000', ats: true },
@@ -117,6 +123,14 @@ function secTitle(sec, lang, showIcons) {
   }
   const icon = showIcons ? `<i class="fas ${def.icon}"></i>` : '';
   return `<h2 class="cv-sec-title">${icon}${tplEsc(t)}</h2>`;
+}
+
+function secTitleText(sec, lang) {
+  const def = SECTION_TYPES[sec.type] || SECTION_TYPES.custom;
+  if (sec.type === 'custom') {
+    return lang === 'en' ? (sec.titleEn || sec.titleAr || 'Custom Section') : (sec.titleAr || sec.titleEn || 'قسم مخصص');
+  }
+  return lang === 'en' ? def.en : (lang === 'bilingual' ? def.ar + ' | ' + def.en : (sec.titleAr || def.ar));
 }
 
 function dateRange(item, lang) {
@@ -945,6 +959,234 @@ function renderTemplate(templateId, data, cust, language) {
           ${headerHtml}
           <div class="bilingual-container" dir="rtl" style="display:table; width:100%; table-layout:fixed;">
             ${sectionRows}
+          </div>
+          ${sig}
+        </div>
+        ${qr}
+      </div>
+    `;
+  }
+
+  
+  // --- 1. Canva Ribbon Templates (Matching Ahmad Saeed / Mayar Mahmoud layouts) ---
+  if (tpl.layout === 'canva_ribbon') {
+    const p = data.personal || {};
+    const nr = resolveName(p);
+    const tr = resolveTitle(p);
+    const v = mkPick(lang);
+
+    const name = v(nr, 'ar', 'en') || 'الاسم الكامل';
+    const jobTitle = v(tr, 'ar', 'en') || '';
+    const phoneRaw = String(p.phone || '').replace(/\s+/g, '');
+    const phoneLink = phoneRaw ? `<a href="tel:${tplEsc(phoneRaw)}" style="color:var(--cv-color);text-decoration:none;font-weight:600;">${tplEsc(p.phone)}</a>` : '';
+    const emailLink = p.email ? `<a href="mailto:${tplEsc(p.email)}" style="color:var(--cv-color);text-decoration:none;font-weight:600;">${tplEsc(p.email)}</a>` : '';
+    const city = v(p, 'cityAr', 'cityEn') || v(p, 'city', 'city') || '';
+
+    const contactParts = [phoneLink, emailLink, city ? `<span>${tplEsc(city)}</span>` : ''].filter(Boolean);
+
+    // Filter bottom sections (languages, training, volunteer/talents) for 3-column banner block
+    const bottomTypes = ['languages', 'training', 'certifications', 'courses', 'softskills', 'volunteer'];
+    const mainSections = sections.filter(s => !bottomTypes.includes(s.type));
+    const footerSections = sections.filter(s => bottomTypes.includes(s.type));
+
+    const mainSectionsHtml = mainSections.map(s => {
+      const isSkills = s.type === 'skills' || s.type === 'techskills';
+      const isText = s.type === 'summary' || s.type === 'objective' || s.type === 'custom';
+      const title = secTitleText(s, lang);
+      const items = s.items || [];
+
+      if (isSkills) {
+        return `
+          <div class="cv-canva-section" style="margin-bottom:14px;">
+            <div style="font-weight:800;font-size:14px;color:var(--cv-color);margin-bottom:4px;">${tplEsc(title)}</div>
+            <div style="background:var(--cv-color);color:#ffffff;padding:8px 14px;display:flex;flex-wrap:wrap;justify-content:space-around;align-items:center;gap:8px 14px;font-size:11.5px;font-weight:700;border-radius:0;">
+              ${items.map(it => `<span>${tplEsc(v(it, 'nameAr', 'nameEn'))}</span>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (isText) {
+        const txt = v(s, 'textAr', 'textEn') || (items[0] && v(items[0], 'textAr', 'textEn')) || '';
+        return `
+          <div class="cv-canva-section" style="margin-bottom:14px;">
+            <div style="font-weight:800;font-size:14px;color:var(--cv-color);margin-bottom:3px;">${tplEsc(title)}</div>
+            <div style="border-bottom:1.5px solid var(--cv-color);margin-bottom:6px;"></div>
+            <div style="text-align:justify;line-height:1.6;font-size:11.5px;color:#1e293b;">${tplEsc(txt).replace(/\n/g, '<br>')}</div>
+          </div>
+        `;
+      }
+
+      // Experience, Education, Timeline
+      return `
+        <div class="cv-canva-section" style="margin-bottom:14px;">
+          <div style="font-weight:800;font-size:14px;color:var(--cv-color);margin-bottom:3px;">${tplEsc(title)}</div>
+          <div style="border-bottom:1.5px solid var(--cv-color);margin-bottom:8px;"></div>
+          ${items.map(it => {
+            const role = v(it, 'roleAr', 'roleEn') || v(it, 'degreeAr', 'degreeEn') || v(it, 'nameAr', 'nameEn') || '';
+            const org = v(it, 'orgAr', 'orgEn') || v(it, 'schoolAr', 'schoolEn') || '';
+            const dRange = dateRange(it, lang) || (it.year ? String(it.year) : '');
+            const desc = v(it, 'descAr', 'descEn');
+            return `
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
+                <div style="width:78%;text-align:${dir === 'rtl' ? 'right' : 'left'};">
+                  <div style="font-weight:800;font-size:12.5px;color:var(--cv-color);">${tplEsc(role)}</div>
+                  ${org ? `<div style="font-weight:700;font-size:11.5px;color:#334155;margin-top:1px;">${tplEsc(org)}</div>` : ''}
+                  ${desc ? `<div style="margin-top:3px;font-size:11px;color:#1e293b;">${renderBulletList(desc)}</div>` : ''}
+                </div>
+                ${dRange ? `<div style="width:20%;text-align:${dir === 'rtl' ? 'left' : 'right'};font-weight:800;font-size:11.5px;color:var(--cv-color);direction:ltr;flex-shrink:0;">${dRange}</div>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }).join('');
+
+    // Bottom Banner Block (Languages & Courses & Extra)
+    let footerBannerHtml = '';
+    if (footerSections.length > 0) {
+      const colsCount = Math.min(3, Math.max(1, footerSections.length));
+      footerBannerHtml = `
+        <div class="cv-canva-footer-banner" style="margin-top:16px;">
+          <!-- Tinted Header Band -->
+          <div style="background:#e8eef5;padding:6px 14px;display:grid;grid-template-columns:repeat(${colsCount},1fr);gap:12px;font-weight:800;font-size:13px;color:var(--cv-color);text-align:center;">
+            ${footerSections.slice(0, colsCount).map(s => `<div>${tplEsc(secTitleText(s, lang))}</div>`).join('')}
+          </div>
+          <!-- Solid Colored Body Ribbon -->
+          <div style="background:var(--cv-color);color:#ffffff;padding:12px 16px;display:grid;grid-template-columns:repeat(${colsCount},1fr);gap:12px;font-size:11px;line-height:1.55;">
+            ${footerSections.slice(0, colsCount).map(s => {
+              const items = s.items || [];
+              return `
+                <div style="text-align:center;">
+                  ${items.map(it => {
+                    const name = v(it, 'nameAr', 'nameEn') || '';
+                    const level = v(it, 'levelAr', 'levelEn') || '';
+                    const issuer = v(it, 'issuerAr', 'issuerEn') || '';
+                    return `<div style="margin-bottom:4px;">${tplEsc(name)}${level ? ': ' + tplEsc(level) : ''}${issuer ? ' (' + tplEsc(issuer) + ')' : ''}</div>`;
+                  }).join('')}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="${cls} cv-canva-ribbon-page" dir="${dir}" ${styleAttr}>
+        <div class="cv-inner" style="padding:28px 36px;">
+          <!-- Top Header -->
+          <div style="text-align:center;margin-bottom:14px;">
+            <h1 class="cv-name" style="font-size:28px;font-weight:900;color:var(--cv-color);margin:0 0 2px;letter-spacing:0.5px;">${tplEsc(name)}</h1>
+            ${jobTitle ? `<div class="cv-jobtitle" style="font-size:15px;font-weight:700;color:var(--cv-color);margin-bottom:10px;">${tplEsc(jobTitle)}</div>` : ''}
+            <div style="width:100%;border:1.5px solid var(--cv-color);padding:6px 14px;display:flex;justify-content:space-around;align-items:center;font-size:11.5px;font-weight:600;color:var(--cv-color);box-sizing:border-box;">
+              ${contactParts.join('<span style="color:#94a3b8;margin:0 4px;">|</span>')}
+            </div>
+          </div>
+
+          <div class="cv-canva-main-sections">
+            ${mainSectionsHtml}
+          </div>
+          ${footerBannerHtml}
+          ${sig}
+        </div>
+        ${qr}
+      </div>
+    `;
+  }
+
+  // --- 2. Canva Vertical Timeline Spine with Side Accent Stripe (Matching Sara Nasser layout) ---
+  if (tpl.layout === 'canva_spine') {
+    const p = data.personal || {};
+    const nr = resolveName(p);
+    const tr = resolveTitle(p);
+    const v = mkPick(lang);
+
+    const name = v(nr, 'ar', 'en') || 'الاسم الكامل';
+    const jobTitle = v(tr, 'ar', 'en') || '';
+    const phoneRaw = String(p.phone || '').replace(/\s+/g, '');
+    const phoneLink = phoneRaw ? `<a href="tel:${tplEsc(phoneRaw)}" style="color:#1e293b;text-decoration:none;font-weight:600;">${tplEsc(p.phone)}</a>` : '';
+    const emailLink = p.email ? `<a href="mailto:${tplEsc(p.email)}" style="color:#1e293b;text-decoration:none;font-weight:600;">${tplEsc(p.email)}</a>` : '';
+    const city = v(p, 'cityAr', 'cityEn') || v(p, 'city', 'city') || '';
+
+    const sectionsHtml = sections.map((s, idx) => {
+      const typeDef = SECTION_TYPES[s.type] || { icon: 'fa-folder-open' };
+      const icon = typeDef.icon || 'fa-circle';
+      const title = secTitleText(s, lang);
+      const isLangs = s.type === 'languages';
+      const items = s.items || [];
+
+      let contentHtml = '';
+      if (isLangs) {
+        contentHtml = `
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            ${items.map(it => {
+              const name = v(it, 'nameAr', 'nameEn');
+              const lv = it.level || 4;
+              const fullBlocks = Math.min(5, Math.max(1, lv));
+              const emptyBlocks = 5 - fullBlocks;
+              const blocksStr = '▮'.repeat(fullBlocks) + '▯'.repeat(emptyBlocks);
+              return `
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;font-weight:700;color:#0f172a;max-width:320px;">
+                  <span>${tplEsc(name)}${it.levelAr ? ': ' + tplEsc(it.levelAr) : ''}</span>
+                  <span style="color:var(--cv-color);letter-spacing:2px;font-size:13px;">${blocksStr}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } else {
+        contentHtml = renderSectionBody(s, lang, tpl, cust);
+      }
+
+      return `
+        <div class="cv-spine-section" style="position:relative;margin-bottom:18px;">
+          <!-- Node Badge on Spine -->
+          <div style="position:absolute;${dir === 'rtl' ? 'right:-32px;' : 'left:-32px;'}top:2px;width:22px;height:22px;border-radius:50%;background:var(--cv-color);color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:9.5px;box-shadow:0 0 0 3px #ffffff;z-index:4;">
+            <i class="fas ${icon}"></i>
+          </div>
+
+          <!-- Section Rectangular Badge Header -->
+          <div style="display:inline-block;background:var(--cv-color);color:#ffffff;padding:4px 14px;font-weight:800;font-size:12px;border-radius:2px;margin-bottom:8px;">
+            ${tplEsc(title)}
+          </div>
+
+          <div class="cv-spine-content" style="padding-inline-start:4px;">
+            ${contentHtml}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="${cls} cv-canva-spine-page" dir="${dir}" ${styleAttr} style="position:relative;overflow:hidden;background:#ffffff;">
+        <!-- Rightmost Side Accent Stripe -->
+        <div style="position:absolute;${dir === 'rtl' ? 'right:0;' : 'left:0;'}top:0;bottom:0;width:34px;background:var(--cv-color);z-index:1;"></div>
+
+        <div class="cv-inner" style="padding:28px ${dir === 'rtl' ? '48px 28px 28px' : '28px 28px 48px'};position:relative;z-index:2;">
+          <!-- Top Header: Name on Right, Contact Details on Left -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <!-- Candidate Name + Title -->
+            <div style="text-align:${dir === 'rtl' ? 'right' : 'left'};">
+              <h1 class="cv-name" style="font-size:32px;font-weight:900;color:var(--cv-color);margin:0 0 2px;letter-spacing:normal;">${tplEsc(name)}</h1>
+              ${jobTitle ? `<div class="cv-jobtitle" style="font-size:15px;font-weight:700;color:var(--cv-accent);margin-top:2px;">${tplEsc(jobTitle)}</div>` : ''}
+            </div>
+
+            <!-- Contact Information Block -->
+            <div style="text-align:${dir === 'rtl' ? 'right' : 'left'};font-size:11.5px;line-height:1.7;color:#334155;">
+              ${phoneLink ? `<div>${phoneLink} <i class="fas fa-phone" style="color:var(--cv-color);margin-inline-start:6px;font-size:11px;"></i></div>` : ''}
+              ${emailLink ? `<div>${emailLink} <i class="fas fa-envelope" style="color:var(--cv-color);margin-inline-start:6px;font-size:11px;"></i></div>` : ''}
+              ${city ? `<div><span>${tplEsc(city)}</span> <i class="fas fa-map-marker-alt" style="color:var(--cv-color);margin-inline-start:6px;font-size:11px;"></i></div>` : ''}
+            </div>
+          </div>
+
+          <div style="border-bottom:2px solid var(--cv-color);margin-bottom:18px;"></div>
+
+          <!-- Connected Spine Body -->
+          <div class="cv-spine-body" style="position:relative;padding-inline-start:24px;">
+            <!-- Continuous vertical spine line -->
+            <div style="position:absolute;${dir === 'rtl' ? 'right:10px;' : 'left:10px;'}top:8px;bottom:14px;width:1.5px;background:#cbd5e1;z-index:2;"></div>
+            ${sectionsHtml}
           </div>
           ${sig}
         </div>
