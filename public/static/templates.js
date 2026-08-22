@@ -707,38 +707,56 @@ function renderTemplate(templateId, data, cust, language) {
   if (tpl.layout === 'ats_merged_bilingual' || templateId === 'ats_merged_bilingual') {
     const p = data.personal || {};
     const nr = resolveName(p);
-    const tr = resolveTitle(p);
 
-    const nameAr = nr.ar || nr.en || '';
+    const nameAr = nr.ar || p.nameAr || p.fullName || 'الاسم الكامل';
+    const nameEn = nr.en || p.nameEn || (typeof translateArabicNameToEnglish === 'function' ? translateArabicNameToEnglish(nameAr) : '') || 'Full Name';
     const phoneRaw = String(p.phone || '').replace(/\s+/g, '');
-    const phoneLink = phoneRaw ? `<a href="tel:${tplEsc(phoneRaw)}" style="color:#000;text-decoration:none;font-weight:600;">${tplEsc(p.phone)}</a>` : '';
-    const emailLink = p.email ? `<a href="mailto:${tplEsc(p.email)}" style="color:#000;text-decoration:none;font-weight:600;">${tplEsc(p.email)}</a>` : '';
-    const cityText = p.cityAr || p.city || p.cityEn || '';
+    const phoneLink = phoneRaw ? `<a href="tel:${tplEsc(phoneRaw)}" style="color:#0f172a;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-phone" style="color:#64748b;font-size:11px;"></i><span>${tplEsc(p.phone)}</span></a>` : '';
+    const emailLink = p.email ? `<a href="mailto:${tplEsc(p.email)}" style="color:#0f172a;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-envelope" style="color:#64748b;font-size:11px;"></i><span>${tplEsc(p.email)}</span></a>` : '';
+    const cityText = p.cityAr || p.city || p.cityEn || 'المملكة العربية السعودية';
+    const cityHtml = cityText ? `<span style="display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-map-marker-alt" style="color:#64748b;font-size:11px;"></i><span>${tplEsc(cityText)}</span></span>` : '';
 
-    const contactBits = [phoneLink, emailLink, cityText].filter(Boolean);
+    const contactBits = [phoneLink, emailLink, cityHtml].filter(Boolean);
     const headerHtml = `
-      <div class="cv-merged-header" style="text-align:center;margin-bottom:12px;">
-        <h1 class="cv-name" style="font-size:26px;font-weight:800;color:#000;margin:0 0 6px;letter-spacing:normal;">${tplEsc(nameAr)}</h1>
-        <div class="cv-merged-contact" style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:4px 10px;font-size:11.5px;color:#334155;direction:rtl;">
-          ${contactBits.join('<span style="color:#94a3b8;margin:0 4px;">|</span>')}
+      <div class="cv-merged-header" style="text-align:center;margin-bottom:14px;">
+        <h1 class="cv-name" style="font-size:25px;font-weight:800;color:#000;margin:0 0 2px;letter-spacing:normal;">${tplEsc(nameAr)}</h1>
+        <div class="cv-name-en" style="font-size:14.5px;font-weight:700;color:#475569;letter-spacing:0.5px;margin-bottom:8px;">${tplEsc(nameEn)}</div>
+        <div class="cv-merged-contact-wrap" style="text-align:center;margin-bottom:6px;">
+          <div class="cv-merged-contact-pill" style="display:inline-flex;align-items:center;justify-content:center;gap:12px;background:rgba(241,245,249,0.75);border:1px solid #e2e8f0;border-radius:6px;padding:5px 16px;font-size:11.5px;color:#1e293b;direction:rtl;">
+            ${contactBits.join('<span style="color:#cbd5e1;margin:0 4px;">|</span>')}
+          </div>
         </div>
         <div style="border-bottom:1.5px solid #cbd5e1;margin-top:10px;"></div>
       </div>
     `;
 
-    const sectionPairs = sections.map(s => {
+    const sectionPairs = sections.map((s, sIdx) => {
       const isText = s.type === 'summary' || s.type === 'objective' || s.type === 'custom';
       const isEdu = s.type === 'education';
       const isSkills = s.type === 'skills' || s.type === 'techskills' || s.type === 'softskills';
       const isLangs = s.type === 'languages';
       const isCerts = s.type === 'training' || s.type === 'certifications' || s.type === 'courses';
 
-      // English Title
-      const def = SECTION_TYPES[s.type] || { en: s.titleEn || s.type, ar: s.titleAr || s.type };
-      const enTitle = (s.titleEn || def.en || '').toUpperCase();
-      const arTitle = s.titleAr || def.ar || '';
+      // Standard Professional English and Arabic Titles
+      const titleMap = {
+        summary: { en: 'PROFESSIONAL SUMMARY', ar: 'الملخص المهني' },
+        objective: { en: 'CAREER OBJECTIVE', ar: 'الهدف الوظيفي' },
+        education: { en: 'EDUCATION', ar: 'المؤهلات العلمية' },
+        experience: { en: 'WORK EXPERIENCE', ar: 'الخبرات العملية' },
+        training: { en: 'CERTIFICATES AND COURSES', ar: 'الشهادات والدورات' },
+        certifications: { en: 'CERTIFICATIONS', ar: 'الشهادات المهنية' },
+        courses: { en: 'COURSES', ar: 'الدورات التدريبية' },
+        skills: { en: 'PROFESSIONAL SKILLS', ar: 'المهارات المهنية' },
+        techskills: { en: 'TECHNICAL SKILLS', ar: 'المهارات التقنية' },
+        softskills: { en: 'SOFT SKILLS', ar: 'المهارات الشخصية' },
+        languages: { en: 'LANGUAGES', ar: 'اللغات' }
+      };
 
-      // Arabic Content
+      const mapped = titleMap[s.type] || {};
+      const enTitle = (mapped.en || s.titleEn || s.type).toUpperCase();
+      const arTitle = mapped.ar || s.titleAr || s.type;
+
+      // Arabic Content (Right Side)
       let arContent = '';
       if (isText) {
         arContent = `<div style="text-align:justify;line-height:1.6;font-size:11px;color:#1e293b;">${tplEsc(s.textAr || (s.items?.[0]?.textAr) || '').replace(/\n/g, '<br>')}</div>`;
@@ -766,7 +784,7 @@ function renderTemplate(templateId, data, cust, language) {
       } else if (isCerts) {
         arContent = (s.items || []).map(it => `
           <div style="display:flex;align-items:baseline;gap:6px;line-height:1.45;margin-bottom:3px;font-size:11px;">
-            <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.45em;"></span>
+            <span class="cv-bullet-dot" style="display:inline-block;width:5px;height:5px;min-width:5px;min-height:5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.45em;"></span>
             <span style="font-weight:600;color:#0f172a;">${tplEsc(it.nameAr || it.nameEn || '')}${(it.issuerAr || it.issuerEn) ? ' (' + tplEsc(it.issuerAr || it.issuerEn) + ')' : ''}</span>
           </div>
         `).join('');
@@ -779,7 +797,7 @@ function renderTemplate(templateId, data, cust, language) {
           return `
             <div style="margin-bottom:8px;font-size:11.5px;">
               <div style="display:flex;align-items:baseline;gap:6px;font-weight:700;color:#0f172a;line-height:1.45;">
-                <span class="cv-bullet-dot" style="display:inline-block;width:5.5px;height:5.5px;min-width:5.5px;min-height:5.5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.45em;"></span>
+                <span class="cv-bullet-dot" style="display:inline-block;width:5px;height:5px;min-width:5px;min-height:5px;border-radius:50%!important;background-color:#000000!important;flex-shrink:0;margin-top:0.45em;"></span>
                 <span>${tplEsc(role)}${org ? ' - ' + tplEsc(org) : ''}</span>
               </div>
               ${desc ? `<div style="padding-inline-start:12px;margin-top:3px;font-weight:400;color:#334155;font-size:11px;">${renderBulletList(desc)}</div>` : ''}
@@ -788,7 +806,7 @@ function renderTemplate(templateId, data, cust, language) {
         }).join('');
       }
 
-      // English Content
+      // English Content (Left Side)
       let enContent = '';
       if (isText) {
         enContent = `<div style="text-align:justify;line-height:1.6;font-size:11px;color:#1e293b;">${tplEsc(s.textEn || s.textAr || '').replace(/\n/g, '<br>')}</div>`;
@@ -838,22 +856,30 @@ function renderTemplate(templateId, data, cust, language) {
         }).join('');
       }
 
+      const isLast = sIdx === sections.length - 1;
+
       return `
-        <div class="cv-merged-row" style="display:table-row;">
-          <!-- English Left Column -->
-          <div class="cv-merged-col-en" dir="ltr" style="display:table-cell;width:49%;vertical-align:top;padding-right:12px;padding-bottom:14px;text-align:left;">
-            <div style="font-weight:800;font-size:12px;color:#000;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">${tplEsc(enTitle)}</div>
-            ${enContent}
-          </div>
+        <div class="cv-merged-section-block" style="margin-bottom:12px;">
+          <!-- Dual Column Table Row: LTR container ensures English is strictly on the LEFT and Arabic is strictly on the RIGHT -->
+          <div style="display:table;width:100%;table-layout:fixed;direction:ltr;">
+            <div style="display:table-row;">
+              <!-- English Left Column -->
+              <div class="cv-merged-col-en" dir="ltr" style="display:table-cell;width:48.5%;vertical-align:top;padding-right:12px;text-align:left;">
+                <div style="font-weight:800;font-size:12px;color:#000;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">${tplEsc(enTitle)}</div>
+                ${enContent}
+              </div>
 
-          <!-- Divider -->
-          <div class="cv-merged-divider" style="display:table-cell;width:2%;border-left:1px solid #e2e8f0;vertical-align:top;"></div>
+              <!-- Straight Vertical Divider Column for this section -->
+              <div class="cv-merged-divider-col" style="display:table-cell;width:3%;border-left:1.5px solid #e2e8f0;vertical-align:top;"></div>
 
-          <!-- Arabic Right Column -->
-          <div class="cv-merged-col-ar" dir="rtl" style="display:table-cell;width:49%;vertical-align:top;padding-left:12px;padding-bottom:14px;text-align:right;">
-            <div style="font-weight:800;font-size:13px;color:#000;margin-bottom:6px;">${tplEsc(arTitle)}</div>
-            ${arContent}
+              <!-- Arabic Right Column -->
+              <div class="cv-merged-col-ar" dir="rtl" style="display:table-cell;width:48.5%;vertical-align:top;padding-right:12px;text-align:right;">
+                <div style="font-weight:800;font-size:13px;color:#000;margin-bottom:6px;">${tplEsc(arTitle)}</div>
+                ${arContent}
+              </div>
+            </div>
           </div>
+          ${!isLast ? '<div style="border-bottom:1px solid #e2e8f0;margin-top:12px;width:100%;"></div>' : ''}
         </div>
       `;
     }).join('');
@@ -862,7 +888,7 @@ function renderTemplate(templateId, data, cust, language) {
       <div class="${cls} cv-merged-bilingual-page" dir="rtl" ${styleAttr}>
         <div class="cv-inner" style="padding:24px 30px;">
           ${headerHtml}
-          <div class="cv-merged-table" style="display:table;width:100%;table-layout:fixed;">
+          <div class="cv-merged-sections-wrap">
             ${sectionPairs}
           </div>
           ${sig}
